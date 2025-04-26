@@ -25,7 +25,7 @@ return new class extends Migration
             $table->integer('stock')->nullable();
             $table->timestamps();
 
-            $table->unsignedBigInteger('order_id')->nullable()->after('id');
+            $table->unsignedBigInteger('order_id')->nullable();
             $table->foreign('order_id')->references('id')->on('orders')->onDelete('cascade');
         });
     }

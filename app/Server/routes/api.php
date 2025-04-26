@@ -9,11 +9,11 @@ use App\Http\Middleware\IsUserAuth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-//PUBLIC ROUTES
+// PUBLIC ROUTES
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
-//PRIVATE ROUTES
+// PRIVATE ROUTES
 Route::middleware([IsUserAuth::class])->group(function(){
     Route::controller(AuthController::class)->group(function(){
         Route::post('/logout', 'logout');
@@ -25,22 +25,22 @@ Route::middleware([IsUserAuth::class])->group(function(){
     });
 
     Route::controller(EventController::class)->group(function(){
-        Route::get('/my-events','getEventsByUserId');
-        Route::get('/events/{id}', 'getEventById');
+        Route::get('/my-events','getEventsByUser');
+
         Route::post('/events','addEvent');
         Route::patch('/events/{id}', 'updateEvent');
     });
 
     Route::controller(OrderController::class)->group(function () {
-        Route::get('/orders/{id}', 'getOrderById');
-        Route::get('/my-orders', 'getOrdersByUser');
+        Route::get('/order/{id}', 'getOrderById');
+        Route::get('/user-orders', 'getOrdersByUserId');
+        Route::get('/my-orders', 'getUserOrders');
         Route::post('/orders', 'addOrder');
-    });
-    
+    });  
 });
 
 
-//ADMIN ROUTES
+// ADMIN ROUTES
 Route::middleware([IsAdmin::class])->group(function(){
 
     Route::controller(ProductController::class)->group(function(){
@@ -51,12 +51,17 @@ Route::middleware([IsAdmin::class])->group(function(){
     });
 
     Route::controller(EventController::class)->group(function(){
-        Route::get('/events','listEvents');
-        Route::delete('/events/{id}','deleteEvent');
+        Route::get('/events','getEvents');
+        Route::get('/events/{id}', 'getEventById');
+        Route::get('/events/accepted','getAcceptedEvents');
+        Route::get('/events/pending','getPendingEvents');
+        Route::patch('/events/{id}', 'updateEventById');
+        Route::delete('/events/{id}','deleteEventById');
     });
 
     Route::controller(OrderController::class)->group(function () {
-        Route::get('/orders', 'getOrders');
+        Route::get('/pendingOrders', 'getPendingOrders');
+        Route::get('/orders/{id}','getOrdersByUserId');
         Route::patch('/orders/{id}', 'updateOrderById');
         Route::delete('/orders/{id}', 'deleteOrderById');
     });

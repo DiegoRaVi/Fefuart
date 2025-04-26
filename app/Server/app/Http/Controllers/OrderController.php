@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 
 class OrderController extends Controller{
 
+    // GET ORDER POR ID
     public function getOrderById($id){
         
         $user = Auth::user();
@@ -26,7 +27,22 @@ class OrderController extends Controller{
         return response()->json($order, 200);
     }
 
-    public function getAllOrders(){
+    // GET ORDERS POR USER
+    public function getUserOrders(){
+
+        $user = Auth::user();
+
+        $orders = Order::where('user_id', $user->id)->with('products')->orderBy('order_date', 'desc')->paginate(10);
+
+        if($orders->isEmpty()){
+            return response()->json(['message' => 'No orders found'], 404);
+        }
+
+        return response()->json($orders, 200);
+    }
+
+    // GET ORDERS POR USER ID
+    public function getOrdersByUserId($id){
 
         $user = Auth::user();
 
@@ -34,17 +50,56 @@ class OrderController extends Controller{
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        $orders = Order::with('products')->orderBy('order_date', 'desc')->paginate(10);
+        $orders = Order::where('user_id', $id)->with('products')->orderBy('order_date', 'desc')->paginate(10);
+
+        if($orders->isEmpty()){
+            return response()->json(['message' => 'No orders found'], 404);
+        }
 
         return response()->json($orders, 200);
     }
 
+    // GET PENDING ORDERS
+    public function getPendingOrders(){
 
-    public function createOrder(){
-        
+        $user = Auth::user();
+
+        if($user->role !== 'admin'){
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $orders = Order::where('status','pending')->with('products')->orderBy('order_date', 'desc')->paginate(10);
+
+        return response()->json($orders, 200);
     }
 
+    //POST NUEVA ORDER
+    public function addOrder(Request $request){
+        
+        $user = Auth::user();
 
+        if (!$user) {
+            return response()->json(['message' => 'User not authenticated'], 401);
+        }
+    
+        $request->validate([
+            'order_date' => 'required|date|after_or_equal:today',
+            'address' => 'required|string|max:255',
+            'total' => 'required|numeric|min:0',
+            //'user_id' => 'required|exists:users,id'
+        ]);
+    
+        Order::create([
+            'user_id' => $user->id,
+            'order_date' => $request->order_date,
+            'status' => 'pending',
+            'address' => $request->address,
+            'total' => $request->total,
+        ]);
+        return response()->json(['message' => 'Order created successfully'], 201);
+    }
+
+    // UPDATE ORDER POR ID
     public function updateOrderById(Request $request, $id){
 
         $user = Auth::user();
@@ -70,6 +125,7 @@ class OrderController extends Controller{
         return response()->json($order, 200);
     }
 
+    // DELETE ORDER POR ID
     public function deleteOrderById($id){
 
         $user = Auth::user();

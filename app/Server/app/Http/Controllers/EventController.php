@@ -8,17 +8,63 @@ use Illuminate\Support\Facades\Auth;
 
 class EventController extends Controller
 {
-    
-    public function listEvents(){
-        $events = Event::all();
-        if($events->isEmpty()){
-            return response()->json(['message' => 'No events found'], 404);
+
+    // GET EVENTO POR ID
+    public function getEventById($id){
+
+        $event = Event::with('user')->find($id);
+
+        if (!$event) {
+            return response()->json(['message' => 'Event not found'], 404);
         }
-        return response()->json(Event::with('user')->get(), 200);
+
+        return response()->json($event, 200);
     }
 
+    // GET TODOS LOS EVENTOS
+    public function getEvents(){
+
+        $events = Event::with('user')->orderBy('status', 'desc')->get();
+
+        if ($events->isEmpty()) {
+            return response()->json(['message' => 'No events found'], 404);
+        }
+
+        return response()->json($events, 200);
+    }
+
+    // GET EVENTOS ACEPTADOS
+    public function getAcceptedEvents(){
+
+        $events = Event::where('status', 'accepted')->with('user')->get();
+
+        if ($events->isEmpty()) {
+            return response()->json(['message' => 'No accepted events found'], 404);
+        }
+
+        return response()->json($events, 200);
+    }
+
+    // GET EVENTOS PENDIENTES
+    public function getPendingEvents(){
+
+        $events = Event::where('status', 'pending')->with('user')->get();
     
-    public function getEventsByUserId(){
+        $user = Auth::user();
+
+        if($user->role !== "admin"){
+            return response()->json(['message' => 'You are not an ADMIN'], 403);
+        }
+    
+        if ($events->isEmpty()) {
+            return response()->json(['message' => 'No pending events found'], 404);
+        }
+
+        return response()->json($events, 200);
+    }
+
+    // GET TODOS LOS EVENTOS DE UN USER
+    public function getEventsByUser(){
 
         $user = Auth::user();
         $events = Event::where('user_id', $user->id)->get();
@@ -30,8 +76,14 @@ class EventController extends Controller
         return response()->json($events, 200);
     }
 
-    
+    // POST NUEVO EVENTO
     public function addEvent(Request $request){
+
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
 
         $request->validate([
             'title' => 'required|string|max:255',
@@ -46,26 +98,14 @@ class EventController extends Controller
             'date' => $request->date,
             'location' => $request->location,
             'status' => 'pending',
-            'user_id' => Auth::id(),
+            'user_id' => $user->id
         ]);
 
         return response()->json($event, 201);
     }
 
-    
-    public function getEventById($id){
-
-        $event = Event::with('user')->find($id);
-
-        if (!$event) {
-            return response()->json(['message' => 'Event not found'], 404);
-        }
-
-        return response()->json($event, 200);
-    }
-
-    
-    public function updateEvent(Request $request, $id){
+    // UPDATE EVENTO POR ID
+    public function updateEventById(Request $request, $id){
 
         $request->validate([
             'title' => 'required|string|max:255',
@@ -92,14 +132,14 @@ class EventController extends Controller
         }
 
         $event->update($request->only([
-            'title', 'description', 'date', 'location'
+            'title', 'description', 'date', 'location', 'status'
         ]));
 
         return response()->json($event, 200);
     }
 
-    
-    public function deleteEvent($id){
+    // DELETE EVENTO POR ID
+    public function deleteEventById($id){
 
         $event = Event::find($id);
 

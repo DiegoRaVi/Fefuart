@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Order;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
 class ProductController extends Controller
 {
+
+    // POST NUEVO PRODUCT
     public function addProduct(Request $request){
 
         $validator = Validator::make($request->all(),[
@@ -20,6 +23,7 @@ class ProductController extends Controller
             'delivery_time' => 'required|string',
             'image_url' => 'nullable|string',
             'stock' => 'nullable|integer',
+            'order_id' => 'required|exists:orders,id'
         ]);
 
         if($validator->fails()){
@@ -37,23 +41,28 @@ class ProductController extends Controller
             'delivery_time' => 'required|string',
             'image_url'=> $request->get('image_url'),
             'stock'=> $request->get('stock'),
+            'order_id' =>$request->order_id
         ]);
         return response()->json(['message' => 'Product added successfully'], 201);
     }
 
+    // GET TODOS LOS PRODUCTOS DE UNA ORDER CON SU ID
+    public function getProductsByOrderId($orderId){
 
-    public function getProducts(){
+        $order = Order::with('products')->find($orderId);
 
-        $products = Product::all();
-
-        if($products->isEmpty()){
-            return response()->json(['message' => 'No products found'], 404);
+        if (!$order) {
+            return response()->json(['message' => 'Order not found'], 404);
         }
 
-        return response()->json($products, 200);
+        if ($order->products->isEmpty()) {
+            return response()->json(['message' => 'No products found for this order'], 404);
+        }
+
+        return response()->json($order->products, 200);
     }
 
-
+    // GET PRODUCT POR SU ID
     public function getProductById($id){
 
         $product = Product::find($id);
@@ -65,7 +74,7 @@ class ProductController extends Controller
         return response()->json($product, 200);
     }
 
-
+    // UPDATE PRODUCT POR SU ID
     public function updateProductById(Request $request, $id){
 
         $product = Product::find($id);
@@ -79,7 +88,7 @@ class ProductController extends Controller
             'description' => 'nullable|string',
             'category' => 'sometimes|string',
             'subcategory' => 'nullable|string',
-            'delivery_type' => 'in:digital,físico',
+            'delivery_type' => 'in:digital,physical',
             'price' => 'sometimes|numeric',
             'delivery_time' => 'sometimes|string',
             'image_url' => 'nullable|string',
@@ -98,12 +107,16 @@ class ProductController extends Controller
             $product->price = $request->price;
         }
 
+        if($request->has('delivery_type')){
+            $product->delivery_type = $request->delivery_type;
+        }
+
         $product->update();
 
         return response()->json(['message' => 'Product updated successfully'], 200);
     }
 
-    
+    // DELETE PRODUCT POR EL ID
     public function deleteProductById($id){
 
         $product = Product::find($id);
