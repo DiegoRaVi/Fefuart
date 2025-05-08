@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <a href="../index.html">Index</a>
+    <main>
+        <h1>Dibujo por encargo</h1>
+
+        <div>
+            <p>Creamos retratos únicos a partir de tus fotos más queridas. Imagina capturar la esencia de un momento significativo, 
+                transformándolo en una obra de arte que perdurará para siempre.
+            Ya sea un retrato familiar, una imagen de boda emotiva, el ramo de novia o un recuerdo especial, estamos aquí para convertirlo en una pieza única y personalizada.</p>
+        </div>
+
+        <div>
+            <form id="form-dibujo-encargo">
+                <label for="name">Nombre</label>
+                <input type="text" id="name" name="name" required>
+
+                <label for="description">Descripción</label>
+                <textarea id="description" name="description"></textarea>
+
+                <label for="quantity">Unidades</label>
+                <input type="number" id="quantity" name="quantity" min="1" value="1" required>
+
+                <label for="estilo">Estilo</label>
+                <select name="estilo" id="estilo">
+                    <option value="diseño-moda">Diseño de moda</option>
+                    <option value="acuarela">Acuarelas</option>
+                    <option value="digital">Digital</option>
+                </select>
+                
+                <label for="envio">Tipo de envío</label>
+                <select name="envio" id="envio">
+                    <option value="physical">Físico</option>
+                    <option value="digital">Digital</option>
+                </select>
+
+                <label for="image">Imagen</label>
+                <input type="file" id="image" name="image" required>
+
+                <label for="price">Precio:</label>
+                <p id="precio"></p>
+
+                <img id="product-image" src="" alt="Imagen del producto">
+            </form>
+        </div>
+    </main>
+</body>
+</html>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+        const form = document.getElementById('form-dibujo-encargo');
+        const productImage = document.getElementById('product-image');
+        const precio = document.getElementById('precio').value;
+        
+        let precioValor = 0;
+
+        precioValor.addEventListener("")
+
+        
+        form.addEventListener('change', (e) => {
+
+            const estilo = document.getElementById('estilo').value;
+            const envio = document.getElementById('envio').value;
+
+            if(estilo === 'diseño-moda'){
+                precioValor = 30;
+            }else if(estilo === 'acuarela'){
+                precioValor = 40;
+            }else if(estilo === 'digital'){
+                precioValor = 20;
+            }
+
+            if(envio === 'physical'){
+                precioValor += 10;
+            }
+
+            precio.textContent = `Precio: ${precioValor} €`;
+        });
+
+        form.addEventListener('submit', async (e) => {
+
+            e.preventDefault();
+
+            try {
+                const response = await fetch(API_URL + '/products', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({
+                        name: document.getElementById('name').value,
+                        description: document.getElementById('description').value,
+                        price: precioValor,
+                        quantity: document.getElementById('quantity').value,
+                        subcategory: document.getElementById('estilo').value,
+                        delivery_type: document.getElementById('envio').value,
+                        delivery_time: 15,
+                        image: document.getElementById('image').files[0],
+                        
+                    })
+                });
+
+                if (response.ok) {
+                    alert('Solicitud enviada con éxito!');
+                } else {
+                    throw new Error('Error al enviar la solicitud');
+                }
+            } catch (error) {
+                console.error(error);
+                alert('Hubo un error al enviar la solicitud. Por favor, inténtalo de nuevo más tarde.');
+            }
+        });
+    });
+</script>

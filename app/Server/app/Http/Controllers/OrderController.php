@@ -59,6 +59,33 @@ class OrderController extends Controller{
         return response()->json($orders, 200);
     }
 
+    public function getOrCreateCartOrder(Request $request){
+    $user = Auth::user();
+
+    if (!$user){
+        return response()->json(['message' => 'User not authenticated'], 401);
+    }
+
+    // Buscar una orden con estado 'cart' para el usuario logueado
+    $cartOrder = Order::where('user_id', $user->id)->where('status', 'cart')->first();
+
+    if ($cartOrder){
+        // Si existe una orden con estado 'cart', devolverla
+        return response()->json($cartOrder, 200);
+    }
+
+    // Si no existe, crear una nueva orden con estado 'cart'
+    $newOrder = Order::create([
+        'user_id' => $user->id,
+        'order_date' => now(),
+        'status' => 'cart',
+        'address' => $request->get('address', 'No address provided'), // Dirección opcional
+        'total' => 0, // Total inicial en 0
+    ]);
+
+    return response()->json($newOrder, 201);
+}
+
     // GET PENDING ORDERS
     public function getPendingOrders(){
 

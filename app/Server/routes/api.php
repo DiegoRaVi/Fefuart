@@ -22,6 +22,7 @@ Route::middleware([IsUserAuth::class])->group(function(){
 
     Route::controller(ProductController::class)->group(function(){
         Route::get('/products', 'getProducts');
+        Route::post('/products', 'addProduct');
     });
 
     Route::controller(EventController::class)->group(function(){
@@ -31,11 +32,12 @@ Route::middleware([IsUserAuth::class])->group(function(){
         Route::patch('/events/{id}', 'updateEvent');
     });
 
-    Route::controller(OrderController::class)->group(function () {
+    Route::controller(OrderController::class)->group(function(){
         Route::get('/order/{id}', 'getOrderById');
         Route::get('/user-orders', 'getOrdersByUserId');
         Route::get('/my-orders', 'getUserOrders');
         Route::post('/orders', 'addOrder');
+        Route::post('/cart-order', 'getOrCreateCartOrder');
     });  
 });
 
@@ -44,7 +46,7 @@ Route::middleware([IsUserAuth::class])->group(function(){
 Route::middleware([IsAdmin::class])->group(function(){
 
     Route::controller(ProductController::class)->group(function(){
-        Route::post('/products', 'addProduct');
+
         Route::get('/products/{id}', 'getProductById');
         Route::patch('/products/{id}', 'updateProductById');
         Route::delete('/products/{id}', 'deleteProductById');

@@ -88,6 +88,7 @@ class EventController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'phone' => 'nullable|string|regex:/^\+?[0-9\s\-()]*$/',
             'date' => 'required|date',
             'location' => 'required|string|max:255',
         ]);
@@ -95,6 +96,7 @@ class EventController extends Controller
         $event = Event::create([
             'title' => $request->title,
             'description' => $request->description,
+            'phone' => $request->phone,
             'date' => $request->date,
             'location' => $request->location,
             'status' => 'pending',

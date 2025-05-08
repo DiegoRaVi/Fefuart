@@ -14,7 +14,7 @@ return new class extends Migration{
         Schema::create('orders', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->date('order_date'); 
-            $table->enum('status', ['pending', 'paid', 'shipped', 'cancelled'])->default('pending');
+            $table->enum('status', ['cart','pending', 'paid', 'shipped', 'cancelled']);
             $table->string('address');
             $table->decimal('total', 10, 2);
             $table->timestamps();

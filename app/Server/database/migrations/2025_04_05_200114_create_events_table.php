@@ -15,8 +15,10 @@ return new class extends Migration
             $table->bigIncrements('id');
             $table->string('title');
             $table->text('description')->nullable();
+            $table->string('phone')->nullable();
             $table->date('date');
             $table->string('location');
+            $table->string('schedule',['morning','evening']);
             $table->enum('status', ['pending', 'confirmed', 'done'])->default('pending');
             $table->timestamps();
 

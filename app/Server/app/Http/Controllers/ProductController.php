@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
 class ProductController extends Controller
@@ -21,13 +22,18 @@ class ProductController extends Controller
             'subcategory' => 'nullable|string',
             'delivery_type' => 'required|in:digital,physical',
             'delivery_time' => 'required|string',
-            'image_url' => 'nullable|string',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'stock' => 'nullable|integer',
             'order_id' => 'required|exists:orders,id'
         ]);
 
         if($validator->fails()){
           return response()->json(['error' => $validator->errors()], 422);  
+        }
+
+        $imagePath = null;
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('uploads', 'public');
         }
 
         Product::create([
@@ -39,7 +45,7 @@ class ProductController extends Controller
             'subcategory'=> $request->get('subcategory'),
             'delivery_type'=> $request->get('delivery_type'),
             'delivery_time' => 'required|string',
-            'image_url'=> $request->get('image_url'),
+            'image_url'=> $imagePath,
             'stock'=> $request->get('stock'),
             'order_id' =>$request->order_id
         ]);

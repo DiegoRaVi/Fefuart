@@ -15,7 +15,7 @@ class AuthController extends Controller
 
         $validator = Validator::make($request->all(),[
             'name' => 'required|string|max:20',
-            'role' => 'required|string|in:admin,user',
+            
             'email' => 'required|string|email|min:10|max:50|unique:users',
             'password' => 'required|string|min:5|confirmed',
         ]);
@@ -26,7 +26,7 @@ class AuthController extends Controller
 
         User::create([
             'name'=> $request->get('name'),
-            'role'=> $request->get('role'),
+            'role'=> $request->get('role', 'user'),
             'email'=> $request->get('email'),
             'password'=> bcrypt($request->get('password')),
         ]);
@@ -53,7 +53,17 @@ class AuthController extends Controller
                 return response()->json(['error' => 'Invalid Credentials'], 401);
             }
 
-            return response()->json(['token' => $token], 200);
+            $user = Auth::user();
+
+            return response()->json([
+                'token' => $token,
+                'user' => [
+                    'name' => $user->name,
+                    'role' => $user->role
+                ]
+            ], 200);
+
+            //return response()->json(['token' => $token], 200);
 
         } catch (JWTException $e) {
             
