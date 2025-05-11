@@ -1,123 +1,195 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="../../config/config.js"></script>
     <title>Document</title>
-</head>
-<body>
+  </head>
+  <body>
     <a href="../index.html">Index</a>
     <main>
-        <h1>Dibujo por encargo</h1>
+      <h1>Dibujo por encargo</h1>
 
-        <div>
-            <p>Creamos retratos únicos a partir de tus fotos más queridas. Imagina capturar la esencia de un momento significativo, 
-                transformándolo en una obra de arte que perdurará para siempre.
-            Ya sea un retrato familiar, una imagen de boda emotiva, el ramo de novia o un recuerdo especial, estamos aquí para convertirlo en una pieza única y personalizada.</p>
-        </div>
+      <div>
+        <p>
+          Creamos retratos únicos a partir de tus fotos más queridas. Imagina
+          capturar la esencia de un momento significativo, transformándolo en
+          una obra de arte que perdurará para siempre. Ya sea un retrato
+          familiar, una imagen de boda emotiva, el ramo de novia o un recuerdo
+          especial, estamos aquí para convertirlo en una pieza única y
+          personalizada.
+        </p>
+      </div>
 
-        <div>
-            <form id="form-dibujo-encargo">
-                <label for="name">Nombre</label>
-                <input type="text" id="name" name="name" required>
+      <div>
+        <form id="form-dibujo-encargo">
+          <div class="form-group">
+            <label for="name">Nombre</label>
+            <input type="text" id="name" name="name" required />
+          </div>
 
-                <label for="description">Descripción</label>
-                <textarea id="description" name="description"></textarea>
+          <div class="form-group">
+            <label for="description">Descripción</label>
+            <textarea id="description" name="description"></textarea>
+          </div>
 
-                <label for="quantity">Unidades</label>
-                <input type="number" id="quantity" name="quantity" min="1" value="1" required>
+          <div class="form-group">
+            <label for="quantity">Unidades</label>
+            <input
+              type="number"
+              id="quantity"
+              name="quantity"
+              min="1"
+              value="1"
+              required
+            />
+          </div>
 
-                <label for="estilo">Estilo</label>
-                <select name="estilo" id="estilo">
-                    <option value="diseño-moda">Diseño de moda</option>
-                    <option value="acuarela">Acuarelas</option>
-                    <option value="digital">Digital</option>
-                </select>
-                
-                <label for="envio">Tipo de envío</label>
-                <select name="envio" id="envio">
-                    <option value="physical">Físico</option>
-                    <option value="digital">Digital</option>
-                </select>
+          <div class="form-group">
+            <label for="estilo">Estilo</label>
+            <select name="estilo" id="estilo"></select>
+          </div>
 
-                <label for="image">Imagen</label>
-                <input type="file" id="image" name="image" required>
+          <div class="form-group">
+            <label for="envio">Tipo de envío</label>
+            <select name="envio" id="envio">
+              <option value="physical">Físico (5€)</option>
+            </select>
+          </div>
 
-                <label for="price">Precio:</label>
-                <p id="precio"></p>
+          <div class="form-group">
+            <label for="image">Imagen</label>
+            <input type="file" id="image" name="image" required />
+          </div>
 
-                <img id="product-image" src="" alt="Imagen del producto">
-            </form>
-        </div>
+          <div class="form-group">
+            >
+            <p id="precio"></p>
+          </div>
+
+          <button type="submit">Enviar</button>
+        </form>
+      </div>
     </main>
-</body>
+  </body>
 </html>
 
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
+  document.addEventListener("DOMContentLoaded", async () => {
+    const form = document.getElementById("form-dibujo-encargo");
+    const productImage = document.getElementById("product-image");
+    const precio = document.getElementById("precio");
+    const estilo = document.getElementById("estilo");
+    const envio = document.getElementById("envio");
+    let precioValor = 0;
 
-        const form = document.getElementById('form-dibujo-encargo');
-        const productImage = document.getElementById('product-image');
-        const precio = document.getElementById('precio').value;
-        
-        let precioValor = 0;
-
-        precioValor.addEventListener("")
-
-        
-        form.addEventListener('change', (e) => {
-
-            const estilo = document.getElementById('estilo').value;
-            const envio = document.getElementById('envio').value;
-
-            if(estilo === 'diseño-moda'){
-                precioValor = 30;
-            }else if(estilo === 'acuarela'){
-                precioValor = 40;
-            }else if(estilo === 'digital'){
-                precioValor = 20;
-            }
-
-            if(envio === 'physical'){
-                precioValor += 10;
-            }
-
-            precio.textContent = `Precio: ${precioValor} €`;
-        });
-
-        form.addEventListener('submit', async (e) => {
-
-            e.preventDefault();
-
-            try {
-                const response = await fetch(API_URL + '/products', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    },
-                    body: JSON.stringify({
-                        name: document.getElementById('name').value,
-                        description: document.getElementById('description').value,
-                        price: precioValor,
-                        quantity: document.getElementById('quantity').value,
-                        subcategory: document.getElementById('estilo').value,
-                        delivery_type: document.getElementById('envio').value,
-                        delivery_time: 15,
-                        image: document.getElementById('image').files[0],
-                        
-                    })
-                });
-
-                if (response.ok) {
-                    alert('Solicitud enviada con éxito!');
-                } else {
-                    throw new Error('Error al enviar la solicitud');
-                }
-            } catch (error) {
-                console.error(error);
-                alert('Hubo un error al enviar la solicitud. Por favor, inténtalo de nuevo más tarde.');
+    const cartResponse = await fetch(API_URL +'/cart-order', {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
             }
         });
+
+        if (!cartResponse.ok) throw new Error('No se pudo obtener o crear la orden');
+
+        const cartOrder = await cartResponse.json();
+        const orderId = cartOrder.id;
+
+    estilo.innerHTML = `
+            <option selected disabled hidden>Selecciona un estilo</option>
+            <option value="diseño-moda">Diseño de moda (30€)</option>
+            <option value="acuarela">Acuarelas (40€)</option>
+            <option value="digital">Digital (20€)</option>`;
+
+    estilo.addEventListener("change", (e) => {
+      const estiloSeleccionado = estilo.value;
+
+      if (estiloSeleccionado === "digital") {
+        envio.innerHTML = `
+                    <option value="physical">Físico (5€)</option>
+                    <option value="digital">Digital (Envío gratuito)</option>`;
+      } else {
+        envio.innerHTML = `<option value="physical">Físico (5€)</option>`;
+      }
     });
+
+    form.addEventListener("change", (e) => {
+      const estilo = document.getElementById("estilo").value;
+      const envio = document.getElementById("envio").value;
+      const quantity = document.getElementById("quantity").value;
+
+      if (estilo === "diseño-moda") {
+        precioValor = 30;
+      } else if (estilo === "acuarela") {
+        precioValor = 40;
+      } else if (estilo === "digital") {
+        precioValor = 20;
+      }
+
+      if (envio === "physical") {
+        precioValor += 5;
+      }
+      precioValor *= quantity;
+      precio.textContent = `Precio: ${precioValor} €`;
+    });
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const formData = new FormData();
+
+      formData.append("name", document.getElementById("name").value);
+      formData.append("description",document.getElementById("description").value);
+      formData.append("price", precioValor);
+      formData.append("quantity", document.getElementById("quantity").value);
+      formData.append("category", "dibujo-encargo"); // <-- Asegúrate de incluir esto o cambiar el validator
+      formData.append("subcategory", document.getElementById("estilo").value);
+      formData.append("delivery_type", document.getElementById("envio").value);
+      formData.append("delivery_time", "15"); // Puedes hacerlo dinámico si quieres
+      formData.append("image", document.getElementById("image").files[0]);
+      formData.append("order_id", orderId); // <-- Aquí pon el ID que hayas recuperado previamente
+
+      try {
+
+        const response = await fetch(API_URL + "/products", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: formData,
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          alert("Producto enviado con éxito!");
+          
+          if (result.product?.image_url) {
+            const img = document.getElementById('preview');
+            img.src = `${API_URL}/${result.product.image_url}`;
+          }
+
+        } else {
+          const err = await response.json();
+          console.error(err);
+          alert("Error al enviar el producto");
+        }
+      } catch (error) {
+        console.error(error);
+        alert("Hubo un error al enviar la solicitud.");
+      }
+    });
+  });
 </script>
+
+<style>
+  #form-dibujo-encargo {
+    border: solid 1px black;
+    display: flex;
+    flex-direction: column;
+    width: 300px;
+    margin: 0 auto;
+    gap: 10px;
+  }
+</style>

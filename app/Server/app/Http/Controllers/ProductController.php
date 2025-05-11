@@ -6,6 +6,7 @@ use App\Models\Order;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 class ProductController extends Controller
@@ -44,10 +45,10 @@ class ProductController extends Controller
             'category'=> $request->get('category'),
             'subcategory'=> $request->get('subcategory'),
             'delivery_type'=> $request->get('delivery_type'),
-            'delivery_time' => 'required|string',
+            'delivery_time' => $request->get('delivery_time'),
             'image_url'=> $imagePath,
             'stock'=> $request->get('stock'),
-            'order_id' =>$request->order_id
+            'order_id' => $request->get('order_id')
         ]);
         return response()->json(['message' => 'Product added successfully'], 201);
     }
@@ -131,9 +132,14 @@ class ProductController extends Controller
             return response()->json(['message' => 'Product not found', 404]);
         }
 
+        // Si hay imagen, eliminarla del disco
+        if ($product->image_url && Storage::disk('public')->exists($product->image_url)) {
+            Storage::disk('public')->delete($product->image_url);
+        }
+
         $product->delete();
 
         return response()->json(['message' => 'Product deleted successfully'], 200);
-    
+        
     }
 }

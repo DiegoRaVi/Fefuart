@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('category');
             $table->string('subcategory')->nullable();
             $table->enum('delivery_type', ['digital', 'physical']);
-            $table->string('delivery_time');
+            $table->string('delivery_time')->default('15');
             $table->string('image_url')->nullable();
             $table->integer('stock')->nullable();
             $table->timestamps();
