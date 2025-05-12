@@ -10,21 +10,21 @@
   <body>
     <a href="../index.html">Index</a>
     <main>
-      <h1>Dibujo por encargo</h1>
+      <h1>Ramos dibujados</h1>
 
       <div>
         <p>
-          Creamos retratos únicos a partir de tus fotos más queridas. Imagina
-          capturar la esencia de un momento significativo, transformándolo en
-          una obra de arte que perdurará para siempre. Ya sea un retrato
-          familiar, una imagen de boda emotiva, el ramo de novia o un recuerdo
-          especial, estamos aquí para convertirlo en una pieza única y
-          personalizada.
+          Si quieres sorprender a tu amiga, pareja o hermana después de su boda,
+          este es el regalo ideal. Un detalle único para inmortalizar el ramo de
+          novia y convertirlo en una obra de arte atemporal. Con un diseño
+          delicado y lleno de detalles, este ramo dibujado captura la esencia y
+          la belleza de ese momento tan especial, preservando para siempre la
+          memoria de un día inolvidable.
         </p>
       </div>
 
       <div>
-        <form id="form-dibujo-encargo">
+        <form id="form-ramo-flores">
           <div class="form-group">
             <label for="name">Nombre</label>
             <input type="text" id="name" name="name" required />
@@ -48,11 +48,6 @@
           </div>
 
           <div class="form-group">
-            <label for="estilo">Estilo</label>
-            <select name="estilo" id="estilo"></select>
-          </div>
-
-          <div class="form-group">
             <label for="envio">Tipo de envío</label>
             <select name="envio" id="envio">
               <option value="physical">Físico (5€)</option>
@@ -65,7 +60,6 @@
           </div>
 
           <div class="form-group">
-            
             <p id="precio"></p>
           </div>
 
@@ -78,57 +72,29 @@
 
 <script>
   document.addEventListener("DOMContentLoaded", async () => {
-    const form = document.getElementById("form-dibujo-encargo");
+    const form = document.getElementById("form-ramo-flores");
     const productImage = document.getElementById("product-image");
     const precio = document.getElementById("precio");
-    const estilo = document.getElementById("estilo");
     const envio = document.getElementById("envio");
     let precioValor = 0;
-    let orderId = null;
 
-   try {
+    try {
     // Intentar obtener la cart order existente
 
     const cartOrder = await cart();
     orderId = cartOrder.id;
-
-    estilo.innerHTML = `
-            <option selected disabled hidden>Selecciona un estilo</option>
-            <option value="diseño-moda">Diseño de moda (30€)</option>
-            <option value="acuarela">Acuarelas (40€)</option>
-            <option value="digital">Digital (20€)</option>`;
-
-    estilo.addEventListener("change", (e) => {
-      const estiloSeleccionado = estilo.value;
-
-      if (estiloSeleccionado === "digital") {
-        envio.innerHTML = `
-                    <option value="physical">Físico (5€)</option>
-                    <option value="digital">Digital (Envío gratuito)</option>`;
-      } else {
-        envio.innerHTML = `<option value="physical">Físico (5€)</option>`;
-      }
-    });
+    
 
     form.addEventListener("change", (e) => {
-      const estilo = document.getElementById("estilo").value;
       const envio = document.getElementById("envio").value;
       const quantity = document.getElementById("quantity").value;
 
-      if (estilo === "diseño-moda") {
-        precioValor = 30;
-      } else if (estilo === "acuarela") {
-        precioValor = 40;
-      } else if (estilo === "digital") {
-        precioValor = 20;
-      }
-
-      precioValor *= quantity;
+      precioValor = 40;
 
       if (envio === "physical") {
         precioValor += 5;
       }
-
+      precioValor *= quantity;
       precio.textContent = `Precio: ${precioValor} €`;
     });
 
@@ -138,18 +104,19 @@
       const formData = new FormData();
 
       formData.append("name", document.getElementById("name").value);
-      formData.append("description",document.getElementById("description").value);
+      formData.append(
+        "description",
+        document.getElementById("description").value
+      );
       formData.append("price", precioValor);
       formData.append("quantity", document.getElementById("quantity").value);
-      formData.append("category", "dibujo-encargo");
-      formData.append("subcategory", document.getElementById("estilo").value);
+      formData.append("category", "ramo-flores");
       formData.append("delivery_type", document.getElementById("envio").value);
       formData.append("delivery_time", "15");
       formData.append("image", document.getElementById("image").files[0]);
       formData.append("order_id", orderId);
 
       try {
-
         const response = await fetch(API_URL + "/products", {
           method: "POST",
           headers: {
@@ -167,9 +134,9 @@
             const img = document.getElementById("preview");
             img.src = `${API_URL}/${result.product.image_url}`;
           }
-
         } else {
-          console.error(result); // Usa el resultado ya obtenido
+          const err = await response.json();
+          console.error(err);
           alert("Error al enviar el producto");
         }
       } catch (error) {
@@ -177,7 +144,7 @@
         alert("Hubo un error al enviar la solicitud.");
       }
     });
-   }catch (error) {
+    }catch (error) {
       console.error("Error en la inicialización del formulario:", error);
       alert("Hubo un problema al cargar la página. Inténtalo más tarde.");
     }

@@ -59,7 +59,7 @@ class OrderController extends Controller{
         return response()->json($orders, 200);
     }
 
-    public function getOrCreateCartOrder(Request $request){
+    public function getCartOrder(){
     $user = Auth::user();
 
     if (!$user){
@@ -72,18 +72,20 @@ class OrderController extends Controller{
     if ($cartOrder){
         // Si existe una orden con estado 'cart', devolverla
         return response()->json($cartOrder, 200);
+    }else{
+        return response()->json(['message' => 'No cart order found'], 404);
     }
 
-    // Si no existe, crear una nueva orden con estado 'cart'
-    $newOrder = Order::create([
-        'user_id' => $user->id,
-        'order_date' => now(),
-        'status' => 'cart',
-        'address' => $request->get('address', 'No address provided'), // Dirección opcional
-        'total' => 0, // Total inicial en 0
-    ]);
+    // // Si no existe, crear una nueva orden con estado 'cart'
+    // $newOrder = Order::create([
+    //     'user_id' => $user->id,
+    //     'order_date' => now(),
+    //     'status' => 'cart',
+    //     'address' => $request->get('address', 'No address provided'), // Dirección opcional
+    //     'total' => 0, // Total inicial en 0
+    // ]);
 
-    return response()->json($newOrder, 201);
+    // return response()->json($newOrder, 201);
 }
 
     // GET PENDING ORDERS
@@ -109,21 +111,22 @@ class OrderController extends Controller{
             return response()->json(['message' => 'User not authenticated'], 401);
         }
     
-        $request->validate([
-            'order_date' => 'required|date|after_or_equal:today',
-            'address' => 'required|string|max:255',
-            'total' => 'required|numeric|min:0',
-            //'user_id' => 'required|exists:users,id'
-        ]);
+        // $request->validate([
+        //     'order_date' => 'required|date|after_or_equal:today',
+        //     'address' => 'required|string|max:255',
+        //     'total' => 'required|numeric|min:0',
+        //     //'user_id' => 'required|exists:users,id'
+        // ]);
     
-        Order::create([
-            'user_id' => $user->id,
-            'order_date' => $request->order_date,
-            'status' => 'pending',
-            'address' => $request->address,
-            'total' => $request->total,
-        ]);
-        return response()->json(['message' => 'Order created successfully'], 201);
+        $newOrder = Order::create([
+        'user_id' => $user->id,
+        'order_date' => now(),
+        'status' => 'cart',
+        'address' => $request->get('address', 'No address provided'),
+        'total' => 0,
+     ]);
+
+     return response()->json($newOrder, 201);
     }
 
     // UPDATE ORDER POR ID

@@ -36,8 +36,8 @@ Route::middleware([IsUserAuth::class])->group(function(){
         Route::get('/order/{id}', 'getOrderById');
         Route::get('/user-orders', 'getOrdersByUserId');
         Route::get('/my-orders', 'getUserOrders');
-        Route::post('/orders', 'addOrder');
-        Route::post('/cart-order', 'getOrCreateCartOrder');
+        Route::post('/cart-order', 'addOrder');
+        Route::get('/cart-order', 'getCartOrder');
     });  
 });
 

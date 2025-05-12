@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="../../config/config.js"></script>
+    <script src="../../js/order.js"></script>
+    <title>Document</title>
+  </head>
+  <body>
+    <a href="../index.html">Index</a>
+    <main>
+      <h1>Letras infantiles</h1>
+
+      <div>
+        <p>
+          Letras ilustradas para regalar a los papás y mamás de los peques. 
+
+Podrás elegir la gama de colores y la temática de la letra.
+        </p>
+      </div>
+
+      <div>
+        <form id="form-letras-infantiles">
+          <div class="form-group">
+            <label for="name">Nombre</label>
+            <input type="text" id="name" name="name" required />
+          </div>
+
+          <div class="form-group">
+            <label for="letra">Letra</label>
+            <input type="text" id="letra" name="letra" required />
+          </div>
+
+          <div class="form-group">
+            <label for="letra-colores">Colores</label>
+            <input
+              type="text"
+              id="letra-colores"
+              name="letra-colores"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="letras-tematica">Temática</label>
+            <input
+              type="text"
+              id="letras-tematica"
+              name="letras-tematica"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="quantity">Unidades</label>
+            <input
+              type="number"
+              id="quantity"
+              name="quantity"
+              min="1"
+              value="1"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="envio">Tipo de envío</label>
+            <select name="envio" id="envio">
+              <option value="physical">Físico (5€)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <p id="precio"></p>
+          </div>
+
+          <button type="submit">Enviar</button>
+        </form>
+      </div>
+    </main>
+  </body>
+</html>
+
+<script>
+  document.addEventListener("DOMContentLoaded", async () => {
+    const form = document.getElementById("form-letras-infantiles");
+    const productImage = document.getElementById("product-image");
+    const precio = document.getElementById("precio");
+    const envio = document.getElementById("envio");
+    let precioValor = 0;
+
+    form.addEventListener("change", async (e) => {
+      e.preventDefault();
+      const envio = document.getElementById("envio").value;
+      const quantity = document.getElementById("quantity").value;
+
+      precioValor = 40;
+
+      precioValor *= quantity;
+
+      if (envio === "physical") {
+        precioValor += 5;
+      }
+      precio.textContent = `Precio: ${precioValor} €`;
+    });
+
+    const quantity = document.getElementById("quantity").value;
+
+    precioValor = 40;
+
+    if (envio === "physical") {
+      precioValor += 5;
+    }
+    precioValor *= quantity;
+    precio.textContent = `Precio: ${precioValor} €`;
+
+    try {
+      const cartOrder = await cart();
+      orderId = cartOrder.id;
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const description = `Letra: ${document.getElementById("letra").value}, 
+        Colores: ${document.getElementById("letra-colores").value}, Tematica: ${
+          document.getElementById("letras-tematica").value
+        }`;
+
+        const formData = new FormData();
+
+        formData.append("name", document.getElementById("name").value);
+        formData.append("description", description);
+        formData.append("price", precioValor);
+        formData.append("quantity", document.getElementById("quantity").value);
+        formData.append("category", "letras-infantiles");
+        formData.append(
+          "delivery_type",
+          document.getElementById("envio").value
+        );
+        formData.append("delivery_time", "10");
+        formData.append("order_id", orderId);
+
+        try {
+          const response = await fetch(API_URL + "/products", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+            body: formData,
+          });
+
+          const result = await response.json();
+
+          if (response.ok) {
+            console.log(result);
+          } else {
+            const err = await response.json();
+            console.error(err);
+          }
+        } catch (error) {
+          console.error(error);
+          alert("Hubo un error al enviar la solicitud.");
+        }
+      });
+    } catch (error) {
+      console.error("Error en la inicialización del formulario:", error);
+      alert("Hubo un problema al cargar la página. Inténtalo más tarde.");
+    }
+  });
+</script>
+
+<style>
+  #form-dibujo-encargo {
+    border: solid 1px black;
+    display: flex;
+    flex-direction: column;
+    width: 300px;
+    margin: 0 auto;
+    gap: 10px;
+  }
+</style>
