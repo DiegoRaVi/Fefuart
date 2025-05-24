@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <script src="../config/config.js"></script>
+  </head>
+  <body>
+    <h1 id="fefuart"><a href="../views/index.html">FEFUART</a></h1>
+    <aside>
+      <button id="orders">PEDIDOS</button>
+      <button id="events">EVENTOS</button>
+    </aside>
+    <main id="content"></main>
+  </body>
+</html>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    console.log(API_URL);
+    const ordersButton = document.getElementById("orders");
+    const eventsButton = document.getElementById("events");
+    const content = document.getElementById("content");
+
+    ordersButton.addEventListener("click", () => {
+      content.innerHTML = `<button id="pending-orders">Pedidos pendientes</button>
+                <button id="completed-orders">Pedidos completados</button>
+                <button id="paid-orders">Pedidos pagados</button>
+                <button id="shipped-orders">Pedidos enviados</button>
+                <button id="cancelled-orders">Pedidos cancelados</button>`;
+
+      const pendingOrdersButton = document.getElementById("pending-orders");
+      const completedOrdersButton = document.getElementById("completed-orders");
+      const paidOrdersButton = document.getElementById("paid-orders");
+      const shippedOrdersButton = document.getElementById("shipped-orders");
+      const cancelledOrdersButton = document.getElementById("cancelled-orders");
+    });
+
+    eventsButton.addEventListener("click", () => {
+      content.innerHTML = `<button id="pending-events">Eventos pendientes</button>
+                <button id="confirmed-events">Eventos confirmados</button>
+                <button id="rejected-events">Eventos rechazados</button>
+                <button id="done-events">Eventos completados</button>`;
+
+      const pendingEventsButton = document.getElementById("pending-events");
+      const confirmedEventsButton = document.getElementById("confirmed-events");
+      const rejectedEventsButton = document.getElementById("rejected-events");
+      const doneEventsButton = document.getElementById("done-events");
+
+        pendingEventsButton.addEventListener("click", async () => {
+            content.innerHTML = `<h2>Eventos pendientes</h2>`;
+            const response = await fetch(API_URL+'/events/pending',
+                {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    }
+                });
+            const pendingEvents = await response.json();
+            if (!response.ok) {
+                content.innerHTML += `<p style="color:red;">${response.message}</p>`;
+                return;
+            }
+            pendingEvents.forEach(event => {
+                const eventElement = document.createElement("div");
+                eventElement.classList.add("event");
+                eventElement.innerHTML = `
+                    <h3>Título: ${event.title}</h3>
+                    <p>Descripción: ${event.description}</p>
+                    <p>Teléfono: ${event.phone}</p>
+                    <p>Fecha: ${event.date}</p>
+                    <p>Ubicación: ${event.location}</p>
+                    <p>Horario: ${event.schedule}</p>
+                `;
+                const confirmButton = document.createElement("button");
+                confirmButton.textContent = "Confirmar";
+                confirmButton.addEventListener("click", async () => {
+                    const response = await fetch(API_URL + '/events/' + event.id, {
+                        method: 'PATCH',
+                        headers: {
+                            'Authorization': 'Bearer ' + localStorage.getItem('token'),
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ status: 'confirmed' })
+                    });
+                    if (response.ok) {
+                        eventElement.innerHTML += `<p style="color:green;">Evento confirmado</p>`;
+                    } else {
+                        eventElement.innerHTML += `<p style="color:red;">Error al confirmar el evento</p>`;
+                    }
+                });
+
+                const rejectButton = document.createElement("button");
+                rejectButton.textContent = "Rechazar";
+                rejectButton.addEventListener("click", async () => {
+                    const response = await fetch(API_URL + '/events/' + event.id, {
+                        method: 'PATCH',
+                        headers: {
+                            'Authorization': 'Bearer ' + localStorage.getItem('token'),
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ status: 'rejected' })
+                    });
+                    if (response.ok) {
+                        eventElement.innerHTML += `<p style="color:red;">Evento rechazado</p>`;
+                    } else {
+                        eventElement.innerHTML += `<p style="color:red;">Error al rechazar el evento</p>`;
+                    }
+                });
+
+                eventElement.appendChild(confirmButton);
+                eventElement.appendChild(rejectButton);
+                content.appendChild(eventElement);
+            });
+        });
+        confirmedEventsButton.addEventListener("click", async () => {
+            content.innerHTML = `<h2>Eventos confirmados</h2>`;
+            const response = await fetch(API_URL+'/events/confirmed', {
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                }
+            });
+            const confirmedEvents = await response.json();
+            if (!response.ok) {
+                content.innerHTML += `<p style="color:red;">${response.message}</p>`;
+                return;
+            }
+            confirmedEvents.forEach(event => {
+                const eventElement = document.createElement("div");
+                eventElement.classList.add("event");
+                eventElement.innerHTML = `
+                    <h3>Título: ${event.title}</h3>
+                    <p>Descripción: ${event.description}</p>
+                    <p>Teléfono: ${event.phone}</p>
+                    <p>Fecha: ${event.date}</p>
+                    <p>Ubicación: ${event.location}</p>
+                    <p>Horario: ${event.schedule}</p>
+                `;
+                content.appendChild(eventElement);
+            });
+        });
+        rejectedEventsButton.addEventListener("click", async () => {
+            content.innerHTML = `<h2>Eventos rechazados</h2>`;
+            const response = await fetch(API_URL + '/events/rejected', {
+                headers: {
+                    Authorization: 'Bearer ' + localStorage.getItem('token')
+                },
+                method: 'GET',
+            });
+            const rejectedEvents = await response.json();
+            if (!response.ok) {
+                content.innerHTML += `<p style="color:red;">${response.message}</p>`;
+                return;
+            }
+            rejectedEvents.forEach(event => {
+                const eventElement = document.createElement("div");
+                eventElement.classList.add("event");
+                eventElement.innerHTML = `
+                    <h3>Título: ${event.title}</h3>
+                    <p>Descripción: ${event.description}</p>
+                    <p>Teléfono: ${event.phone}</p>
+                    <p>Fecha: ${event.date}</p>
+                    <p>Ubicación: ${event.location}</p>
+                    <p>Horario: ${event.schedule}</p>
+                `;
+                content.appendChild(eventElement);
+            });
+        });
+        doneEventsButton.addEventListener("click", async () => {
+            content.innerHTML = `<h2>Eventos completados</h2>`;
+            const response = await fetch(API_URL + '/events/done', {
+                headers: {
+                    Authorization: 'Bearer ' + localStorage.getItem('token')
+                },
+                method: 'GET',
+            });
+
+            const doneEvents = await response.json();
+            console.log(doneEvents);
+            if (!response.ok) {
+            // Mostrar mensaje de error si el servidor responde con 403 o 404
+            content.innerHTML += `<p style="color:red;">${response.message}</p>`;
+            return;
+            }
+            
+            doneEvents.forEach(event => {
+                const eventElement = document.createElement("div");
+                eventElement.classList.add("event");
+                eventElement.innerHTML = `
+                    <h3>Título: ${event.title}</h3>
+                    <p>Descripción: ${event.description}</p>
+                    <p>Teléfono: ${event.phone}</p>
+                    <p>Fecha: ${event.date}</p>
+                    <p>Ubicación: ${event.location}</p>
+                    <p>Horario: ${event.schedule}</p>
+                `;
+                content.appendChild(eventElement);
+            });
+        });
+    });
+  });
+</script>

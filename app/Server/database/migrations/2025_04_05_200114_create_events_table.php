@@ -18,8 +18,8 @@ return new class extends Migration
             $table->string('phone')->nullable();
             $table->date('date');
             $table->string('location');
-            $table->string('schedule',['morning','evening']);
-            $table->enum('status', ['pending', 'confirmed', 'done'])->default('pending');
+            $table->enum('schedule',['morning','evening']);
+            $table->enum('status', ['pending', 'confirmed', 'rejected', 'done'])->default('pending');
             $table->timestamps();
 
             $table->unsignedBigInteger('user_id');

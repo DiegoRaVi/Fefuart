@@ -53,10 +53,13 @@ Route::middleware([IsAdmin::class])->group(function(){
     });
 
     Route::controller(EventController::class)->group(function(){
-        Route::get('/events','getEvents');
-        Route::get('/events/{id}', 'getEventById');
-        Route::get('/events/accepted','getAcceptedEvents');
+        Route::get('/events/confirmed','getConfirmedEvents');
         Route::get('/events/pending','getPendingEvents');
+        Route::get('/events/rejected','getRejectedEvents');
+        Route::get('/events/done','getDoneEvents');
+        Route::get('/events','getEvents'); 
+        Route::get('/events/{id}', 'getEventById');
+        
         Route::patch('/events/{id}', 'updateEventById');
         Route::delete('/events/{id}','deleteEventById');
     });

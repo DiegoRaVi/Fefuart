@@ -1,0 +1,185 @@
+<header>
+  <nav>
+    <h1 id="fefuart"><a href="../views/index.html">FEFUART</a></h1>
+
+    <div id="menu">
+      <ul>
+        <li><a href="./services.html">Servicios</a></li>
+        <li><a href="#about">Galería</a></li>
+        <li><a href="#services">Contacto</a></li>
+        <li><a href="#contact">About</a></li>
+        <li id="admin"><a href="../views/admin.html" style="font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;">F</a></li>
+      </ul>
+    </div>
+
+    <div id="auth">
+      <div class="auth-item">
+        <img src="../img/login.png" alt="Login" />
+        <a href="./login.html">Login</a>
+      </div>
+      <div class="auth-item">
+        <a href="./register.html">Registrarse</a>
+      </div>
+    </div>
+
+    <!-- 🔽 Carrito -->
+    <div id="cart-container">
+      <div id="cart-icon">
+        <img src="../img/carrito.png" alt="Carrito" />
+      </div>
+      <div id="cart-panel">
+        <h3>Tu carrito</h3>
+        <ul id="cart-items">
+          <li>Producto de ejemplo 1</li>
+          <li>Producto de ejemplo 2</li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+</header>
+
+<style>
+  * {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Segoe UI", sans-serif;
+}
+
+/* Header general */
+header {
+  background-color: #111;
+  color: white;
+  padding: 1rem 2rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+nav {
+  display: flex;
+  align-items: center;
+  justify-content:space-between;
+  flex-wrap: wrap;
+}
+
+/* Logo */
+#fefuart {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #fefefe;
+}
+
+/* Admin */
+#admin{
+  display: none;
+}
+
+/* Menú principal */
+#menu ul {
+  list-style: none;
+  display: flex;
+  gap: 1.5rem;
+}
+
+#menu ul li a {
+  color: white;
+  text-decoration: none;
+  font-size: 1rem;
+  transition: color 0.3s;
+}
+
+#menu ul li a:hover {
+  color: #f39c12;
+}
+
+/* Login / Register */
+#auth {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.auth-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.auth-item img {
+  width: 24px;
+  height: 24px;
+}
+
+/* Carrito */
+#cart-container {
+  position: relative;
+  margin-left: 1rem;
+}
+
+#cart-icon img {
+  width: 28px;
+  cursor: pointer;
+  transition: transform 0.3s;
+}
+
+#cart-icon img:hover {
+  transform: scale(1.1);
+}
+
+#cart-panel {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: 35px;
+  width: 250px;
+  background-color: white;
+  color: black;
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+  z-index: 100;
+}
+
+#cart-panel.show {
+  display: block;
+}
+
+#cart-panel h3 {
+  margin-bottom: 0.5rem;
+  font-size: 1.2rem;
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 0.5rem;
+}
+
+#cart-panel ul {
+  list-style: none;
+  padding: 0;
+}
+
+#cart-panel li {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #eee;
+  font-size: 0.95rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  nav {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  #menu ul {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  #auth {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+</style>

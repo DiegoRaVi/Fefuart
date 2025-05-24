@@ -1,4 +1,5 @@
-async function cart(){
+export async function cart(){
+
     const cartResponse = await fetch(API_URL + "/cart-order", {
       method: "GET",
       headers: {

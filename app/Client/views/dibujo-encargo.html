@@ -3,12 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <script src="../../config/config.js"></script>
-    <script src="../../js/order.js"></script>
+    <script src="../config/config.js" defer></script>
+    <script type="module" src="../js/main.js"></script>
     <title>Document</title>
   </head>
   <body>
-    <a href="../index.html">Index</a>
+    <div id="header-placeholder" style="background-color: lightcoral;"></div>
     <main>
       <h1>Dibujo por encargo</h1>
 
@@ -76,7 +76,10 @@
   </body>
 </html>
 
-<script>
+<script type="module">
+  import { getUser, isAuthenticated } from "../js/auth.js";
+  import { cart } from "../js/order.js";
+
   document.addEventListener("DOMContentLoaded", async () => {
     const form = document.getElementById("form-dibujo-encargo");
     const productImage = document.getElementById("product-image");
@@ -86,98 +89,106 @@
     let precioValor = 0;
     let orderId = null;
 
-   try {
-    // Intentar obtener la cart order existente
-
-    const cartOrder = await cart();
-    orderId = cartOrder.id;
-
-    estilo.innerHTML = `
+    try {
+      // Intentar obtener la cart order existente
+      estilo.innerHTML = `
             <option selected disabled hidden>Selecciona un estilo</option>
             <option value="diseño-moda">Diseño de moda (30€)</option>
             <option value="acuarela">Acuarelas (40€)</option>
             <option value="digital">Digital (20€)</option>`;
 
-    estilo.addEventListener("change", (e) => {
-      const estiloSeleccionado = estilo.value;
+      estilo.addEventListener("change", (e) => {
+        const estiloSeleccionado = estilo.value;
 
-      if (estiloSeleccionado === "digital") {
-        envio.innerHTML = `
+        if (estiloSeleccionado === "digital") {
+          envio.innerHTML = `
                     <option value="physical">Físico (5€)</option>
                     <option value="digital">Digital (Envío gratuito)</option>`;
-      } else {
-        envio.innerHTML = `<option value="physical">Físico (5€)</option>`;
-      }
-    });
-
-    form.addEventListener("change", (e) => {
-      const estilo = document.getElementById("estilo").value;
-      const envio = document.getElementById("envio").value;
-      const quantity = document.getElementById("quantity").value;
-
-      if (estilo === "diseño-moda") {
-        precioValor = 30;
-      } else if (estilo === "acuarela") {
-        precioValor = 40;
-      } else if (estilo === "digital") {
-        precioValor = 20;
-      }
-
-      precioValor *= quantity;
-
-      if (envio === "physical") {
-        precioValor += 5;
-      }
-
-      precio.textContent = `Precio: ${precioValor} €`;
-    });
-
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-
-      const formData = new FormData();
-
-      formData.append("name", document.getElementById("name").value);
-      formData.append("description",document.getElementById("description").value);
-      formData.append("price", precioValor);
-      formData.append("quantity", document.getElementById("quantity").value);
-      formData.append("category", "dibujo-encargo");
-      formData.append("subcategory", document.getElementById("estilo").value);
-      formData.append("delivery_type", document.getElementById("envio").value);
-      formData.append("delivery_time", "15");
-      formData.append("image", document.getElementById("image").files[0]);
-      formData.append("order_id", orderId);
-
-      try {
-
-        const response = await fetch(API_URL + "/products", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-          body: formData,
-        });
-
-        const result = await response.json();
-
-        if (response.ok) {
-          alert("Producto enviado con éxito!");
-
-          if (result.product?.image_url) {
-            const img = document.getElementById("preview");
-            img.src = `${API_URL}/${result.product.image_url}`;
-          }
-
         } else {
-          console.error(result); // Usa el resultado ya obtenido
-          alert("Error al enviar el producto");
+          envio.innerHTML = `<option value="physical">Físico (5€)</option>`;
         }
-      } catch (error) {
-        console.error(error);
-        alert("Hubo un error al enviar la solicitud.");
-      }
-    });
-   }catch (error) {
+      });
+
+      form.addEventListener("change", (e) => {
+        const estilo = document.getElementById("estilo").value;
+        const envio = document.getElementById("envio").value;
+        const quantity = document.getElementById("quantity").value;
+
+        if (estilo === "diseño-moda") {
+          precioValor = 30;
+        } else if (estilo === "acuarela") {
+          precioValor = 40;
+        } else if (estilo === "digital") {
+          precioValor = 20;
+        }
+
+        precioValor *= quantity;
+
+        if (envio === "physical") {
+          precioValor += 5;
+        }
+
+        precio.textContent = `Precio: ${precioValor} €`;
+      });
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        if (!isAuthenticated()) {
+          location.href = "./login.html";
+          return;
+        }else{
+          const cartOrder = await cart();
+          orderId = cartOrder.id;
+        }
+
+        const formData = new FormData();
+
+        formData.append("name", document.getElementById("name").value);
+        formData.append(
+          "description",
+          document.getElementById("description").value
+        );
+        formData.append("price", precioValor);
+        formData.append("quantity", document.getElementById("quantity").value);
+        formData.append("category", "dibujo-encargo");
+        formData.append("subcategory", document.getElementById("estilo").value);
+        formData.append(
+          "delivery_type",
+          document.getElementById("envio").value
+        );
+        formData.append("delivery_time", "15");
+        formData.append("image", document.getElementById("image").files[0]);
+        formData.append("order_id", orderId);
+
+        try {
+          const response = await fetch(API_URL + "/products", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+            body: formData,
+          });
+
+          const result = await response.json();
+
+          if (response.ok) {
+            alert("Producto enviado con éxito!");
+
+            if (result.product?.image_url) {
+              const img = document.getElementById("preview");
+              img.src = `${API_URL}/${result.product.image_url}`;
+            }
+          } else {
+            console.error(result); // Usa el resultado ya obtenido
+            alert("Error al enviar el producto");
+          }
+        } catch (error) {
+          console.error(error);
+          alert("Hubo un error al enviar la solicitud.");
+        }
+      });
+    } catch (error) {
       console.error("Error en la inicialización del formulario:", error);
       alert("Hubo un problema al cargar la página. Inténtalo más tarde.");
     }
