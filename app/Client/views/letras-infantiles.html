@@ -9,15 +9,14 @@
     <title>Document</title>
   </head>
   <body>
-    <div id="header-placeholder" style="background-color: lightcoral;"></div>
+    <div id="header-placeholder" style="background-color: lightcoral"></div>
     <main>
       <h1>Letras infantiles</h1>
 
       <div>
         <p>
-          Letras ilustradas para regalar a los papás y mamás de los peques. 
-
-Podrás elegir la gama de colores y la temática de la letra.
+          Letras ilustradas para regalar a los papás y mamás de los peques.
+          Podrás elegir la gama de colores y la temática de la letra.
         </p>
       </div>
 
@@ -63,6 +62,11 @@ Podrás elegir la gama de colores y la temática de la letra.
               value="1"
               required
             />
+          </div>
+
+          <div class="form-group">
+            <label for="address">Dirección de envío</label>
+            <input type="text" id="address" name="address" required />
           </div>
 
           <div class="form-group">
@@ -124,12 +128,23 @@ Podrás elegir la gama de colores y la temática de la letra.
       form.addEventListener("submit", async (e) => {
         e.preventDefault();
 
+        const address = document.getElementById("address").value;
+
         if (!isAuthenticated()) {
           location.href = "./login.html";
           return;
-        }else{
+        } else {
           const cartOrder = await cart();
           orderId = cartOrder.id;
+
+          const response = await fetch(`${API_URL}/orders/${orderId}`, {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: "Bearer " + localStorage.getItem("token"),
+            },
+            body: JSON.stringify({ address: address }),
+          });
         }
 
         const description = `Letra: ${document.getElementById("letra").value}, 

@@ -1,4 +1,5 @@
 import { getUser, isAuthenticated } from './auth.js';
+import { loadCartItems } from './order.js';
 
 document.addEventListener("DOMContentLoaded", async () => {
   const placeholder = document.getElementById("header-placeholder");
@@ -15,6 +16,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (icon && panel) {
       icon.addEventListener("click", () => {
         panel.classList.toggle("show");
+        if (panel.classList.contains("show")) {
+          loadCartItems();
+        }
       });
     }
 

@@ -36,3 +36,105 @@ export async function cart(){
       throw new Error("Error al obtener la cart order");
     }
 }
+
+export async function loadCartItems() {
+  try {
+    const cartItemsList = document.getElementById("cart-items");
+
+    cartItemsList.innerHTML = ""; // Limpiar solo si existe
+
+    if (!cartItemsList) {
+      console.warn("Elemento cart-items no encontrado");
+      return;
+    }
+    
+    
+    // 1. Obtener la orden del carrito
+    const cartResponse = await fetch(`${API_URL}/cart-order`, {
+      method: "GET",
+      headers: {
+        Authorization: "Bearer " + localStorage.getItem("token"),
+      },
+    });
+    
+    if (!cartResponse.ok) {
+      cartItemsList.innerHTML = "<li>No hay productos en el carrito</li>";
+      return;
+    }
+    
+    const cartOrder = await cartResponse.json();
+    
+    // 2. Obtener productos de la orden
+    const productsResponse = await fetch(`${API_URL}/products/${cartOrder.id}`, {
+      method: "GET",
+      headers: {
+        Authorization: "Bearer " + localStorage.getItem("token"),
+      },
+    });
+    
+    if (!productsResponse.ok) {
+      cartItemsList.innerHTML = "<li>Todavía no hay productos</li>";
+      return;
+    }
+    
+    const products = await productsResponse.json();
+
+    if (products.length === 0) {
+      cartItemsList.innerHTML = "<li>No hay productos en el carrito</li>";
+      return;
+    }
+    
+    // 3. Limpiar y mostrar productos
+    cartItemsList.innerHTML = "";
+    products.forEach(product => {
+      const li = document.createElement("li");
+      li.innerHTML = `
+        ${product.name} - ${product.price}€
+        <button class="remove-btn" data-product-id="${product.id}">Eliminar</button>
+      `;
+      cartItemsList.appendChild(li);
+    });
+    const buttonDetails = document.createElement("button");
+    buttonDetails.textContent = "Detalles";
+    buttonDetails.addEventListener("click", ()=>{
+      location.href = "./cart.html";
+    });
+    cartItemsList.appendChild(buttonDetails);
+    
+    // 4. Añadir event listeners a los botones
+    document.querySelectorAll(".remove-btn").forEach(button => {
+      button.addEventListener("click", async () => {
+        const productId = button.dataset.productId;
+        const success = await deleteProduct(productId);
+        if (success) {
+          await loadCartItems(); // Recargar solo si se eliminó correctamente
+        }
+      });
+    });
+    
+  } catch (error) {
+    console.error("Error:", error);
+    const cartItemsList = document.getElementById("cart-items");
+    if (cartItemsList) {
+      cartItemsList.innerHTML = "<li>Error al cargar el carrito</li>";
+    }
+  }
+}
+
+// Función para eliminar producto
+export async function deleteProduct(productId) {
+  try {
+    const response = await fetch(`${API_URL}/products/${productId}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: "Bearer " + localStorage.getItem("token"),
+      },
+    });
+    
+    if (!response.ok) {
+      console.error("Error al eliminar producto");
+    }
+  } catch (error) {
+    console.error("Error:", error);
+  }
+}

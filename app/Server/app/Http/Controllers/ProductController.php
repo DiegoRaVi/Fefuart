@@ -21,6 +21,7 @@ class ProductController extends Controller
             'description' => 'nullable|string',
             'category' => 'required|string',
             'subcategory' => 'nullable|string',
+            'quantity' => 'nullable|integer|min:1',
             'delivery_type' => 'required|in:digital,physical',
             'delivery_time' => 'required|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
@@ -75,7 +76,7 @@ class ProductController extends Controller
         $product = Product::find($id);
 
         if(!$product){
-            return response()->json(['message'=> 'Product not found', 404]);
+            return response()->json(['message'=> 'Product not found'], 404);
         }
 
         return response()->json($product, 200);

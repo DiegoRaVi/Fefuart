@@ -102,6 +102,49 @@ class OrderController extends Controller{
         return response()->json($orders, 200);
     }
 
+
+    // GET PAID ORDERS
+    public function getPaidOrders(){
+
+        $user = Auth::user();
+
+        if($user->role !== 'admin'){
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $orders = Order::where('status','paid')->with('products')->orderBy('order_date', 'desc')->paginate(10);
+
+        return response()->json($orders, 200);
+    }
+
+    // GET SHIPPED ORDERS
+    public function getShippedOrders(){
+
+        $user = Auth::user();
+
+        if($user->role !== 'admin'){
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $orders = Order::where('status','shipped')->with('products')->orderBy('order_date', 'desc')->paginate(10);
+
+        return response()->json($orders, 200);
+    }
+    
+        // GET CANCELLED ORDERS
+    public function getCancelledOrders(){
+
+        $user = Auth::user();
+
+        if($user->role !== 'admin'){
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $orders = Order::where('status','cancelled')->with('products')->orderBy('order_date', 'desc')->paginate(10);
+
+        return response()->json($orders, 200);
+    }
+    
     //POST NUEVA ORDER
     public function addOrder(Request $request){
         
@@ -132,11 +175,11 @@ class OrderController extends Controller{
     // UPDATE ORDER POR ID
     public function updateOrderById(Request $request, $id){
 
-        $user = Auth::user();
+        /*$user = Auth::user();
 
         if($user->role !== 'admin'){
             return response()->json(['message' => 'Unauthorized'], 403);
-        }
+        }*/
 
         $order = Order::find($id);
 
@@ -147,10 +190,11 @@ class OrderController extends Controller{
         $request->validate([
             'order_date' => 'sometimes|date',
             'status' => 'sometimes|in:pending,paid,shipped,cancelled',
+            'address' => 'sometimes',
             'total' => 'sometimes|numeric|min:0',
         ]);
 
-        $order->update($request->only(['order_date', 'status', 'total']));
+        $order->update($request->only(['order_date','address', 'status', 'total']));
 
         return response()->json($order, 200);
     }

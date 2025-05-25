@@ -23,6 +23,7 @@ Route::middleware([IsUserAuth::class])->group(function(){
     Route::controller(ProductController::class)->group(function(){
         Route::get('/products', 'getProducts');
         Route::post('/products', 'addProduct');
+        Route::delete('/products/{id}', 'deleteProductById');
     });
 
     Route::controller(EventController::class)->group(function(){
@@ -38,6 +39,7 @@ Route::middleware([IsUserAuth::class])->group(function(){
         Route::get('/my-orders', 'getUserOrders');
         Route::post('/cart-order', 'addOrder');
         Route::get('/cart-order', 'getCartOrder');
+        Route::patch('/orders/{id}', 'updateOrderById');
     });  
 });
 
@@ -46,8 +48,9 @@ Route::middleware([IsUserAuth::class])->group(function(){
 Route::middleware([IsAdmin::class])->group(function(){
 
     Route::controller(ProductController::class)->group(function(){
+        Route::get('/products/{orderId}', 'getProductsByOrderId');
+        Route::get('/product/{id}', 'getProductById');
 
-        Route::get('/products/{id}', 'getProductById');
         Route::patch('/products/{id}', 'updateProductById');
         Route::delete('/products/{id}', 'deleteProductById');
     });
@@ -65,8 +68,12 @@ Route::middleware([IsAdmin::class])->group(function(){
     });
 
     Route::controller(OrderController::class)->group(function () {
-        Route::get('/pendingOrders', 'getPendingOrders');
+        Route::get('/orders/pending', 'getPendingOrders');
+        Route::get('/orders/paid', 'getPaidOrders');
+        Route::get('/orders/shipped', 'getShippedOrders');
+        Route::get('/orders/cancelled', 'getCancelledOrders');
         Route::get('/orders/{id}','getOrdersByUserId');
+
         Route::patch('/orders/{id}', 'updateOrderById');
         Route::delete('/orders/{id}', 'deleteOrderById');
     });
