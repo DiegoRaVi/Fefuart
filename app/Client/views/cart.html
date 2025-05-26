@@ -1,16 +1,135 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
+    <title>Detalle del Pedido</title>
+    <script src="../config/config.js"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 2rem;
+      }
+      h1 {
+        color: #333;
+      }
+      ul {
+        list-style: none;
+        padding: 0;
+      }
+      li {
+        padding: 10px;
+        border-bottom: 1px solid #ccc;
+      }
+    </style>
   </head>
-  <body></body>
+  <body>
+    <a href="./index.html">Volver</a>
+    <h1 id="order-title">Pedido</h1>
+    <div id="order-details">
+      <ul id="product-list"></ul>
+    </div>
+
+    <script type="module">
+      import { getUser } from "../js/auth.js";
+      import { cart, deleteProduct } from "../js/order.js";
+
+      document.addEventListener("DOMContentLoaded", async () => {
+        try {
+          let total = 0;
+          // Obtener datos del usuario
+          const user = await getUser();
+          const title = document.getElementById("order-title");
+          const orderDetails = document.getElementById("order-details");
+          title.textContent = "Pedido de " + (user ? user.name : "Invitado");
+
+          // Obtener pedido actual (cart)
+          const cartOrder = await cart();
+
+          // Obtener productos del pedido
+          const productsResponse = await fetch(
+            `${API_URL}/products/${cartOrder.id}`,
+            {
+              headers: {
+                Authorization: "Bearer " + localStorage.getItem("token"),
+              },
+            }
+          );
+
+          const productList = document.getElementById("product-list");
+
+          if (!productsResponse.ok) {
+            productList.innerHTML =
+              "<li>No se pudieron cargar los productos</li>";
+            return;
+          }
+
+          const products = await productsResponse.json();
+
+          if (products.length === 0) {
+            productList.innerHTML = "<li>No hay productos en este pedido</li>";
+            return;
+          }
+
+          // Mostrar productos
+          products.forEach((product) => {
+            const li = document.createElement("li");
+            li.innerHTML = `<div class="product-info">${product.name} - ${product.price}€
+            - Descripción: ${product.description}
+            - Categoría: ${product.category}
+            - Subcategoría: ${product.subcategory}
+            - Tipo de envío: ${product.delivery_type}</div>
+            <div class='image-container'>- Imagen: <img src="${IMAGES_URL}/storage/${product.image_url}" alt="${product.name}" /></div>
+            <button class="remove-btn" data-product-id="${product.id}">Eliminar</button>
+            `;
+            productList.appendChild(li);
+            total += parseFloat(product.price);
+          });
+          orderDetails.appendChild(productList);
+
+          document.querySelectorAll(".remove-btn").forEach((button) => {
+            button.addEventListener("click", async () => {
+              const productId = button.dataset.productId;
+              const success = await deleteProduct(productId);
+              if (success) {
+                await loadCartItems(); // Recargar solo si se eliminó correctamente
+              }
+            });
+          });
+
+          const totalDiv = document.createElement("div");
+          totalDiv.textContent = `Total: ${total.toFixed(2)}€`;
+          productList.appendChild(totalDiv);
+
+          const payButton = document.createElement("button");
+          payButton.textContent = "Pagar";
+          payButton.addEventListener("click", async () => {
+            const payOrderResponse = await fetch(
+              `${API_URL}/orders/${cartOrder.id}`,
+              {
+                method: "PATCH",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: "Bearer " + localStorage.getItem("token"),
+                },
+                body: JSON.stringify({ status: "pending" }),
+              }
+            );
+
+            if (payOrderResponse.ok) {
+              localStorage.setItem("showThanksModal", "true");
+              window.location.href = "./index.html";
+            } else {
+              alert("Hubo un error al procesar el pago.");
+            }
+          });
+          orderDetails.appendChild(payButton);
+        } catch (error) {
+          console.error("Error al cargar la vista del pedido:", error);
+          document.getElementById("product-list").innerHTML =
+            "<li>Error al cargar los datos del pedido</li>";
+        }
+      });
+    </script>
+  </body>
 </html>
-<script type="module">
-  import { getUser } from "../js/auth.js";
-  
-  document.addEventListener("DOMContentLoaded", async () => {
-    const user = await getUser();
-  });
-</script>
