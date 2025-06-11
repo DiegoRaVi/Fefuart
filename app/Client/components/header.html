@@ -1,184 +1,292 @@
-<header>
+<header class="site-header">
   <nav>
-    <h1 id="fefuart"><a href="../views/index.html">FEFUART</a></h1>
+    <div class="nav-left">
+      <h1 id="fefuart"><a href="../views/index.html">FEFUART</a></h1>
+      <div class="menu-toggle" id="menu-toggle">☰</div>
+    </div>
 
-    <div id="menu">
+    <div class="nav-center" id="menu">
       <ul>
         <li><a href="./services.html">Servicios</a></li>
-        <li><a href="#about">Galería</a></li>
-        <li><a href="#services">Contacto</a></li>
-        <li><a href="#contact">About</a></li>
-        <li id="admin"><a href="../views/admin.html" style="font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;">F</a></li>
+        <li><a href="../views/galeria.html">Galería</a></li>
+        <li><a href="../views/about.html">About</a></li>
+        <li id="admin">
+          <a
+            href="../views/admin.html"
+            style="
+              font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial,
+                sans-serif;
+            "
+            >F</a
+          >
+        </li>
       </ul>
     </div>
 
-    <div id="auth">
-      <div class="auth-item">
-        <img src="../img/login.png" alt="Login" />
-        <a href="./login.html">Login</a>
+    <div class="nav-right">
+      <div id="auth">
+        <div class="auth-item">
+          <img src="../img/login.png" alt="Login" />
+          <a href="./login.html">Login</a>
+        </div>
+        <div class="auth-item">
+          <img src="../img/register.png" alt="Registrarse" />
+          <a href="./register.html">Registrarse</a>
+        </div>
       </div>
-      <div class="auth-item">
-        <a href="./register.html">Registrarse</a>
-      </div>
-    </div>
 
-    <!-- 🔽 Carrito -->
-    <div id="cart-container">
-      <div id="cart-icon">
-        <img src="../img/carrito.png" alt="Carrito" />
-      </div>
-      <div id="cart-panel">
-        <h3>Tu carrito</h3>
-        <ul id="cart-items">
-          <!-- PRODUCTOS DE LA CART ORDER-->
-        </ul>
+      <!-- 🔽 Carrito -->
+      <div id="cart-container">
+        <div id="cart-icon">
+          <img src="../img/carrito.png" alt="Carrito" />
+        </div>
+        <div id="cart-panel">
+          <h3>Tu carrito</h3>
+          <ul id="cart-items">
+            <!-- PRODUCTOS DE LA CART ORDER-->
+          </ul>
+        </div>
       </div>
     </div>
   </nav>
 </header>
 
 <style>
-  * {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  font-family: "Segoe UI", sans-serif;
-}
-
-/* Header general */
-header {
-  background-color: #111;
-  color: white;
-  padding: 1rem 2rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-}
-
-nav {
-  display: flex;
-  align-items: center;
-  justify-content:space-between;
-  flex-wrap: wrap;
-}
-
-/* Logo */
-#fefuart {
-  font-size: 1.8rem;
-  font-weight: bold;
-  color: #fefefe;
-}
-
-/* Admin */
-#admin{
-  display: none;
-}
-
-/* Menú principal */
-#menu ul {
-  list-style: none;
-  display: flex;
-  gap: 1.5rem;
-}
-
-#menu ul li a {
-  color: white;
-  text-decoration: none;
-  font-size: 1rem;
-  transition: color 0.3s;
-}
-
-#menu ul li a:hover {
-  color: #f39c12;
-}
-
-/* Login / Register */
-#auth {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-}
-
-.auth-item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.auth-item img {
-  width: 24px;
-  height: 24px;
-}
-
-/* Carrito */
-#cart-container {
-  position: relative;
-  margin-left: 1rem;
-}
-
-#cart-icon img {
-  width: 28px;
-  cursor: pointer;
-  transition: transform 0.3s;
-}
-
-#cart-icon img:hover {
-  transform: scale(1.1);
-}
-
-#cart-panel {
-  display: none;
-  position: absolute;
-  right: 0;
-  top: 35px;
-  width: 250px;
-  background-color: white;
-  color: black;
-  border-radius: 8px;
-  padding: 1rem;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-  z-index: 100;
-}
-
-#cart-panel.show {
-  display: block;
-}
-
-#cart-panel h3 {
-  margin-bottom: 0.5rem;
-  font-size: 1.2rem;
-  border-bottom: 1px solid #ccc;
-  padding-bottom: 0.5rem;
-}
-
-#cart-panel ul {
-  list-style: none;
-  padding: 0;
-}
-
-#cart-panel li {
-  padding: 0.5rem 0;
-  border-bottom: 1px solid #eee;
-  font-size: 0.95rem;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  nav {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
+  /* ==== HEADER BASE ==== */
+  .site-header {
+    background-color: #ddbacc;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 10px 20px;
+    position: sticky;
+    top: 0;
+    z-index: 999;
   }
 
-  #menu ul {
-    flex-direction: column;
-    gap: 0.75rem;
+  .site-header nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: nowrap;
   }
 
-  #auth {
-    flex-direction: column;
-    align-items: flex-start;
+  .nav-left h1 a {
+    text-decoration: none;
+    color: #000;
+    font-size: 28px;
   }
-}
+
+  .nav-center ul {
+    list-style: none;
+    display: flex;
+    gap: 20px;
+    padding: 0;
+    margin: 0;
+  }
+
+  .nav-center ul li a {
+    text-decoration: none;
+    color: #333;
+    font-weight: bold;
+  }
+
+  .nav-right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+
+  .auth-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .auth-item img {
+    width: 20px;
+    height: 20px;
+  }
+
+  #cart-container {
+    position: relative;
+  }
+
+  #cart-icon img {
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+  }
+
+  #cart-panel {
+    display: none; /* muestra cuando el carrito está activo */
+    position: absolute;
+    right: 0;
+    top: 40px;
+    background: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    padding: 15px;
+    width: 200px;
+    z-index: 999;
+  }
+
+  .menu-toggle {
+    display: none;
+  }
+  /* ==== MEDIA QUERIES ==== */
+
+  /* Tablet (≤1024px) */
+  @media (max-width: 1024px) {
+    .site-header nav {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .nav-left {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Menú hamburguesa */
+    .menu-toggle {
+      text-align: end;
+      display: block;
+      font-size: 28px;
+      cursor: pointer;
+      padding: 10px;
+    }
+
+    .nav-center {
+      width: 100%;
+      display: none;
+      flex-direction: column;
+    }
+
+    .nav-center ul {
+      flex-direction: column;
+      width: 100%;
+    }
+
+    .nav-center ul li {
+      width: 100%;
+      text-align: left;
+      padding: 10px 0;
+      border-bottom: 1px solid #ccc;
+    }
+
+    /* Mostrar menú al activar toggle */
+    .nav-center.active {
+      display: flex;
+    }
+
+    .nav-right {
+      width: 100%;
+      display: flex;
+      flex-direction: row;
+    }
+
+    #auth {
+      width: 50%;
+    }
+
+    .auth-item {
+      width: 30%;
+    }
+
+    #cart-container {
+      margin-left: auto;
+      display: flex;
+    }
+
+    #cart-icon  {
+      display: flex;
+      padding: 10px;
+     
+      justify-content: end;
+      
+    }
+  }
+
+  /* Móvil (≤480px / 375px) */
+  @media (max-width: 480px) {
+
+    .site-header nav {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .nav-left {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Menú hamburguesa */
+    .menu-toggle {
+      text-align: end;
+      display: block;
+      font-size: 28px;
+      cursor: pointer;
+      padding: 10px;
+    }
+
+    .nav-center {
+      width: 100%;
+      display: none;
+      flex-direction: column;
+    }
+
+    .nav-center ul {
+      flex-direction: column;
+      width: 100%;
+    }
+
+    .nav-center ul li {
+      width: 100%;
+      text-align: left;
+      padding: 10px 0;
+      border-bottom: 1px solid #ccc;
+    }
+
+    /* Mostrar menú al activar toggle */
+    .nav-center.active {
+      display: flex;
+    }
+    
+    .nav-right {
+      width: 100%;
+      display: flex;
+      flex-direction: row;
+    }
+
+    #auth {
+      width: 50%;
+    }
+
+    .auth-item {
+      width: 30%;
+    }
+
+    #cart-container {
+      margin-left: auto;
+      display: flex;
+    }
+
+    #cart-icon  {
+      display: flex;
+      padding: 10px;
+     
+      justify-content: end;
+      
+    }
+    /*#cart-container {
+      display: flex;
+      justify-content: end;
+      justify-items: end;
+      align-items: flex-end;
+      align-content: flex-end;
+      align-items: end;
+    }*/
+  }
 </style>

@@ -1,0 +1,326 @@
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: #ffffff;
+  margin: 0;
+  font-family: Cambria, Cochin, Georgia, Times, "Times New Roman", serif;
+  line-height: 1.6;
+}
+
+main {
+  margin: 2rem auto;
+  width: 90%;
+  max-width: 1000px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  animation: fadeIn 0.8s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+h1 {
+  color: #000000;
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+  position: relative;
+}
+
+.product-description{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  margin-bottom: 5%;
+}
+
+.product-description-text{
+  margin: 0 auto;
+  font-size: 1.4rem;
+  width: 90%;
+  margin: 0 auto;
+  text-align: justify;
+  justify-items: start;
+  align-items: start;
+}
+
+.product-measurements {
+  text-align: center;
+}
+
+.product-description img {
+  width: 100%;
+  max-width: 600px;
+  height: auto;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+
+}
+
+/* Formulario mejorado */
+form {
+  border: 1px solid #ddbacc;
+  padding: 2.5rem;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 500px;
+  background: white;
+  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+form:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+.form-group {
+  margin-bottom: 1.8rem;
+  position: relative;
+}
+
+label {
+  text-align: start;
+  font-weight: 600;
+  color: #255035;
+  margin-bottom: 0.6rem;
+  font-size: 1rem;
+  display: block;
+}
+
+/* Inputs mejorados */
+input[type="text"],
+input[type="number"],
+select,
+textarea {
+  width: 100%;
+  padding: 0.9rem 1.2rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  resize: none;
+  font-size: 1rem;
+  font-family: inherit;
+  color: #333;
+  background-color: #fff;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  appearance: none; /* Elimina estilos por defecto */
+}
+
+/* Efecto focus mejorado */
+input[type="text"]:focus,
+input[type="number"]:focus,
+select:focus,
+textarea:focus {
+  border-color: #255035;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 80, 53, 0.2);
+  transform: scale(1.01);
+}
+
+textarea {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  min-height: 120px;
+}
+
+/* Select personalizado */
+select {
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23255035' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 1em;
+  padding-right: 2.5rem;
+}
+
+/* File input personalizado */
+.file-input-container {
+  position: relative;
+  overflow: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+.file-input-button {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 1.5rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background-color: #f9f9f9;
+  color: #555;
+}
+
+.file-input-button:hover {
+  border-color: #255035;
+  background-color: #f0f0f0;
+}
+
+.file-input-button span {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  color: #777;
+}
+
+#image {
+  position: absolute;
+  opacity: 0;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+#label-image {
+  text-align: center;
+  width: 30%;
+  height: 10%;
+  background-color: #584f50;
+  color: white;
+  border-radius: 5px;
+}
+
+/* Botón mejorado */
+form button[type="submit"] {
+  background-color: #584f50;
+  color: #ffffff;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  position: relative;
+  overflow: hidden;
+}
+
+form button[type="submit"]:hover {
+  background-color: #255035;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(37, 80, 53, 0.3);
+}
+
+/* Efecto ripple */
+form button[type="submit"]::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.5);
+  opacity: 0;
+  border-radius: 100%;
+  transform: scale(1, 1) translate(-50%);
+  transform-origin: 50% 50%;
+}
+
+
+@keyframes ripple {
+  0% {
+    transform: scale(0, 0);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(20, 20);
+    opacity: 0;
+  }
+}
+
+/* Precio animado */
+#precio {
+  font-size: 1.3rem;
+  font-weight: bold;
+  color: #000000;
+  text-align: center;
+  padding: 1rem;
+  margin: 1.5rem 0;
+  background-color: rgba(221, 186, 204, 0.2);
+  border-radius: 8px;
+  animation: pulse 2s infinite;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  main {
+    width: 95%;
+    padding: 0 1rem;
+  }
+  
+  form {
+    padding: 1.8rem;
+    width: 100%;
+  }
+  
+  h1 {
+    font-size: 200%;
+  }
+  h2 {
+    font-size: 160%;
+  }
+  h3 {
+    font-size: 150%;
+  }
+  p,
+  a,
+  .product-description-text {
+    font-size: 120%;
+  }
+}
+
+@media (max-width: 480px) {
+  h1 {
+    font-size: 120%;
+  }
+  h2 {
+    font-size: 100%;
+  }
+  h3 {
+    font-size: 80%;
+  }
+  p,
+  a,
+  .product-description-text {
+    font-size: 80%;
+  }
+  
+  form {
+    padding: 1.5rem;
+  }
+  
+  input[type="text"],
+  input[type="number"],
+  select,
+  textarea {
+    padding: 0.8rem 1rem;
+  }
+  
+  form button[type="submit"] {
+    padding: 0.9rem;
+  }
+}
+
+/* Validación visual */
+input:invalid, textarea:invalid {
+  border-left: 4px solid rgb(119, 12, 12);
+}
+
+input:valid, textarea:valid {
+  border-left: 4px solid #255035;
+}
+
+/* Transición para cambios de precio */
+#precio {
+  background-color: #584f50;
+  color: #ffffff;
+}

@@ -22,6 +22,7 @@ Route::middleware([IsUserAuth::class])->group(function(){
 
     Route::controller(ProductController::class)->group(function(){
         Route::get('/products', 'getProducts');
+        Route::get('/products/{orderId}', 'getProductsByOrderId');
         Route::post('/products', 'addProduct');
         Route::delete('/products/{id}', 'deleteProductById');
     });
@@ -48,7 +49,7 @@ Route::middleware([IsUserAuth::class])->group(function(){
 Route::middleware([IsAdmin::class])->group(function(){
 
     Route::controller(ProductController::class)->group(function(){
-        Route::get('/products/{orderId}', 'getProductsByOrderId');
+
         Route::get('/product/{id}', 'getProductById');
 
         Route::patch('/products/{id}', 'updateProductById');
@@ -63,7 +64,7 @@ Route::middleware([IsAdmin::class])->group(function(){
         Route::get('/events','getEvents'); 
         Route::get('/events/{id}', 'getEventById');
         
-        Route::patch('/events/{id}', 'updateEventById');
+        Route::patch('/admin/events/{id}', 'updateEventById');
         Route::delete('/events/{id}','deleteEventById');
     });
 
@@ -74,7 +75,7 @@ Route::middleware([IsAdmin::class])->group(function(){
         Route::get('/orders/cancelled', 'getCancelledOrders');
         Route::get('/orders/{id}','getOrdersByUserId');
 
-        Route::patch('/orders/{id}', 'updateOrderById');
+        Route::patch('/admin/orders/{id}', 'updateOrderById');
         Route::delete('/orders/{id}', 'deleteOrderById');
     });
 });

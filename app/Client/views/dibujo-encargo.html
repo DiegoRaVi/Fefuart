@@ -3,17 +3,18 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="../css/style.css" />
+    <link rel="stylesheet" href="../css/forms.css" />
     <script src="../config/config.js" defer></script>
     <script type="module" src="../js/main.js"></script>
     <title>Document</title>
   </head>
   <body>
-    <div id="header-placeholder" style="background-color: lightcoral"></div>
+    <div id="header-placeholder"></div>
     <main>
       <h1>Dibujo por encargo</h1>
-
-      <div>
-        <p>
+      <div class="product-description">
+        <p class="product-description-text">
           Creamos retratos únicos a partir de tus fotos más queridas. Imagina
           capturar la esencia de un momento significativo, transformándolo en
           una obra de arte que perdurará para siempre. Ya sea un retrato
@@ -21,62 +22,70 @@
           especial, estamos aquí para convertirlo en una pieza única y
           personalizada.
         </p>
+        <img src="../img/fefuart-img/Dibujos/Estilo clásico/Imagen de WhatsApp 2025-03-03 a las 11.21.59_268f9245.jpg" alt="">
+        <p class="product-measurements">
+          A continuación podéis ver las medidas y el precio.<br /><br />
+        MARCO DE MADERA CLARITA Y ENVÍO INCLUIDO.<br /><br />
+
+          Plazo de entrega de 10 días aproximadamente<br /><br />
+        </p>
+        <img src="../img/fefuart-img/utiles/medidas-precio.avif" alt="">
       </div>
 
-      <div>
-        <form id="form-dibujo-encargo">
-          <div class="form-group">
-            <label for="name">Nombre</label>
-            <input type="text" id="name" name="name" required />
-          </div>
+      <h2 style="font-weight: bold;">Rellene el formulario</h2>
+      <form id="form-dibujo-encargo">
+        <div class="form-group">
+          <label for="name">Nombre</label>
+          <input type="text" id="name" name="name" required />
+        </div>
 
-          <div class="form-group">
-            <label for="description">Descripción</label>
-            <textarea id="description" name="description"></textarea>
-          </div>
+        <div class="form-group">
+          <label for="description">Descripción</label>
+          <textarea id="description" name="description"></textarea>
+        </div>
 
-          <div class="form-group">
-            <label for="estilo">Estilo</label>
-            <select name="estilo" id="estilo"></select>
-          </div>
+        <div class="form-group">
+          <label for="estilo">Estilo</label>
+          <select name="estilo" id="estilo"></select>
+        </div>
 
-          <div class="form-group">
-            <label for="quantity">Unidades</label>
-            <input
-              type="number"
-              id="quantity"
-              name="quantity"
-              min="1"
-              value="1"
-              required
-            />
-          </div>
+        <div class="form-group">
+          <label for="quantity">Unidades</label>
+          <input
+            type="number"
+            id="quantity"
+            name="quantity"
+            min="1"
+            value="1"
+            required
+          />
+        </div>
 
-          <div class="form-group">
-            <label for="address">Dirección de envío</label>
-            <input type="text" id="address" name="address" required />
-          </div>
+        <div class="form-group">
+          <label for="address">Dirección de envío</label>
+          <input type="text" id="address" name="address" required />
+        </div>
 
-          <div class="form-group">
-            <label for="envio">Tipo de envío</label>
-            <select name="envio" id="envio">
-              <option value="physical">Físico (5€)</option>
-            </select>
-          </div>
+        <div class="form-group">
+          <label for="envio">Tipo de envío</label>
+          <select name="envio" id="envio">
+            <option value="physical">Físico (5€)</option>
+          </select>
+        </div>
 
-          <div class="form-group">
-            <label for="image">Imagen</label>
-            <input type="file" id="image" name="image" required />
-          </div>
+        <div class="form-group">
+          <label id="label-image" for="image">Subir Imagen</label>
+          <input type="file" id="image" name="image" required />
+        </div>
 
-          <div class="form-group">
-            <p id="precio"></p>
-          </div>
+        <div class="form-group">
+          <p id="precio"></p>
+        </div>
 
-          <button type="submit">Enviar</button>
-        </form>
-      </div>
+        <button type="submit">Enviar</button>
+      </form>
     </main>
+    <div id="footer-placeholder"></div>
   </body>
 </html>
 
@@ -209,14 +218,3 @@
     }
   });
 </script>
-
-<style>
-  #form-dibujo-encargo {
-    border: solid 1px black;
-    display: flex;
-    flex-direction: column;
-    width: 300px;
-    margin: 0 auto;
-    gap: 10px;
-  }
-</style>

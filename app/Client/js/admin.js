@@ -12,10 +12,10 @@ document.addEventListener("DOMContentLoaded", () => {
 function showOrderButtons() {
   const content = document.getElementById("content");
   content.innerHTML = `
-      <button id="pending-orders">Pedidos pendientes</button>
-      <button id="paid-orders">Pedidos pagados</button>
-      <button id="shipped-orders">Pedidos enviados</button>
-      <button id="cancelled-orders">Pedidos cancelados</button>
+      <button class="btn" id="pending-orders">Pedidos pendientes</button>
+      <button class="btn" id="paid-orders">Pedidos pagados</button>
+      <button class="btn" id="shipped-orders">Pedidos enviados</button>
+      <button class="btn" id="cancelled-orders">Pedidos cancelados</button>
     `;
   document
     .getElementById("pending-orders")
@@ -159,7 +159,7 @@ function createProductElement(product) {
 
 async function updateOrderStatus(orderId, newStatus, container) {
   try {
-    const response = await fetch(`${API_URL}/orders/${orderId}`, {
+    const response = await fetch(`${API_URL}/admin/orders/${orderId}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -265,7 +265,7 @@ function createEventElement(event, status, includeActions = false) {
 
 async function updateEventStatus(eventId, newStatus, container) {
   try {
-    const response = await fetch(`${API_URL}/events/${eventId}`, {
+    const response = await fetch(`${API_URL}/admin/events/${eventId}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",

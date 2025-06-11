@@ -4,24 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Detalle del Pedido</title>
+    <link rel="stylesheet" href="../css/style.css" />
+    <link rel="stylesheet" href="../css/cart.css" />
     <script src="../config/config.js"></script>
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        margin: 2rem;
-      }
-      h1 {
-        color: #333;
-      }
-      ul {
-        list-style: none;
-        padding: 0;
-      }
-      li {
-        padding: 10px;
-        border-bottom: 1px solid #ccc;
-      }
-    </style>
   </head>
   <body>
     <a href="./index.html">Volver</a>
@@ -74,12 +59,17 @@
           // Mostrar productos
           products.forEach((product) => {
             const li = document.createElement("li");
-            li.innerHTML = `<div class="product-info">${product.name} - ${product.price}€
-            - Descripción: ${product.description}
-            - Categoría: ${product.category}
-            - Subcategoría: ${product.subcategory}
-            - Tipo de envío: ${product.delivery_type}</div>
-            <div class='image-container'>- Imagen: <img src="${IMAGES_URL}/storage/${product.image_url}" alt="${product.name}" /></div>
+            li.innerHTML = `<div class="product-info">
+              <p>${product.name} - ${product.price}€</p>
+              <p>- Descripción: ${product.description}</p>
+              <p>- Categoría: ${product.category}</p>
+              <p>- Subcategoría: ${product.subcategory}</p>
+              <p>- Unidades: ${product.quantity}</p>
+              <p>- Tipo de envío: ${product.delivery_type}</p>
+            </div>
+            <div class='image-container'><p>- Imagen:</p>
+              <img src="${IMAGES_URL}/storage/${product.image_url}" alt="${product.name}" />
+            </div>
             <button class="remove-btn" data-product-id="${product.id}">Eliminar</button>
             `;
             productList.appendChild(li);

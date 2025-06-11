@@ -63,6 +63,7 @@ export async function loadCartItems() {
     }
     
     const cartOrder = await cartResponse.json();
+    console.log("Orden del carrito:", cartOrder);
     
     // 2. Obtener productos de la orden
     const productsResponse = await fetch(`${API_URL}/products/${cartOrder.id}`, {
@@ -71,6 +72,7 @@ export async function loadCartItems() {
         Authorization: "Bearer " + localStorage.getItem("token"),
       },
     });
+    
     
     if (!productsResponse.ok) {
       cartItemsList.innerHTML = "<li>Todavía no hay productos</li>";
@@ -89,13 +91,14 @@ export async function loadCartItems() {
     products.forEach(product => {
       const li = document.createElement("li");
       li.innerHTML = `
-        ${product.name} - ${product.price}€
-        <button class="remove-btn" data-product-id="${product.id}">Eliminar</button>
+        <p>${product.name} - ${product.price}€</p>
+        <button class="remove-btn btn" data-product-id="${product.id}">Eliminar</button>
       `;
       cartItemsList.appendChild(li);
     });
     const buttonDetails = document.createElement("button");
     buttonDetails.textContent = "Detalles";
+    buttonDetails.className = "btn";
     buttonDetails.addEventListener("click", ()=>{
       location.href = "./cart.html";
     });
