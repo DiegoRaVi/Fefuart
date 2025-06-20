@@ -65,11 +65,11 @@ h1 {
 /* Formulario mejorado */
 form {
   border: 1px solid #ddbacc;
+  background-color: #ddbacc ;
   padding: 2.5rem;
   border-radius: 12px;
   width: 100%;
   max-width: 500px;
-  background: white;
   box-shadow: 0 5px 25px rgba(0, 0, 0, 0.08);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
@@ -87,7 +87,7 @@ form:hover {
 label {
   text-align: start;
   font-weight: 600;
-  color: #255035;
+  color: #000000;
   margin-bottom: 0.6rem;
   font-size: 1rem;
   display: block;
@@ -100,13 +100,13 @@ select,
 textarea {
   width: 100%;
   padding: 0.9rem 1.2rem;
-  border: 1px solid #ddd;
+  border: 1px solid gray;
   border-radius: 8px;
   resize: none;
   font-size: 1rem;
   font-family: inherit;
   color: #333;
-  background-color: #fff;
+  background-color: #ffffff;
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   appearance: none; /* Elimina estilos por defecto */
 }
@@ -121,9 +121,33 @@ textarea:focus {
   box-shadow: 0 0 0 3px rgba(37, 80, 53, 0.2);
   transform: scale(1.01);
 }
+input[type="date"] {
+  width: 100%;
+  padding: 0.9rem 1.2rem;
+  border: 1px solid gray;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: inherit;
+  color: #333;
+  background-color: #ffffff;
+  appearance: none; /* Quita estilos nativos */
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  cursor: pointer;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg fill='none' stroke='%23255035' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3e%3cline x1='8' x2='16' y1='12' y2='12'%3e%3c/line%3e%3cline x1='12' x2='12' y1='8' y2='16'%3e%3c/line%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 1.2em;
+}
 
+/* Efecto focus */
+input[type="date"]:focus {
+  border-color: #255035;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 80, 53, 0.2);
+  transform: scale(1.01);
+}
 textarea {
-  border: 1px solid #ddd;
+  border: 1px solid gray;
   border-radius: 8px;
   min-height: 120px;
 }

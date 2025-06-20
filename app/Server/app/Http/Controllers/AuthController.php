@@ -79,6 +79,17 @@ class AuthController extends Controller
         return response()->json($user, 200);
     }
 
+    public function getUserById($id){
+        
+        $user = User::find($id);
+
+        if(!$user){
+            return response()->json(['error' => 'Usuario no encontrado'], 404);
+        }
+
+        return response()->json($user, 200);
+    }
+
     public function logout(){
         JWTAuth::invalidate(JWTAuth::getToken());
         return response()->json(['message' => 'Logged out successfully'], 200);

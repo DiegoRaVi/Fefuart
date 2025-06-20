@@ -87,9 +87,7 @@
     </main>
     <div id="footer-placeholder"></div>
   </body>
-</html>
-
-<script type="module">
+  <script type="module">
   import { getUser, isAuthenticated } from "../js/auth.js";
   import { cart } from "../js/order.js";
 
@@ -194,6 +192,14 @@
             body: formData,
           });
 
+          /*Borrar en caso de fallos*/
+          if (response.status === 401) {
+              localStorage.removeItem("token");
+              localStorage.removeItem("role");
+              location.href = "./login.html";
+              return;
+            }
+
           const result = await response.json();
 
           if (response.ok) {
@@ -218,3 +224,4 @@
     }
   });
 </script>
+</html>

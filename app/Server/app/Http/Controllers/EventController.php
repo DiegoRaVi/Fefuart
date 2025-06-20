@@ -36,7 +36,7 @@ class EventController extends Controller
     // GET EVENTOS CONFIRMADOS
     public function getConfirmedEvents(){
 
-        $events = Event::where('status', 'confirmed')->with('user')->get();
+        $events = Event::where('status', 'confirmed')->with('user')->orderBy('date', 'asc')->get();
 
         if ($events->isEmpty()) {
             return response()->json(['message' => 'No confirmed events found'], 404);
@@ -48,7 +48,7 @@ class EventController extends Controller
     // GET EVENTOS PENDIENTES
     public function getPendingEvents(){
 
-        $events = Event::where('status', 'pending')->with('user')->get();
+        $events = Event::where('status', 'pending')->with('user')->orderBy('date', 'asc')->get();
     
         $user = Auth::user();
 
@@ -66,7 +66,7 @@ class EventController extends Controller
     // GET EVENTOS RECHAZADOS
     public function getRejectedEvents(){
 
-        $events = Event::where('status', 'rejected')->with('user')->get();
+        $events = Event::where('status', 'rejected')->with('user')->orderBy('date', 'asc')->get();
 
         $user = Auth::user();
 
@@ -90,7 +90,7 @@ class EventController extends Controller
             return response()->json(['message' => 'You are not an ADMIN'], 403);
         }
 
-        $events = Event::where('status', 'done')->with('user')->get();
+        $events = Event::where('status', 'done')->with('user')->orderBy('date', 'asc')->get();
     
         if ($events->isEmpty()) {
             return response()->json(['message' => 'No done events found'], 404);
@@ -124,7 +124,7 @@ class EventController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'phone' => 'nullable|string|regex:/^\+?[0-9\s\-()]*$/',
+            'phone' => 'nullable|string',
             'date' => 'required|date',
             'location' => 'required|string|max:255',
             'schedule' => 'required|in:morning,evening'

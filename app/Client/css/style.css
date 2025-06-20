@@ -282,6 +282,7 @@ nav {
 }
 
 .btn {
+  font-family: Cambria, Cochin, Georgia, Times, "Times New Roman", serif;
   background-color: #584f50;
   color: #ffffff;
   padding: 0.5rem 1rem;

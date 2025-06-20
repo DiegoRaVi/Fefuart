@@ -1,11 +1,31 @@
 document.addEventListener("DOMContentLoaded", () => {
-
   const ordersButton = document.getElementById("orders");
   const eventsButton = document.getElementById("events");
   const content = document.getElementById("content");
 
   ordersButton.addEventListener("click", showOrderButtons);
   eventsButton.addEventListener("click", showEventButtons);
+
+  const searchBtn = document.getElementById("searchBtn");
+  searchBtn.addEventListener("click", async () => {
+    const userEmail = document.getElementById("userSearch").value.trim();
+    if (userEmail) {
+      const orders = await searchOrdersByUserEmail(userEmail);
+
+      const content = document.getElementById("content");
+      content.innerHTML = `<h2>Pedidos de ${userEmail}</h2>`;
+      
+      for (const order of orders) {
+        const orderElement = await createOrderElement(
+          order,
+          status
+        );
+        content.appendChild(orderElement);
+      }
+    } else {
+      alert("Por favor ingrese un email de usuario");
+    }
+  });
 });
 
 // FUNCIONES PEDIDOS
@@ -51,23 +71,35 @@ async function loadOrdersByStatus(status, includeActions = false) {
       return;
     }
 
-    orders.data.forEach((order) => {
+    for (const order of orders.data) {
+      const orderElement = await createOrderElement(
+        order,
+        status,
+        includeActions
+      );
+      content.appendChild(orderElement);
+    }
+    /*orders.data.forEach((order) => {
       const orderElement = createOrderElement(order, status, includeActions);
       content.appendChild(orderElement);
-    });
+    });*/
   } catch (error) {
     content.innerHTML += `<p style="color:red;">Error al cargar pedidos</p>`;
   }
 }
 
-function createOrderElement(order, status, includeActions = false) {
+async function createOrderElement(order, status, includeActions = false) {
+  const user = await getUserById(order.user_id);
   const orderElement = document.createElement("div");
   orderElement.classList.add("order");
   orderElement.innerHTML = `
       <h3>ID Pedido: ${order.id}</h3>
-      <p>Fecha: ${order.order_date}</p>
-      <p>Dirección envío: ${order.address}</p>
-      <p>Total: ${order.total}</p>
+      <p><strong>Usuario:</strong> ${user.name || "N/A"}</p>
+      <p><strong>Email:</strong> ${user.email || "N/A"}</p>
+      <p><strong>Status:</strong> ${order.status || "N/A"}</p>
+      <p><strong>Fecha:</strong> ${order.order_date}</p>
+      <p><strong>Dirección envío:</strong> ${order.address}</p>
+      <p><strong>Total:</strong> ${order.total}</p>
     `;
   const showButton = document.createElement("button");
   showButton.textContent = "Mostrar Productos";
@@ -222,25 +254,37 @@ async function loadEventsByStatus(status, includeActions = false) {
       return;
     }
 
-    events.forEach((event) => {
+    for (const event of events) {
+      const eventElement = await createEventElement(
+        event,
+        status,
+        includeActions
+      );
+      content.appendChild(eventElement);
+    }
+
+    /*events.forEach((event) => {
       const eventElement = createEventElement(event, status, includeActions);
       content.appendChild(eventElement);
-    });
+    });*/
   } catch (error) {
     content.innerHTML += `<p style="color:red;">Error al cargar eventos</p>`;
   }
 }
 
-function createEventElement(event, status, includeActions = false) {
+async function createEventElement(event, status, includeActions = false) {
+  const user = await getUserById(event.user_id);
   const eventElement = document.createElement("div");
   eventElement.classList.add("event");
   eventElement.innerHTML = `
       <h3>Título: ${event.title}</h3>
-      <p>Descripción: ${event.description}</p>
-      <p>Teléfono: ${event.phone}</p>
-      <p>Fecha: ${event.date}</p>
-      <p>Ubicación: ${event.location}</p>
-      <p>Horario: ${event.schedule}</p>
+      <p><strong>Usuario:</strong> ${user.name}</p>
+      <p><strong>Email:</strong> ${user.email}</p>
+      <p><strong>Descripción:</strong> ${event.description}</p>
+      <p><strong>Teléfono:</strong> ${event.phone}</p>
+      <p><strong>Fecha:</strong> ${event.date}</p>
+      <p><strong>Ubicación:</strong> ${event.location}</p>
+      <p><strong>Horario:</strong> ${event.schedule}</p>
     `;
 
   if (includeActions) {
@@ -283,5 +327,59 @@ async function updateEventStatus(eventId, newStatus, container) {
     }
   } catch (error) {
     container.innerHTML += `<p style="color:red;">Error en la petición</p>`;
+  }
+}
+
+async function getUserById(id) {
+  try {
+    const response = await fetch(API_URL + "/user/" + id, {
+      method: "GET",
+      headers: {
+        Authorization: "Bearer " + localStorage.getItem("token"),
+        "Content-Type": "application/json",
+      },
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error(
+        "Error de API al obtener el usuario:",
+        data.message || response.status
+      );
+      return { name: "Usuario desconocido" }; // Fallback visible
+    }
+
+    return data;
+  } catch (e) {
+    console.error("Error en fetch getUserById:", e);
+    return { name: "Error" };
+  }
+}
+
+async function searchOrdersByUserEmail(email) {
+  try {
+    console.log(
+      "Llamando a:",
+      `${API_URL}/orders/search?email=${encodeURIComponent(email)}`
+    );
+    const response = await fetch(
+      `${API_URL}/orders/search?email=${encodeURIComponent(email)}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: "Bearer " + localStorage.getItem("token"),
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    const orders = await response.json();
+    console.log("Respuesta del backend: ", orders);
+    return orders;
+  } catch (error) {
+    console.error("Error en búsqueda:", error.message);
+    alert(`Error al obtener las órdenes: ${error.message}`);
+    return [];
   }
 }

@@ -183,6 +183,14 @@
             body: formData,
           });
 
+          /*Borrar en caso de fallo*/
+          if (response.status === 401) {
+              localStorage.removeItem("token");
+              localStorage.removeItem("role");
+              location.href = "./login.html";
+              return;
+            }
+
           const result = await response.json();
 
           if (response.ok) {

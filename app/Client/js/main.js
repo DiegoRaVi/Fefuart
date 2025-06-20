@@ -1,4 +1,4 @@
-import { getUser, isAuthenticated } from './auth.js';
+import { getUser, isAuthenticated, getUserRole } from './auth.js';
 import { loadCartItems } from './order.js';
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -38,15 +38,17 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // Comprobar usuario después de cargar el HTML
     let user = null;
+    let userRole = null;
 
     if (isAuthenticated()) {
         user = await getUser();
+        userRole = getUserRole();
     }else{
       console.log("NO HAY TOKEN");
     }
 
     const admin = document.getElementById("admin");
-    if (user && user.role === "admin" && admin) {
+    if (user && userRole === "admin" && admin) {
       admin.style.display = "block";
     }
   } catch (err) {

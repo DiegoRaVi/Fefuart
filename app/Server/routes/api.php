@@ -18,6 +18,7 @@ Route::middleware([IsUserAuth::class])->group(function(){
     Route::controller(AuthController::class)->group(function(){
         Route::post('/logout', 'logout');
         Route::get('/me', 'getUser');
+        Route::get('/user/{id}', 'getUserById');
     });
 
     Route::controller(ProductController::class)->group(function(){
@@ -73,8 +74,8 @@ Route::middleware([IsAdmin::class])->group(function(){
         Route::get('/orders/paid', 'getPaidOrders');
         Route::get('/orders/shipped', 'getShippedOrders');
         Route::get('/orders/cancelled', 'getCancelledOrders');
+        Route::get('/orders/search', 'getOrdersByUserEmail');
         Route::get('/orders/{id}','getOrdersByUserId');
-
         Route::patch('/admin/orders/{id}', 'updateOrderById');
         Route::delete('/orders/{id}', 'deleteOrderById');
     });

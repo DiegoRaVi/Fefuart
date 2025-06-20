@@ -1,4 +1,4 @@
-export { getUser, isAuthenticated };
+export { getUser, isAuthenticated, getUserRole };
 
 const API_URL = "http://localhost:8000/api";
 // js/auth.js

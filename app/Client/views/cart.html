@@ -17,7 +17,7 @@
 
     <script type="module">
       import { getUser } from "../js/auth.js";
-      import { cart, deleteProduct } from "../js/order.js";
+      import { cart, deleteProduct, patchOrder } from "../js/order.js";
 
       document.addEventListener("DOMContentLoaded", async () => {
         try {
@@ -74,6 +74,8 @@
             `;
             productList.appendChild(li);
             total += parseFloat(product.price);
+            patchOrder(cartOrder.id, total);
+
           });
           orderDetails.appendChild(productList);
 
