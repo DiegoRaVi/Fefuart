@@ -54,7 +54,7 @@ Route::middleware([IsAdmin::class])->group(function(){
         Route::get('/product/{id}', 'getProductById');
 
         Route::patch('/products/{id}', 'updateProductById');
-        Route::delete('/products/{id}', 'deleteProductById');
+        //Route::delete('/products/{id}', 'deleteProductById');
     });
 
     Route::controller(EventController::class)->group(function(){
