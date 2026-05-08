@@ -6,7 +6,6 @@ use App\Models\User;
 use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 
 class OrderController extends Controller
 {
@@ -56,7 +55,7 @@ public function getOrdersByUserEmail(Request $request)
             return response()->json(['message' => 'Order not found'], 404);
         }
 
-        if ($user->role !== 'admin' && $user->role !== $order->user_id) {
+        if ($user->role !== 'admin' && (int) $user->id !== (int) $order->user_id) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -219,12 +218,11 @@ public function getOrdersByUserEmail(Request $request)
     // UPDATE ORDER POR ID
     public function updateOrderById(Request $request, $id)
     {
+        $user = Auth::user();
 
-        /*$user = Auth::user();
-
-        if($user->role !== 'admin'){
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }*/
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
 
         $order = Order::find($id);
 
@@ -232,14 +230,36 @@ public function getOrdersByUserEmail(Request $request)
             return response()->json(['message' => 'Order not found'], 404);
         }
 
-        $request->validate([
-            'order_date' => 'sometimes|date',
-            'status' => 'sometimes|in:pending,paid,shipped,cancelled',
-            'address' => 'sometimes',
-            'total' => 'sometimes|numeric|min:0',
-        ]);
+        if ($user->role !== 'admin' && (int) $order->user_id !== (int) $user->id) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
 
-        $order->update($request->only(['order_date', 'address', 'status', 'total']));
+        $isAdmin = $user->role === 'admin';
+
+        $rules = [
+            'address' => ['sometimes', 'string', 'max:255'],
+            'total' => ['sometimes', 'numeric', 'min:0'],
+        ];
+
+        if ($isAdmin) {
+            $rules['order_date'] = ['sometimes', 'date'];
+            $rules['status'] = ['sometimes', 'in:pending,paid,shipped,cancelled'];
+        } else {
+            $rules['order_date'] = ['prohibited'];
+            $rules['status'] = ['sometimes', 'in:pending'];
+        }
+
+        $request->validate($rules);
+
+        if (!$isAdmin && $request->has('status') && $order->status !== 'cart') {
+            return response()->json(['message' => 'Only cart orders can be moved to pending by the owner'], 422);
+        }
+
+        $fields = $isAdmin
+            ? ['order_date', 'address', 'status', 'total']
+            : ['address', 'status', 'total'];
+
+        $order->update($request->only($fields));
 
         return response()->json($order, 200);
     }

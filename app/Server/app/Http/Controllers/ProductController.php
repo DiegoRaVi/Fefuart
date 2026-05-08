@@ -12,8 +12,26 @@ use Illuminate\Support\Facades\Validator;
 class ProductController extends Controller
 {
 
+    // GET PRODUCTOS DEL USUARIO AUTENTICADO
+    public function getProducts(){
+
+        $user = Auth::user();
+
+        $products = Product::whereHas('order', function ($query) use ($user) {
+            $query->where('user_id', $user->id);
+        })->orderBy('created_at', 'desc')->paginate(20);
+
+        if ($products->isEmpty()) {
+            return response()->json(['message' => 'No products found'], 404);
+        }
+
+        return response()->json($products, 200);
+    }
+
     // POST NUEVO PRODUCT
     public function addProduct(Request $request){
+
+        $user = Auth::user();
 
         $validator = Validator::make($request->all(),[
             'name' => 'required|string|max:100',
@@ -21,7 +39,7 @@ class ProductController extends Controller
             'description' => 'nullable|string',
             'category' => 'required|string',
             'subcategory' => 'nullable|string',
-            'quantity' => 'nullable|integer|min:1',
+            'quantity' => 'required|integer|min:1',
             'delivery_type' => 'required|in:digital,physical',
             'delivery_time' => 'required|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
@@ -33,12 +51,22 @@ class ProductController extends Controller
           return response()->json(['error' => $validator->errors()], 422);  
         }
 
+        $order = Order::find($request->get('order_id'));
+
+        if(!$order){
+            return response()->json(['message' => 'Order not found'], 404);
+        }
+
+        if($user->role !== 'admin' && (int) $order->user_id !== (int) $user->id){
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
         $imagePath = null;
         if ($request->hasFile('image')) {
             $imagePath = $request->file('image')->store('uploads', 'public');
         }
 
-        Product::create([
+        $product = Product::create([
             'name'=> $request->get('name'),
             'price'=> $request->get('price'),
             'quantity' => $request->get('quantity'),
@@ -51,16 +79,25 @@ class ProductController extends Controller
             'stock'=> $request->get('stock'),
             'order_id' => $request->get('order_id')
         ]);
-        return response()->json(['message' => 'Product added successfully'], 201);
+        return response()->json([
+            'message' => 'Product added successfully',
+            'product' => $product,
+        ], 201);
     }
 
     // GET TODOS LOS PRODUCTOS DE UNA ORDER CON SU ID
     public function getProductsByOrderId($orderId){
 
+        $user = Auth::user();
+
         $order = Order::with('products')->find($orderId);
 
         if (!$order) {
             return response()->json(['message' => 'Order not found'], 404);
+        }
+
+        if ($user->role !== 'admin' && (int) $order->user_id !== (int) $user->id) {
+            return response()->json(['message' => 'Unauthorized'], 403);
         }
 
         if ($order->products->isEmpty()) {
@@ -88,7 +125,7 @@ class ProductController extends Controller
         $product = Product::find($id);
 
         if(!$product){
-            return response()->json(['message'=> 'Product not found', 404]);
+            return response()->json(['message'=> 'Product not found'], 404);
         }
 
         $validator = Validator::make($request->all(),[
@@ -119,6 +156,30 @@ class ProductController extends Controller
             $product->delivery_type = $request->delivery_type;
         }
 
+        if($request->exists('description')){
+            $product->description = $request->description;
+        }
+
+        if($request->has('category')){
+            $product->category = $request->category;
+        }
+
+        if($request->exists('subcategory')){
+            $product->subcategory = $request->subcategory;
+        }
+
+        if($request->has('delivery_time')){
+            $product->delivery_time = $request->delivery_time;
+        }
+
+        if($request->exists('image_url')){
+            $product->image_url = $request->image_url;
+        }
+
+        if($request->exists('stock')){
+            $product->stock = $request->stock;
+        }
+
         $product->update();
 
         return response()->json(['message' => 'Product updated successfully'], 200);
@@ -127,10 +188,18 @@ class ProductController extends Controller
     // DELETE PRODUCT POR EL ID
     public function deleteProductById($id){
 
-        $product = Product::find($id);
+        $user = Auth::user();
+
+        $product = Product::with('order')->find($id);
 
         if(!$product){
-            return response()->json(['message' => 'Product not found', 404]);
+            return response()->json(['message' => 'Product not found'], 404);
+        }
+
+        if($user->role !== 'admin'){
+            if(!$product->order || (int) $product->order->user_id !== (int) $user->id){
+                return response()->json(['message' => 'Unauthorized'], 403);
+            }
         }
 
         // Si hay imagen, eliminarla del disco

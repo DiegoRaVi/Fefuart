@@ -48,13 +48,13 @@ class EventController extends Controller
     // GET EVENTOS PENDIENTES
     public function getPendingEvents(){
 
-        $events = Event::where('status', 'pending')->with('user')->orderBy('date', 'asc')->get();
-    
         $user = Auth::user();
 
         if($user->role !== "admin"){
             return response()->json(['message' => 'You are not an ADMIN'], 403);
         }
+
+        $events = Event::where('status', 'pending')->with('user')->orderBy('date', 'asc')->get();
     
         if ($events->isEmpty()) {
             return response()->json(['message' => 'No pending events found'], 404);
@@ -66,13 +66,13 @@ class EventController extends Controller
     // GET EVENTOS RECHAZADOS
     public function getRejectedEvents(){
 
-        $events = Event::where('status', 'rejected')->with('user')->orderBy('date', 'asc')->get();
-
         $user = Auth::user();
 
         if($user->role !== "admin"){
             return response()->json(['message' => 'You are not an ADMIN'], 403);
         }
+
+        $events = Event::where('status', 'rejected')->with('user')->orderBy('date', 'asc')->get();
     
         if ($events->isEmpty()) {
             return response()->json(['message' => 'No rejected events found'], 404);
@@ -194,19 +194,40 @@ class EventController extends Controller
         return response()->json(['message' => 'You can only edit pending events'], 403);
     }
 
-    // ✅ Validar campos solo si NO es admin o si se actualizan más campos
-    if ($user->role !== 'admin' || $request->hasAny(['title', 'date', 'location'])) {
+    if ($user->role !== 'admin') {
         $request->validate([
-            'title' => 'required|string|max:255',
+            'title' => 'sometimes|string|max:255',
             'description' => 'nullable|string',
-            'date' => 'required|date',
-            'location' => 'required|string|max:255',
+            'phone' => 'nullable|string',
+            'date' => 'sometimes|date',
+            'location' => 'sometimes|string|max:255',
+            'schedule' => 'sometimes|in:morning,evening',
+            'status' => 'prohibited',
         ]);
+
+        if ($event->status !== 'pending') {
+            return response()->json(['message' => 'You can only edit pending events'], 403);
+        }
+
+        $event->update($request->only([
+            'title', 'description', 'phone', 'date', 'location', 'schedule'
+        ]));
+
+        return response()->json($event, 200);
     }
 
-    // Solo actualiza los campos enviados
+    $request->validate([
+            'title' => 'sometimes|string|max:255',
+            'description' => 'nullable|string',
+            'phone' => 'nullable|string',
+            'date' => 'sometimes|date',
+            'location' => 'sometimes|string|max:255',
+            'schedule' => 'sometimes|in:morning,evening',
+            'status' => 'sometimes|in:pending,confirmed,rejected,done',
+        ]);
+
     $event->update($request->only([
-        'title', 'description', 'date', 'location', 'status'
+        'title', 'description', 'phone', 'date', 'location', 'schedule', 'status'
     ]));
 
     return response()->json($event, 200);

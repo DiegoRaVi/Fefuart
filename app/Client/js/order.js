@@ -37,12 +37,12 @@ export async function loadCartItems() {
   try {
     const cartItemsList = document.getElementById("cart-items");
 
-    cartItemsList.innerHTML = ""; // Limpiar solo si existe
-
     if (!cartItemsList) {
       console.warn("Elemento cart-items no encontrado");
       return;
     }
+
+    cartItemsList.innerHTML = "";
 
     // 1. Obtener la orden del carrito
     const cartResponse = await fetch(`${API_URL}/cart-order`, {
@@ -131,6 +131,13 @@ export async function patchOrder(orderId, orderTotal) {
     },
     body: JSON.stringify({ total: orderTotal }),
   });
+
+  if (!response.ok) {
+    console.error("No se pudo actualizar el pedido");
+    return false;
+  }
+
+  return true;
 }
 
 // Función para eliminar producto
@@ -145,8 +152,12 @@ export async function deleteProduct(productId) {
 
     if (!response.ok) {
       console.error("Error al eliminar producto");
+      return false;
     }
+
+    return true;
   } catch (error) {
     console.error("Error:", error);
+    return false;
   }
 }

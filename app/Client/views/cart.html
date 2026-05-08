@@ -74,9 +74,10 @@
             `;
             productList.appendChild(li);
             total += parseFloat(product.price);
-            patchOrder(cartOrder.id, total);
-
           });
+
+          await patchOrder(cartOrder.id, total);
+
           orderDetails.appendChild(productList);
 
           document.querySelectorAll(".remove-btn").forEach((button) => {
@@ -84,7 +85,7 @@
               const productId = button.dataset.productId;
               const success = await deleteProduct(productId);
               if (success) {
-                await loadCartItems(); // Recargar solo si se eliminó correctamente
+                window.location.reload();
               }
             });
           });

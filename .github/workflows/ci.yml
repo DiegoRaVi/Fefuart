@@ -1,0 +1,567 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      run_prerelease_gates:
+        description: Run pre-release rollout gates
+        required: false
+        default: "true"
+      rollout_spa_base_url:
+        description: Optional SPA base URL override for rollout validation
+        required: false
+        default: ""
+      rollout_phase:
+        description: Rollout phase preset for canary validation
+        required: false
+        default: "all"
+        type: choice
+        options:
+          - phase1
+          - phase2
+          - phase3
+          - all
+      run_extended_e2e:
+        description: Run extended E2E suite (assistant + media upload)
+        required: false
+        default: "false"
+
+jobs:
+  backend-tests:
+    name: Backend Tests (Laravel)
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: app/Server
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          tools: composer:v2
+          extensions: mbstring, dom, fileinfo, sqlite3, pdo_sqlite, pcntl
+
+      - name: Prepare environment vars
+        run: |
+          echo "APP_KEY=base64:$(php -r 'echo base64_encode(random_bytes(32));')" >> "$GITHUB_ENV"
+          echo "JWT_SECRET=$(php -r 'echo bin2hex(random_bytes(32));')" >> "$GITHUB_ENV"
+
+      - name: Install backend dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Run backend test suite
+        run: php artisan test
+
+  spa-build:
+    name: Frontend Build (SPA)
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: app/Client/spa
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: app/Client/spa/package-lock.json
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Build SPA
+        run: npm run build
+
+  e2e-smoke:
+    name: E2E Smoke (Playwright)
+    runs-on: ubuntu-latest
+    needs: [backend-tests, spa-build]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          tools: composer:v2
+          extensions: mbstring, dom, fileinfo, sqlite3, pdo_sqlite, pcntl
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: app/Client/spa/package-lock.json
+
+      - name: Install backend dependencies
+        working-directory: app/Server
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Prepare backend environment vars
+        run: |
+          echo "APP_KEY=base64:$(php -r 'echo base64_encode(random_bytes(32));')" >> "$GITHUB_ENV"
+          echo "JWT_SECRET=$(php -r 'echo bin2hex(random_bytes(32));')" >> "$GITHUB_ENV"
+
+      - name: Prepare backend sqlite database
+        working-directory: app/Server
+        env:
+          APP_ENV: testing
+          APP_KEY: ${{ env.APP_KEY }}
+          JWT_SECRET: ${{ env.JWT_SECRET }}
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+        run: |
+          cp -n .env.example .env || true
+          mkdir -p database
+          touch database/database.sqlite
+          php artisan migrate --force
+
+      - name: Start backend server
+        working-directory: app/Server
+        env:
+          APP_ENV: testing
+          APP_KEY: ${{ env.APP_KEY }}
+          JWT_SECRET: ${{ env.JWT_SECRET }}
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+        run: |
+          php artisan serve --host=127.0.0.1 --port=8000 > ../laravel-e2e.log 2>&1 &
+          echo $! > ../laravel-e2e.pid
+
+      - name: Wait for backend health
+        run: |
+          for i in {1..40}; do
+            if curl -fsS http://127.0.0.1:8000/api/v1/health > /dev/null; then
+              echo "Backend is ready"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Backend did not become ready in time"
+          exit 1
+
+      - name: Install frontend dependencies
+        working-directory: app/Client/spa
+        run: npm ci
+
+      - name: Install Playwright browser
+        working-directory: app/Client/spa
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Playwright smoke suite
+        working-directory: app/Client/spa
+        env:
+          CI: "true"
+          E2E_API_BASE_URL: http://127.0.0.1:8000/api/v1
+          E2E_BASE_URL: http://127.0.0.1:4173
+          E2E_HOST: 127.0.0.1
+          E2E_PORT: "4173"
+          E2E_LEGACY_BASE_URL: http://127.0.0.1:4180
+          E2E_LEGACY_HOST: 127.0.0.1
+          E2E_LEGACY_PORT: "4180"
+          E2E_ASSISTANT_EMAIL: ${{ secrets.E2E_ASSISTANT_EMAIL }}
+          E2E_ASSISTANT_PASSWORD: ${{ secrets.E2E_ASSISTANT_PASSWORD }}
+          E2E_ENABLE_MEDIA_UPLOAD: ${{ vars.E2E_ENABLE_MEDIA_UPLOAD }}
+        run: npm run test:e2e
+
+      - name: Upload Playwright artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-artifacts
+          path: |
+            app/Client/spa/playwright-report
+            app/Client/spa/test-results
+
+      - name: Upload backend e2e log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: laravel-e2e-log
+          path: app/laravel-e2e.log
+
+      - name: Stop backend server
+        if: always()
+        run: |
+          if [ -f app/laravel-e2e.pid ]; then
+            kill "$(cat app/laravel-e2e.pid)" || true
+          fi
+
+  prerelease-rollout-gates:
+    name: Pre-release Rollout Gates
+    runs-on: ubuntu-latest
+    needs: [backend-tests, spa-build, e2e-smoke]
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.run_prerelease_gates != 'false'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve rollout target URL
+        id: rollout_target
+        env:
+          INPUT_ROLLOUT_SPA_BASE_URL: ${{ github.event.inputs.rollout_spa_base_url }}
+          VAR_ROLLOUT_SPA_BASE_URL: ${{ vars.ROLLOUT_SPA_BASE_URL }}
+        run: |
+          target="${INPUT_ROLLOUT_SPA_BASE_URL:-$VAR_ROLLOUT_SPA_BASE_URL}"
+          target="$(echo "$target" | xargs)"
+
+          if [ -z "$target" ]; then
+            echo "Missing rollout target URL. Provide workflow_dispatch input rollout_spa_base_url or set repository variable ROLLOUT_SPA_BASE_URL."
+            exit 1
+          fi
+
+          case "$target" in
+            http://*|https://*) ;;
+            *)
+              echo "Invalid rollout target URL: $target"
+              exit 1
+              ;;
+          esac
+
+          echo "value=$target" >> "$GITHUB_OUTPUT"
+          echo "Using rollout target: $target"
+
+      - name: Publish prerelease gate context
+        run: |
+          {
+            echo "## Pre-release Rollout Gate"
+            echo ""
+            echo "- Rollout target URL: ${{ steps.rollout_target.outputs.value }}"
+            echo "- Selected rollout phase: ${{ github.event.inputs.rollout_phase }}"
+            echo "- Extended E2E requested: ${{ github.event.inputs.run_extended_e2e }}"
+            echo "- Validation feedback smoke: enabled"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Validate rollout target availability
+        env:
+          TARGET_URL: ${{ steps.rollout_target.outputs.value }}
+        run: |
+          response_meta="$(curl -L --retry 3 --retry-delay 2 --connect-timeout 10 -sS -o /tmp/rollout-target.html -w "%{http_code}|%{content_type}" "$TARGET_URL")"
+          status_code="${response_meta%%|*}"
+          content_type="${response_meta#*|}"
+
+          if [ "$status_code" -lt 200 ] || [ "$status_code" -ge 400 ]; then
+            echo "Rollout target is not reachable. HTTP status: $status_code"
+            exit 1
+          fi
+
+          if [[ "$content_type" != text/html* && "$content_type" != application/xhtml+xml* ]]; then
+            echo "Rollout target did not return HTML content. Content-Type: ${content_type:-unknown}"
+            exit 1
+          fi
+
+          if [ ! -s /tmp/rollout-target.html ]; then
+            echo "Rollout target responded with an empty body."
+            exit 1
+          fi
+
+          if ! grep -Eiq '<!doctype html|<html' /tmp/rollout-target.html; then
+            echo "Rollout target response is not an HTML document shell."
+            exit 1
+          fi
+
+          if ! grep -Eiq 'id=["\x27](root|app)["\x27]|<script[^>]+(type=["\x27]module["\x27]|src=)' /tmp/rollout-target.html; then
+            echo "Rollout target does not look like a SPA entrypoint (missing root container or bootstrap script)."
+            exit 1
+          fi
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          tools: composer:v2
+          extensions: mbstring, dom, fileinfo, sqlite3, pdo_sqlite, pcntl
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: app/Client/spa/package-lock.json
+
+      - name: Install backend dependencies
+        working-directory: app/Server
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Prepare backend environment vars
+        run: |
+          echo "APP_KEY=base64:$(php -r 'echo base64_encode(random_bytes(32));')" >> "$GITHUB_ENV"
+          echo "JWT_SECRET=$(php -r 'echo bin2hex(random_bytes(32));')" >> "$GITHUB_ENV"
+
+      - name: Prepare backend sqlite database
+        working-directory: app/Server
+        env:
+          APP_ENV: testing
+          APP_KEY: ${{ env.APP_KEY }}
+          JWT_SECRET: ${{ env.JWT_SECRET }}
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+        run: |
+          cp -n .env.example .env || true
+          mkdir -p database
+          touch database/database.sqlite
+          php artisan migrate --force
+
+      - name: Start backend server
+        working-directory: app/Server
+        env:
+          APP_ENV: testing
+          APP_KEY: ${{ env.APP_KEY }}
+          JWT_SECRET: ${{ env.JWT_SECRET }}
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+        run: |
+          php artisan serve --host=127.0.0.1 --port=8000 > ../laravel-canary.log 2>&1 &
+          echo $! > ../laravel-canary.pid
+
+      - name: Wait for backend health
+        run: |
+          for i in {1..40}; do
+            if curl -fsS http://127.0.0.1:8000/api/v1/health > /dev/null; then
+              echo "Backend is ready"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Backend did not become ready in time"
+          exit 1
+
+      - name: Install frontend dependencies
+        working-directory: app/Client/spa
+        run: npm ci
+
+      - name: Install Playwright browser
+        working-directory: app/Client/spa
+        run: npx playwright install --with-deps chromium
+
+      - name: Run rollout canary suite
+        id: run_rollout_canary
+        working-directory: app/Client/spa
+        env:
+          CI: "true"
+          E2E_API_BASE_URL: http://127.0.0.1:8000/api/v1
+          E2E_BASE_URL: http://127.0.0.1:4173
+          E2E_HOST: 127.0.0.1
+          E2E_PORT: "4173"
+          E2E_LEGACY_BASE_URL: http://127.0.0.1:4180
+          E2E_LEGACY_HOST: 127.0.0.1
+          E2E_LEGACY_PORT: "4180"
+          E2E_ROLLOUT_SPA_BASE_URL: ${{ steps.rollout_target.outputs.value }}
+          E2E_CANARY_ROLLOUT_PHASE: ${{ github.event.inputs.rollout_phase }}
+        run: npm run test:e2e:canary
+
+      - name: Run validation feedback smoke
+        id: run_validation_feedback_smoke
+        working-directory: app/Client/spa
+        env:
+          CI: "true"
+          E2E_API_BASE_URL: http://127.0.0.1:8000/api/v1
+          E2E_BASE_URL: http://127.0.0.1:4173
+          E2E_HOST: 127.0.0.1
+          E2E_PORT: "4173"
+          E2E_LEGACY_BASE_URL: http://127.0.0.1:4180
+          E2E_LEGACY_HOST: 127.0.0.1
+          E2E_LEGACY_PORT: "4180"
+          E2E_ROLLOUT_SPA_BASE_URL: ${{ steps.rollout_target.outputs.value }}
+          E2E_CANARY_ROLLOUT_PHASE: ${{ github.event.inputs.rollout_phase }}
+        run: npm run test:e2e:validation
+
+      - name: Upload Playwright canary artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-canary-artifacts
+          path: |
+            app/Client/spa/playwright-report
+            app/Client/spa/test-results
+
+      - name: Upload backend canary log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: laravel-canary-log
+          path: app/laravel-canary.log
+
+      - name: Publish prerelease result summary
+        if: always()
+        run: |
+          {
+            echo ""
+            echo "### Suite Results"
+            echo "- rollout canary: ${{ steps.run_rollout_canary.outcome }}"
+            echo "- validation feedback smoke: ${{ steps.run_validation_feedback_smoke.outcome }}"
+            echo ""
+            echo "### Artifacts"
+            echo "- playwright-canary-artifacts"
+            echo "- laravel-canary-log"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Stop backend server
+        if: always()
+        run: |
+          if [ -f app/laravel-canary.pid ]; then
+            kill "$(cat app/laravel-canary.pid)" || true
+          fi
+
+  e2e-extended:
+    name: E2E Extended (Assistant + Media)
+    runs-on: ubuntu-latest
+    needs: [backend-tests, spa-build, e2e-smoke]
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.run_extended_e2e == 'true'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Publish extended lane context
+        run: |
+          {
+            echo "## Extended E2E Lane"
+            echo ""
+            echo "- Triggered by workflow_dispatch with run_extended_e2e=true"
+            echo "- Includes assistant backoffice notification journey"
+            echo "- Includes media upload/delete validation"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          tools: composer:v2
+          extensions: mbstring, dom, fileinfo, sqlite3, pdo_sqlite, pcntl
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: app/Client/spa/package-lock.json
+
+      - name: Validate extended E2E prerequisites
+        env:
+          E2E_ASSISTANT_EMAIL: ${{ secrets.E2E_ASSISTANT_EMAIL }}
+          E2E_ASSISTANT_PASSWORD: ${{ secrets.E2E_ASSISTANT_PASSWORD }}
+        run: |
+          if [ -z "$E2E_ASSISTANT_EMAIL" ] || [ -z "$E2E_ASSISTANT_PASSWORD" ]; then
+            echo "Missing assistant credentials for extended E2E. Set secrets E2E_ASSISTANT_EMAIL and E2E_ASSISTANT_PASSWORD."
+            exit 1
+          fi
+
+      - name: Install backend dependencies
+        working-directory: app/Server
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Prepare backend environment vars
+        run: |
+          echo "APP_KEY=base64:$(php -r 'echo base64_encode(random_bytes(32));')" >> "$GITHUB_ENV"
+          echo "JWT_SECRET=$(php -r 'echo bin2hex(random_bytes(32));')" >> "$GITHUB_ENV"
+
+      - name: Prepare backend sqlite database
+        working-directory: app/Server
+        env:
+          APP_ENV: testing
+          APP_KEY: ${{ env.APP_KEY }}
+          JWT_SECRET: ${{ env.JWT_SECRET }}
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+        run: |
+          cp -n .env.example .env || true
+          mkdir -p database
+          touch database/database.sqlite
+          php artisan migrate --force
+
+      - name: Start backend server
+        working-directory: app/Server
+        env:
+          APP_ENV: testing
+          APP_KEY: ${{ env.APP_KEY }}
+          JWT_SECRET: ${{ env.JWT_SECRET }}
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+        run: |
+          php artisan serve --host=127.0.0.1 --port=8000 > ../laravel-extended.log 2>&1 &
+          echo $! > ../laravel-extended.pid
+
+      - name: Wait for backend health
+        run: |
+          for i in {1..40}; do
+            if curl -fsS http://127.0.0.1:8000/api/v1/health > /dev/null; then
+              echo "Backend is ready"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Backend did not become ready in time"
+          exit 1
+
+      - name: Install frontend dependencies
+        working-directory: app/Client/spa
+        run: npm ci
+
+      - name: Install Playwright browser
+        working-directory: app/Client/spa
+        run: npx playwright install --with-deps chromium
+
+      - name: Run extended E2E suite
+        working-directory: app/Client/spa
+        env:
+          CI: "true"
+          E2E_API_BASE_URL: http://127.0.0.1:8000/api/v1
+          E2E_BASE_URL: http://127.0.0.1:4173
+          E2E_HOST: 127.0.0.1
+          E2E_PORT: "4173"
+          E2E_LEGACY_BASE_URL: http://127.0.0.1:4180
+          E2E_LEGACY_HOST: 127.0.0.1
+          E2E_LEGACY_PORT: "4180"
+          E2E_ASSISTANT_EMAIL: ${{ secrets.E2E_ASSISTANT_EMAIL }}
+          E2E_ASSISTANT_PASSWORD: ${{ secrets.E2E_ASSISTANT_PASSWORD }}
+          E2E_ENABLE_MEDIA_UPLOAD: "true"
+        run: npm run test:e2e:extended
+
+      - name: Upload Playwright extended artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-extended-artifacts
+          path: |
+            app/Client/spa/playwright-report
+            app/Client/spa/test-results
+
+      - name: Upload backend extended log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: laravel-extended-log
+          path: app/laravel-extended.log
+
+      - name: Publish extended result summary
+        if: always()
+        run: |
+          {
+            echo ""
+            echo "### Artifacts"
+            echo "- playwright-extended-artifacts"
+            echo "- laravel-extended-log"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Stop backend server
+        if: always()
+        run: |
+          if [ -f app/laravel-extended.pid ]; then
+            kill "$(cat app/laravel-extended.pid)" || true
+          fi

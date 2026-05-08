@@ -14,11 +14,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const content = document.getElementById("content");
       content.innerHTML = `<h2>Pedidos de ${userEmail}</h2>`;
+
+      if (!orders.length) {
+        content.innerHTML += `<p>No se encontraron pedidos para ese usuario</p>`;
+        return;
+      }
       
       for (const order of orders) {
         const orderElement = await createOrderElement(
           order,
-          status
+          order.status
         );
         content.appendChild(orderElement);
       }
@@ -374,9 +379,23 @@ async function searchOrdersByUserEmail(email) {
       }
     );
 
-    const orders = await response.json();
-    console.log("Respuesta del backend: ", orders);
-    return orders;
+    const data = await response.json();
+    console.log("Respuesta del backend: ", data);
+
+    if (!response.ok) {
+      alert(data.message || "No se pudieron obtener las órdenes");
+      return [];
+    }
+
+    if (Array.isArray(data)) {
+      return data;
+    }
+
+    if (Array.isArray(data.orders)) {
+      return data.orders;
+    }
+
+    return [];
   } catch (error) {
     console.error("Error en búsqueda:", error.message);
     alert(`Error al obtener las órdenes: ${error.message}`);

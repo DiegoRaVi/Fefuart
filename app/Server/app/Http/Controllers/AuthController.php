@@ -26,7 +26,7 @@ class AuthController extends Controller
 
         User::create([
             'name'=> $request->get('name'),
-            'role'=> $request->get('role', 'user'),
+            'role'=> 'user',
             'email'=> $request->get('email'),
             'password'=> bcrypt($request->get('password')),
         ]);
@@ -80,6 +80,16 @@ class AuthController extends Controller
     }
 
     public function getUserById($id){
+
+        $authUser = Auth::user();
+
+        if(!$authUser){
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        if($authUser->role !== 'admin' && (int) $authUser->id !== (int) $id){
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
         
         $user = User::find($id);
 
@@ -87,7 +97,12 @@ class AuthController extends Controller
             return response()->json(['error' => 'Usuario no encontrado'], 404);
         }
 
-        return response()->json($user, 200);
+        return response()->json([
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'role' => $user->role,
+        ], 200);
     }
 
     public function logout(){

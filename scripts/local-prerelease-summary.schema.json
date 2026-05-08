@@ -1,0 +1,145 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "FefuArt Local Pre-release Summary",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "status",
+    "started_local",
+    "finished_local",
+    "duration_seconds",
+    "rollout",
+    "seeding",
+    "suites",
+    "spec_coverage",
+    "artifacts",
+    "failure_detail"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["passed", "failed"]
+    },
+    "started_local": {
+      "type": "string"
+    },
+    "finished_local": {
+      "type": "string"
+    },
+    "duration_seconds": {
+      "type": "number",
+      "minimum": 0
+    },
+    "rollout": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["phase", "target_url", "backend_api"],
+      "properties": {
+        "phase": {
+          "type": "string",
+          "enum": ["phase1", "phase2", "phase3", "all"]
+        },
+        "target_url": {
+          "type": "string"
+        },
+        "backend_api": {
+          "type": "string"
+        }
+      }
+    },
+    "seeding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["demo_catalog", "default_environment_demo"],
+      "properties": {
+        "demo_catalog": {
+          "type": "string"
+        },
+        "default_environment_demo": {
+          "type": "string"
+        }
+      }
+    },
+    "suites": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["canary", "validation_feedback_smoke", "extended"],
+      "properties": {
+        "canary": {
+          "type": "string"
+        },
+        "validation_feedback_smoke": {
+          "type": "string"
+        },
+        "extended": {
+          "type": "string"
+        }
+      }
+    },
+    "spec_coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["canary_presence", "validation_presence", "canary_expected", "validation_expected"],
+      "properties": {
+        "canary_presence": {
+          "type": "string",
+          "enum": ["present", "missing", "not-checked"]
+        },
+        "validation_presence": {
+          "type": "string",
+          "enum": ["present", "missing", "not-checked"]
+        },
+        "canary_expected": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "validation_expected": {
+          "type": "string"
+        }
+      }
+    },
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "backend_stdout_log",
+        "backend_stderr_log",
+        "playwright_report",
+        "playwright_report_index",
+        "playwright_test_results"
+      ],
+      "properties": {
+        "backend_stdout_log": {
+          "type": "string",
+          "enum": ["present", "missing"]
+        },
+        "backend_stderr_log": {
+          "type": "string",
+          "enum": ["present", "missing"]
+        },
+        "playwright_report": {
+          "type": "string",
+          "enum": ["present", "missing"]
+        },
+        "playwright_report_index": {
+          "type": "string",
+          "enum": ["present", "missing", "not-checked"]
+        },
+        "playwright_test_results": {
+          "type": "string",
+          "enum": ["present", "missing"]
+        }
+      }
+    },
+    "failure_detail": {
+      "type": ["string", "null"]
+    }
+  }
+}
