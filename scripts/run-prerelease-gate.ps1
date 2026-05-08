@@ -222,6 +222,67 @@ function Get-LatestRunWithRetry {
     return $null
 }
 
+function Get-DispatchedRunWithRetry {
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateSet("gh", "rest")]
+        [string]$ExecutionMode,
+        [Parameter(Mandatory = $true)]
+        [string]$Repo,
+        [Parameter(Mandatory = $true)]
+        [string]$Ref,
+        [string]$Token,
+        [string]$BaselineRunId,
+        [Parameter(Mandatory = $true)]
+        [datetime]$DispatchRequestedAtUtc,
+        [int]$MaxAttempts = 30,
+        [int]$DelaySeconds = 3
+    )
+
+    $thresholdUtc = $DispatchRequestedAtUtc.AddSeconds(-5)
+
+    for ($attempt = 1; $attempt -le $MaxAttempts; $attempt++) {
+        $run = if ($ExecutionMode -eq "gh") {
+            Get-LatestRunViaGh -Repo $Repo -Ref $Ref
+        }
+        else {
+            Get-LatestRunViaRest -Repo $Repo -Ref $Ref -Token $Token
+        }
+
+        if ($run) {
+            $isDifferentFromBaseline = [string]::IsNullOrWhiteSpace($BaselineRunId) -or ([string]$run.databaseId -ne [string]$BaselineRunId)
+            $isRecentEnough = $true
+
+            if (-not [string]::IsNullOrWhiteSpace([string]$run.createdAt)) {
+                try {
+                    $createdAtUtc = [DateTime]::Parse(
+                        [string]$run.createdAt,
+                        [System.Globalization.CultureInfo]::InvariantCulture,
+                        [System.Globalization.DateTimeStyles]::AdjustToUniversal
+                    )
+
+                    if ($createdAtUtc -lt $thresholdUtc) {
+                        $isRecentEnough = $false
+                    }
+                }
+                catch {
+                    # Keep isRecentEnough true if parsing fails; the baseline id check still protects against stale runs.
+                }
+            }
+
+            if ($isDifferentFromBaseline -and $isRecentEnough) {
+                return $run
+            }
+        }
+
+        if ($attempt -lt $MaxAttempts) {
+            Start-Sleep -Seconds $DelaySeconds
+        }
+    }
+
+    return $null
+}
+
 function Watch-RunViaRest {
     param(
         [Parameter(Mandatory = $true)]
@@ -384,6 +445,19 @@ Write-Host "Execution mode: $executionMode"
 Write-Host "Watch workflow run: $shouldWatch"
 Write-Host "Download artifacts: $($DownloadArtifacts.IsPresent)"
 
+$baselineRunId = $null
+try {
+    $baselineRun = Get-LatestRunWithRetry -ExecutionMode $executionMode -Repo $Repo -Ref $Ref -Token $token -MaxAttempts 1 -DelaySeconds 1
+    if ($baselineRun) {
+        $baselineRunId = [string]$baselineRun.databaseId
+    }
+}
+catch {
+    Write-Warning "Unable to resolve baseline workflow run before dispatch: $($_.Exception.Message)"
+}
+
+$dispatchRequestedAtUtc = [DateTime]::UtcNow
+
 if ($executionMode -eq "gh") {
     $dispatchArgs = @(
         "workflow", "run", "ci.yml",
@@ -420,7 +494,12 @@ else {
 Write-Host "Workflow dispatched successfully." -ForegroundColor Green
 
 try {
-    $latestRun = Get-LatestRunWithRetry -ExecutionMode $executionMode -Repo $Repo -Ref $Ref -Token $token
+    $latestRun = Get-DispatchedRunWithRetry -ExecutionMode $executionMode -Repo $Repo -Ref $Ref -Token $token -BaselineRunId $baselineRunId -DispatchRequestedAtUtc $dispatchRequestedAtUtc
+
+    if (-not $latestRun) {
+        Write-Warning "Unable to detect a newly dispatched run within the retry window; falling back to latest run lookup."
+        $latestRun = Get-LatestRunWithRetry -ExecutionMode $executionMode -Repo $Repo -Ref $Ref -Token $token
+    }
 }
 catch {
     throw "Failed to query workflow runs after dispatch. Verify token permissions (Actions: read). Details: $($_.Exception.Message)"
