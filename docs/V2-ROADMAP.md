@@ -35,6 +35,11 @@ Todo el desarrollo se realiza **en local**. El despliegue a staging y producció
 | **D13** | **Sin prefijo de versión en la API** | v2 es la primera versión oficial: las rutas son `/api/…`, no `/api/v1/…`. Si algún día hace falta versionar, se añade entonces. |
 | **D14** | **El encargo a medida es de primera clase** | Cada dibujo, ramo o encargo es único y lleva su descripción e imagen de referencia: eso vive en `order_items` + `media_assets`. El catálogo solo define el tipo de encargo y su precio. |
 | **D15** | **El frontend legacy no se mantiene vivo** | En cuanto la Fase 1 sustituya JWT por Sanctum y renombre las rutas, el frontend de `app/Client/views/` dejará de funcionar por completo: llama a endpoints que ya no existirán. **No se intenta evitarlo.** Mantener la API de v1 en paralelo obligaría a conservar vivas sus cinco vulnerabilidades críticas durante meses. Sin usuarios ni producción, ese «fallback» no protege de nada. El legacy permanece en el repositorio como referencia de flujos y diseño mientras se construyen las pantallas React, y se retira en la Fase 7. |
+| **D16** | **`quantity` son copias, no encargos** | Cada línea del carrito es un dibujo con su foto. La cantidad son láminas de esa misma obra, y por eso **no** se multiplica el precio completo: ver la regla N4. |
+| **D17** | **El envío se cobra por pedido, no por línea** | v1 lo sumaba por producto (tres artículos = 15 €). Sube de `order_items` a `orders`. Reglas N5–N7. |
+| **D18** | **Precios con IVA incluido, sin facturación automática** | El precio mostrado es el final; las facturas se gestionan fuera del sistema. Se evita así toda la complejidad de numeración correlativa, datos fiscales y desglose. Revisar si el negocio pasa a necesitar facturación desde la web. |
+| **D19** | **Sin fase de aprobación de boceto** | La máquina de estados de pedido se mantiene simple: no hay ida y vuelta de propuestas dentro del sistema. |
+| **D20** | **Entrega digital desde el detalle del pedido** | La artista sube el archivo final y el cliente lo descarga con el acceso verificado por Policy. Cierra una funcionalidad que en v1 se cobraba (estilo «Digital», 20 €) pero no existía. |
 
 **Decisiones de bajo impacto adoptadas sin consulta:** React Router para rutas · React Hook Form + Zod para formularios · Pest para backend · Vitest + Testing Library + Playwright para frontend.
 
@@ -43,10 +48,11 @@ Todo el desarrollo se realiza **en local**. El despliegue a staging y producció
 | # | Decisión | Cuándo hay que resolverla |
 |---|---|---|
 | P1 | Política de caducidad del presupuesto de evento (`quote_expires_at`) | Fase 5 |
-| P2 | ¿La señal es un porcentaje fijo del presupuesto o un importe que fija la administradora en cada evento? | Fase 5 |
-| P3 | ¿Se permite cancelar un pedido ya pagado y con qué política de reembolso? | Fase 5 |
+| P2 | ¿Se devuelve la señal si se cancela un evento ya confirmado? | Fase 5 |
+| P3 | **RGPD — eliminación de cuenta.** No se incluyó en el alcance de la Fase 1. El derecho de supresión no es opcional si Fefuart tendrá clientes reales en la UE. Con pedidos históricos de por medio, la solución técnica es anonimizar en lugar de borrar, para no romper la trazabilidad contable. | **Antes del primer cliente real** (Fase 7 o antes) |
+| P4 | ¿Los precios actuales (30/40/20 € por variante, 5 € de envío) son los definitivos? Se siembran como semilla y son editables desde el backoffice, así que no bloquea | Fase 2 |
 
-*Resueltas:* el destino de las tablas huérfanas de la BD local (DB-001, cerrado en Fase 0) y la continuidad del frontend legacy (decisión D15).
+*Resueltas:* destino de las tablas huérfanas de la BD local (DB-001, Fase 0) · continuidad del frontend legacy (D15) · semántica de `quantity` (D16) · cálculo del envío (D17) · IVA y facturación (D18) · fase de boceto (D19) · entrega digital (D20) · cálculo de la señal (N15) · política de cancelación (N12).
 
 ---
 
@@ -110,24 +116,71 @@ El encargo a medida es la esencia del negocio, así que el modelo lo trata como 
 
 | Tabla | Contenido | Notas |
 |---|---|---|
-| `users` | + `role` enum(`customer`,`admin`) default `customer` | `role` fuera de `$fillable` |
-| `products` | **tipo de encargo:** `slug` único, `name`, `description`, `category`, `base_price`, `is_active`, `sort_order`, `requires_reference_image`, `requires_notes`, `max_quantity` | softDeletes; índice `(is_active, category)` |
-| `product_variants` | variante con precio absoluto: «Diseño de moda» 30 €, «Acuarela» 40 €, «Digital» 20 € | ramo y letras tienen una variante única |
-| `shipping_methods` | `code` (`physical`/`digital`), `name`, `price` | +5 € físico, 0 € digital |
-| `variant_shipping_method` | pivot: qué envíos admite cada variante | modela «envío digital solo si el estilo es digital» |
-| `orders` | `status`, `subtotal`, `shipping_total`, `total`, `placed_at`, dirección | importes **calculados en servidor**; softDeletes; índices `(user_id,status)` y `(status,placed_at)` |
-| **`order_items`** | **el encargo concreto:** `customer_notes` · `reference_media_id` · `product_id`, `variant_id`, `shipping_method_id`, `quantity` · **snapshot** de `product_name`, `variant_name`, `unit_price`, `line_total` | Aquí vive todo lo que hace único a cada encargo. El snapshot congela el precio de compra: cambiar el catálogo no reescribe el histórico. Índice `(order_id)` |
-| `media_assets` | imágenes de referencia que sube el cliente: `user_id`, `path`, `original_name`, `mime_type`, `size_bytes` | disco `public`, propiedad verificada por Policy. Se sube **antes** de añadir la línea al carrito |
-| `events` | + `status` enum(`requested`,`quoted`,`accepted`,`confirmed`,`rejected`,`completed`,`cancelled`), `quoted_amount`, `deposit_amount`, `quoted_at`, `quote_expires_at` | índices `(status,event_date)` y `(user_id)` |
+| `users` | + `role` enum(`customer`,`admin`) default `customer`, `phone`, dirección predeterminada | `role` fuera de `$fillable`. `email_verified_at` pasa a usarse de verdad |
+| `products` | **tipo de encargo:** `slug` único, `name`, `description`, `category`, `is_active`, `sort_order`, `requires_reference_image`, `requires_notes`, `max_quantity`, `delivery_days` | El precio **no** vive aquí, sino en las variantes. softDeletes; índice `(is_active, category)` |
+| `product_variants` | `name`, `price` (primera copia, IVA incluido), `additional_copy_price`, `is_active` | «Diseño de moda» 30 €, «Acuarela» 40 €, «Digital» 20 €. Ramo y letras tienen una variante única. Todo producto tiene al menos una |
+| `shipping_methods` | `code` (`physical`/`digital`), `name`, `price` | 5 € físico, 0 € digital. Se aplica **una vez por pedido** |
+| `variant_shipping_method` | pivot: qué tipos de entrega admite cada variante | modela «envío digital solo si el estilo es digital» |
+| `orders` | `status`, `subtotal`, `shipping_method_id`, `shipping_total`, `total`, `placed_at`, dirección de envío | importes **calculados en servidor**; softDeletes; índices `(user_id,status)` y `(status,placed_at)` |
+| **`order_items`** | **el encargo concreto:** `customer_notes` · `reference_media_id` (la foto de partida) · `delivered_media_id` (el archivo final que sube la artista) · `product_id`, `variant_id`, `delivery_type`, `quantity` · **snapshot** de `product_name`, `variant_name`, `unit_price`, `additional_copy_price`, `line_total` | El snapshot congela el precio de compra: cambiar el catálogo no reescribe el histórico. Índice `(order_id)` |
+| `media_assets` | `user_id` (quien sube), `path`, `original_name`, `mime_type`, `size_bytes`, `visibility` | disco `public` para referencias, `private` para entregas digitales. Propiedad verificada por Policy |
+| `events` | `title`, `description`, `phone`, `event_date`, `schedule`, `location` · **nuevos:** `guest_count`, `duration_hours`, `event_type` · **presupuesto:** `status`, `quoted_amount`, `deposit_amount`, `quoted_at`, `quote_expires_at` · `confirmed_slot` (columna generada) | índices `(status,event_date)` y `(user_id)`; **índice único sobre `confirmed_slot`** |
+| `settings` | clave-valor tipado para parámetros de negocio editables | arranca con `deposit_percentage`. Evita recompilar para cambiar una regla |
 | `payments` | polimórfica sobre pedido o evento: `provider`, `provider_payment_intent_id` único, `amount`, `currency`, `status`, `kind` (`full`/`deposit`), `idempotency_key` único | separa estado de pago del estado de negocio |
 | `webhook_events` | `provider`, `provider_event_id` **único**, `payload`, `processed_at` | garantiza idempotencia ante reenvíos de Stripe |
 | `notifications` | tabla nativa de Laravel (`notifications:table`) | no se inventa una propia |
 
-Los flags `requires_reference_image` y `requires_notes` recogen lo que hoy está cableado en los formularios: **ramo de flores** y **dibujo por encargo** exigen imagen y descripción; **letras infantiles** no pide ninguna de las dos. Así puede cambiarse por producto desde el backoffice sin tocar código.
+Se mantienen `sessions`, `cache`, `jobs`, `failed_jobs`, `password_reset_tokens`. **Se eliminan** `personal_access_tokens` (el modo cookie de Sanctum no lo usa) y la columna `stock` (no tiene sentido en encargos a medida).
 
-Se mantienen `sessions`, `cache`, `jobs`, `failed_jobs`, `password_reset_tokens`. **Se elimina** `personal_access_tokens`: el modo cookie de Sanctum no lo usa.
+**Estados de pedido:** `cart → pending_payment → paid → in_progress → shipped → completed`, más `cancelled`. **No hay fase de boceto** (D19). Cada transición permitida se declara en el enum y se comprueba en `Services`, nunca en el controller.
 
-**Estados de pedido:** `cart → pending_payment → paid → in_progress → shipped → completed`, más `cancelled`. Cada transición permitida se declara en el enum y se comprueba en `Services`, nunca en el controller.
+**Estados de evento:** `requested → quoted → accepted → confirmed → completed`, más `rejected` y `cancelled`.
+
+---
+
+## 4.1 Reglas de negocio
+
+Extraídas de la sesión de descubrimiento del 2026-08-11/12. **Ninguna de estas reglas puede vivir en el navegador.**
+
+### Catálogo y precios
+
+| # | Regla |
+|---|---|
+| **N1** | Los cuatro servicios son: **Live Art** (espectáculo en directo, presupuesto a medida), **Dibujo por encargo** (retratos a partir de fotos), **Letras infantiles** (letras ilustradas) y **Ramos dibujados** (el ramo de novia en lámina). Los tres últimos son productos de catálogo. |
+| **N2** | **Todos los precios llevan IVA incluido.** El precio que ve el cliente es el final. El sistema **no** emite facturas: se gestionan por fuera. No hay columnas de base imponible ni cuota. |
+| **N3** | `quantity` = **copias de la misma lámina**, no encargos distintos. Quien quiera dos dibujos diferentes añade dos líneas al carrito. |
+| **N4** | **Precio de una línea = `unit_price` + `additional_copy_price` × (`quantity` − 1).** La primera copia paga el trabajo artístico; las siguientes solo la impresión. Ambos precios se configuran por variante desde el backoffice. |
+| **N5** | **El envío se cobra una sola vez por pedido**, no por producto (v1 lo cobraba por línea: tres artículos eran 15 €). |
+| **N6** | Un pedido paga envío físico **si contiene al menos una línea física**. Si todas sus líneas son digitales, el envío es 0. |
+| **N7** | El tipo de entrega se elige por línea y está limitado por la variante: solo el estilo «Digital» admite entrega digital. |
+| **N8** | Un pedido puede mezclar productos de tipos distintos (un ramo y unas letras en el mismo carrito). |
+
+### Encargos
+
+| # | Regla |
+|---|---|
+| **N9** | La imagen de referencia **no es un adjunto opcional: es el material de partida**. Los retratos y los ramos se dibujan a partir de la foto del cliente. `requires_reference_image` está activo en «Dibujo por encargo» y «Ramos dibujados», y desactivado en «Letras infantiles». |
+| **N10** | **No existe fase de aprobación de boceto.** El cliente encarga, paga y recibe la obra terminada. |
+| **N11** | Los productos digitales se entregan **descargándolos desde el detalle del pedido**. La artista sube el archivo final y el acceso se verifica por Policy: solo el dueño del pedido puede descargarlo. |
+| **N12** | El cliente puede cancelar **solo antes de pagar**. Una vez pagado, la cancelación se acuerda directamente con la artista y la aplica ella desde el backoffice. **No hay reembolsos automáticos** en el alcance actual. |
+
+### Eventos Live Art
+
+| # | Regla |
+|---|---|
+| **N13** | El precio **siempre es a medida**: la artista revisa la solicitud y emite un presupuesto. No hay tarifas publicadas. |
+| **N14** | Para presupuestar necesita, además de lo que ya se pide: **número aproximado de invitados**, **duración del servicio en horas** y **tipo de evento** (boda, comunión, empresa…). Los dos primeros son los que determinan la tarifa. |
+| **N15** | La reserva se confirma con una **señal calculada como porcentaje fijo del presupuesto**, configurable desde el backoffice (`settings.deposit_percentage`). |
+| **N16** | **No puede haber dos eventos confirmados en la misma fecha y franja.** Se aplica en la base de datos mediante una columna generada `confirmed_slot` con índice único: vale `NULL` salvo que el evento esté confirmado, y los `NULL` no colisionan entre sí en MariaDB. La aplicación no es la única línea de defensa. |
+| **N17** | Las solicitudes sí pueden solaparse: varios clientes pueden pedir la misma fecha. Solo una llega a confirmarse. |
+
+### Cuentas
+
+| # | Regla |
+|---|---|
+| **N18** | **El registro es obligatorio** para encargar. No hay compra como invitado. |
+| **N19** | v2 incorpora **recuperación de contraseña por email**, **verificación de email al registrarse** y **edición de perfil con cambio de contraseña** — las tres inexistentes en v1 pese a que sus tablas y columnas ya estaban creadas. |
+| **N20** | Dos roles: `customer` y `admin`. La promoción a `admin` nunca ocurre por petición HTTP. |
 
 ---
 
@@ -227,9 +280,11 @@ Prioridad: **P0** crítico · **P1** importante · **P2** mejora · **P3** opcio
 **Fase 0 completada.** El backup del esquema previo (15 tablas) está fuera del repositorio, en el scratchpad de la sesión. La recreación del esquema limpio se hace en la Fase 2, cuando existan las migraciones de v2.
 
 ### Fase 1 — Núcleo del backend · P0
-Sanctum en modo SPA y retirada de `jwt-auth` · CORS con orígenes explícitos y `supports_credentials` · registro seguro y throttle · Policies y `EnsureIsAdmin` · Enums de estado · esqueleto de `/api` con Form Requests, Resources y formato de error único · tests de autenticación y autorización.
+Sanctum en modo SPA y retirada de `jwt-auth` · CORS con orígenes explícitos y `supports_credentials` · registro seguro y throttle · **recuperación de contraseña, verificación de email y edición de perfil** (N19) · Policies y `EnsureIsAdmin` · Enums de estado · esqueleto de `/api` con Form Requests, Resources y formato de error único · tests de autenticación y autorización.
 **Cierra:** SEC-001, SEC-003, SEC-004, SEC-007, SEC-008, SEC-009, SEC-011, SEC-013, ARCH-001, ARCH-002, ARCH-004.
 *Depende de: Fase 0.*
+
+> Mailpit hace falta ya en esta fase, no en la 6: sin él no se pueden probar ni la recuperación de contraseña ni la verificación de email.
 
 ### Fase 2 — Catálogo y esquema · P0
 Migraciones de `products`, `product_variants`, `shipping_methods`, pivot y `media_assets` · `PricingService` con las 3 fórmulas · seeder del catálogo real · endpoints públicos de catálogo · subida de imágenes de referencia con Policy de propiedad · CRUD de administración · índices de DB-003.
