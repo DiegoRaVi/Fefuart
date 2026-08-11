@@ -261,6 +261,24 @@ master            v1 congelado (referencia)
 
 ---
 
+## 8.1 Entorno local
+
+Todo el desarrollo ocurre en local. Piezas necesarias para levantar el proyecto:
+
+| Pieza | Cómo se arranca | Dónde |
+|---|---|---|
+| Backend Laravel | `cd app/Server && php artisan serve --host=127.0.0.1 --port=8000` | http://127.0.0.1:8000 |
+| MySQL (MariaDB 10.4) | XAMPP Control Panel | BD `fefuart`, usuario `root` sin contraseña |
+| **Mailpit** | `C:\xampp\mailpit\mailpit.exe --listen 127.0.0.1:8025 --smtp 127.0.0.1:1025` | Bandeja en http://127.0.0.1:8025 |
+| SPA React | `cd app/Client/spa && npm run dev` | pendiente de la Fase 3 |
+| Apache | XAMPP Control Panel | solo sirve el frontend legacy; **no** sirve el backend (SEC-002) |
+
+**Mailpit** (v1.30.7) captura todo el correo saliente sin enviarlo a ninguna parte: hace falta desde la Fase 1 para probar la recuperación de contraseña y la verificación de email. El binario se descargó de las releases oficiales de `axllent/mailpit` y su SHA-256 se verificó contra el digest publicado por la API de GitHub. Vive fuera del repositorio, en `C:\xampp\mailpit`.
+
+La configuración de correo (`MAIL_MAILER=smtp`, puerto 1025) está en `.env` y replicada en `.env.example`.
+
+---
+
 ## 9. Fases
 
 Prioridad: **P0** crítico · **P1** importante · **P2** mejora · **P3** opcional.
