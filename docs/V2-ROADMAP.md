@@ -34,6 +34,7 @@ Todo el desarrollo se realiza **en local**. El despliegue a staging y producció
 | **D12** | **TanStack Query** | Caché, estados de carga y error, reintentos e invalidación tras mutaciones sin código repetitivo. |
 | **D13** | **Sin prefijo de versión en la API** | v2 es la primera versión oficial: las rutas son `/api/…`, no `/api/v1/…`. Si algún día hace falta versionar, se añade entonces. |
 | **D14** | **El encargo a medida es de primera clase** | Cada dibujo, ramo o encargo es único y lleva su descripción e imagen de referencia: eso vive en `order_items` + `media_assets`. El catálogo solo define el tipo de encargo y su precio. |
+| **D15** | **El frontend legacy no se mantiene vivo** | En cuanto la Fase 1 sustituya JWT por Sanctum y renombre las rutas, el frontend de `app/Client/views/` dejará de funcionar por completo: llama a endpoints que ya no existirán. **No se intenta evitarlo.** Mantener la API de v1 en paralelo obligaría a conservar vivas sus cinco vulnerabilidades críticas durante meses. Sin usuarios ni producción, ese «fallback» no protege de nada. El legacy permanece en el repositorio como referencia de flujos y diseño mientras se construyen las pantallas React, y se retira en la Fase 7. |
 
 **Decisiones de bajo impacto adoptadas sin consulta:** React Router para rutas · React Hook Form + Zod para formularios · Pest para backend · Vitest + Testing Library + Playwright para frontend.
 
@@ -41,9 +42,11 @@ Todo el desarrollo se realiza **en local**. El despliegue a staging y producció
 
 | # | Decisión | Cuándo hay que resolverla |
 |---|---|---|
-| P1 | Destino de las tablas huérfanas `media_assets` y `operational_notifications` de la BD local (DB-001) | Fase 0 — antes de crear ninguna migración de v2 |
-| P2 | ¿Se conserva el frontend legacy accesible durante todo el desarrollo o se retira por pantallas? | Fase 4 |
-| P3 | Política de caducidad del presupuesto de evento (`quote_expires_at`) | Fase 5 |
+| P1 | Política de caducidad del presupuesto de evento (`quote_expires_at`) | Fase 5 |
+| P2 | ¿La señal es un porcentaje fijo del presupuesto o un importe que fija la administradora en cada evento? | Fase 5 |
+| P3 | ¿Se permite cancelar un pedido ya pagado y con qué política de reembolso? | Fase 5 |
+
+*Resueltas:* el destino de las tablas huérfanas de la BD local (DB-001, cerrado en Fase 0) y la continuidad del frontend legacy (decisión D15).
 
 ---
 
@@ -80,7 +83,7 @@ app/
 
 ### Frontend
 
-`app/Client/spa/` — Vite + React + TypeScript. El frontend legacy de `app/Client/views/` se mantiene servido en local hasta que cada pantalla tenga equivalente en React; durante el desarrollo, el rollback es «usa la vista legacy».
+`app/Client/spa/` — Vite + React + TypeScript. El frontend legacy de `app/Client/views/` se conserva únicamente como referencia de flujos y diseño (D15): dejará de funcionar en la Fase 1 y no se mantiene.
 
 ```
 src/
@@ -157,8 +160,10 @@ El cuerpo de `POST /api/cart/items` lleva `product_id`, `variant_id`, `shipping_
 No se hace un Big Bang. Tampoco se parchea la API de v1: con 3 rutas rotas y 5 fallos críticos de autorización, endurecerla cuesta más que rehacerla, y el modelo de datos tiene que cambiar de todos modos (no existe catálogo).
 
 - **Base de datos:** esquema limpio con migraciones nuevas. No hay backfill porque no hay datos reales (D4, DB-008).
-- **Frontend:** el HTML legacy sigue accesible en local mientras se construye la SPA. El rollback durante el desarrollo es usar la vista legacy.
+- **Frontend:** el HTML legacy queda como referencia, no como fallback (D15). Deja de funcionar en la Fase 1 y no se mantiene.
 - **Retirada del legacy:** cuando la SPA cubra toda la superficie funcional (Fase 7).
+
+**Sobre el rollback:** durante el desarrollo no existe «volver a v1» — el rollback real es `git`. Es aceptable precisamente porque no hay usuarios ni producción; cuando los haya (Fase 8) el rollback será una preocupación de infraestructura, no de código.
 
 ---
 
@@ -207,7 +212,7 @@ master            v1 congelado (referencia)
 
 Prioridad: **P0** crítico · **P1** importante · **P2** mejora · **P3** opcional.
 
-### Fase 0 — Contención y preparación · P0 · 🔄 en curso
+### Fase 0 — Contención y preparación · P0 · ✅ completada
 
 | # | Tarea | Estado |
 |---|---|---|
@@ -215,9 +220,11 @@ Prioridad: **P0** crítico · **P1** importante · **P2** mejora · **P3** opcio
 | 0.2 | Rotar `APP_KEY` y `JWT_SECRET` | ✅ 2026-08-11 |
 | 0.3 | No devolver la excepción de login al cliente (SEC-012) | ✅ `b0eac92` |
 | 0.4 | Sincronizar `develop` con `master` | ✅ fast-forward |
-| 0.5 | Backup de la BD local y esquema limpio (DB-001) | ⏸️ pendiente de decisión P1 |
+| 0.5 | Backup de la BD local y limpieza de la deriva (DB-001) | ✅ 2026-08-11 |
 | 0.6 | Etiquetar `autotest` como archivo | ✅ `archive/v2-autonomous-attempt` |
 | 0.7 | Crear `docs/AUDIT.md` y `docs/V2-ROADMAP.md` | ✅ este documento |
+
+**Fase 0 completada.** El backup del esquema previo (15 tablas) está fuera del repositorio, en el scratchpad de la sesión. La recreación del esquema limpio se hace en la Fase 2, cuando existan las migraciones de v2.
 
 ### Fase 1 — Núcleo del backend · P0
 Sanctum en modo SPA y retirada de `jwt-auth` · CORS con orígenes explícitos y `supports_credentials` · registro seguro y throttle · Policies y `EnsureIsAdmin` · Enums de estado · esqueleto de `/api` con Form Requests, Resources y formato de error único · tests de autenticación y autorización.
