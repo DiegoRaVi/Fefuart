@@ -1,0 +1,13 @@
+# SEC-002 — Bloqueo del backend Laravel frente a Apache.
+#
+# El DocumentRoot de XAMPP es C:/xampp/htdocs, la carpeta padre de este proyecto,
+# de modo que sin este fichero Apache sirve TODO el arbol del backend como
+# ficheros estaticos: .env (con APP_KEY y JWT_SECRET), el codigo PHP en texto
+# plano, storage/logs/laravel.log, database/*.sqlite y vendor/.
+#
+# Solo public/ debe ser alcanzable desde el navegador; alli un
+# "Require all granted" vuelve a abrir el acceso de forma explicita.
+#
+# Ver docs/AUDIT.md, hallazgo SEC-002.
+
+Require all denied

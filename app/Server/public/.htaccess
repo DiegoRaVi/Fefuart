@@ -1,3 +1,7 @@
+# El .htaccess de app/Server/ deniega el acceso a todo el backend (SEC-002).
+# public/ es el unico directorio pensado para ser publico, asi que se reabre aqui.
+Require all granted
+
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes

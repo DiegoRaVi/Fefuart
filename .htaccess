@@ -1,0 +1,25 @@
+# SEC-002 — Endurecimiento del proyecto frente a Apache.
+#
+# El DocumentRoot de XAMPP es C:/xampp/htdocs, la carpeta padre de este
+# proyecto, y httpd.conf trae "Options Indexes" activo. Sin este fichero
+# cualquiera puede navegar el arbol completo del repositorio y descargarse
+# el historial de git.
+#
+# El bloqueo del backend Laravel esta en app/Server/.htaccess.
+# Ver docs/AUDIT.md, hallazgo SEC-002.
+
+# Sin listado de directorios.
+Options -Indexes
+
+# Ningun fichero oculto es servible: .env, .gitignore, .editorconfig,
+# .gitattributes y el propio .htaccess.
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+# El directorio .git completo queda fuera de alcance: <DirectoryMatch> no
+# esta permitido en .htaccess, asi que se bloquea por reescritura.
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule (^|/)\.git(/|$) - [F,L]
+</IfModule>
