@@ -66,8 +66,13 @@ class AuthController extends Controller
             //return response()->json(['token' => $token], 200);
 
         } catch (JWTException $e) {
-            
-            return response()->json(['error' => 'Could not create token', $e], 500);
+
+            // SEC-012: devolver $e volcaba la excepcion completa al cliente
+            // (traza, rutas del sistema y configuracion) con independencia de
+            // APP_DEBUG. El detalle va al log; el cliente solo recibe el motivo.
+            report($e);
+
+            return response()->json(['error' => 'Could not create token'], 500);
         }
     }
 
