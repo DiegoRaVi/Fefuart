@@ -14,7 +14,9 @@ return [
     */
 
     'defaults' => [
-        'guard' => env('AUTH_GUARD', 'api'),
+        // D2: el guard por defecto vuelve a ser `web` (sesion). Sanctum
+        // autentica las peticiones de la SPA con esa misma sesion via cookie.
+        'guard' => env('AUTH_GUARD', 'web'),
         'passwords' => env('AUTH_PASSWORD_BROKER', 'users'),
     ],
 
@@ -40,10 +42,8 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
-        'api' => [
-            'driver' => 'jwt',
-            'provider' => 'users',
-        ],
+        // El guard `api` con driver `jwt` desaparece con tymon/jwt-auth.
+        // `auth:sanctum` resuelve la sesion sobre el guard `web`.
     ],
 
     /*
