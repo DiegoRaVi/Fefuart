@@ -1,20 +1,43 @@
 <?php
 
+use App\Http\Controllers\Api\AuthController;
+use Illuminate\Support\Facades\Route;
+
 /*
 |--------------------------------------------------------------------------
 | API
 |--------------------------------------------------------------------------
 |
-| Las 40 rutas de v1 se retiran aqui. Dependian del guard `api` de JWT, que
-| ya no existe, y arrastraban cinco fallos criticos de autorizacion
-| (SEC-001, SEC-003, SEC-004, SEC-008, SEC-009) mas tres rutas que apuntaban
-| a metodos inexistentes (BUG-001, BUG-002, BUG-003).
+| Sin prefijo de version (D13): v2 es la primera version funcional y
+| desplegada oficialmente.
 |
-| No se mantienen en paralelo de forma deliberada (D15): conservarlas
-| funcionando obligaria a conservar tambien sus vulnerabilidades. Los
-| controllers de v1 siguen en el arbol como referencia hasta que cada fase
-| reconstruya su area.
+| Las 40 rutas de v1 se retiraron al migrar a Sanctum. Dependian del guard
+| `api` de JWT, arrastraban cinco fallos criticos de autorizacion y tres
+| apuntaban a metodos inexistentes. No se mantienen en paralelo (D15).
 |
-| Los endpoints de v2 se anaden por fases y sin prefijo de version (D13).
+| Antes de la primera peticion autenticada, la SPA pide la cookie CSRF a
+| GET /sanctum/csrf-cookie, que registra el propio paquete.
 |
 */
+
+Route::prefix('auth')->group(function () {
+    // SEC-007: throttle propio, mas estricto que el limitador general de la
+    // API. En login se suma el limitador por email+IP de LoginRequest.
+    //
+    // Nota conocida: `unique:users` en el registro sigue revelando que
+    // direcciones existen. Es inherente al alta con email y se mitiga con
+    // este limite; la alternativa (aceptar siempre y avisar por correo)
+    // se valorara si el volumen lo justifica.
+    Route::post('register', [AuthController::class, 'register'])
+        ->middleware('throttle:6,1')
+        ->name('auth.register');
+
+    Route::post('login', [AuthController::class, 'login'])
+        ->middleware('throttle:10,1')
+        ->name('auth.login');
+
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('logout', [AuthController::class, 'logout'])->name('auth.logout');
+        Route::get('me', [AuthController::class, 'me'])->name('auth.me');
+    });
+});

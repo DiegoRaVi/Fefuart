@@ -29,7 +29,11 @@
         <env name="MAIL_MAILER" value="array"/>
         <env name="PULSE_ENABLED" value="false"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
-        <env name="SESSION_DRIVER" value="array"/>
+        <!-- `array` no persiste la sesion entre peticiones, asi que no
+             ejercita la autenticacion por cookie de Sanctum (D2). Con
+             `database` los tests recorren el mismo camino que la aplicacion;
+             RefreshDatabase crea la tabla `sessions`. -->
+        <env name="SESSION_DRIVER" value="database"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
     </php>
 </phpunit>
