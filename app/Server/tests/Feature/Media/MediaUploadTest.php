@@ -112,6 +112,26 @@ it('no toca las imagenes que ya son pequenas', function () {
     expect([$ancho, $alto])->toBe([600, 400]);
 });
 
+/**
+ * La url tiene que ser relativa al origen de la SPA.
+ *
+ * Con una absoluta a `APP_URL` salia `http://localhost/storage/...`, que es
+ * Apache en el puerto 80 — y ahi el .htaccess de SEC-002 deniega el backend
+ * entero, asi que las miniaturas salian rotas. Relativa, la pide el mismo
+ * origen que la SPA y el proxy la lleva a Laravel.
+ */
+it('devuelve la url de la imagen relativa al origen', function () {
+    $user = User::factory()->create();
+
+    $url = $this->actingAs($user)
+        ->postJson(route('media.store'), ['file' => UploadedFile::fake()->image('foto.jpg')])
+        ->assertCreated()
+        ->json('data.url');
+
+    expect($url)->toStartWith('/storage/')
+        ->and($url)->not->toStartWith('http');
+});
+
 it('rechaza un fichero que no es una imagen', function () {
     $user = User::factory()->create();
 

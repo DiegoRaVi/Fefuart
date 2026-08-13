@@ -41,7 +41,22 @@ return [
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
-            'url' => env('APP_URL').'/storage',
+
+            /*
+             * Relativa, no absoluta.
+             *
+             * Con `env('APP_URL').'/storage'` salia `http://localhost/storage/...`,
+             * que es Apache en el puerto 80 — y ahi el .htaccess de SEC-002
+             * deniega todo el backend, asi que las imagenes salian rotas. Con
+             * la ruta relativa, el navegador las pide al mismo origen que la
+             * SPA y el proxy de Vite las lleva a Laravel (D2: todo tiene que
+             * ser same-site).
+             *
+             * En produccion (Fase 8) el VirtualHost servira `public/` de
+             * verdad y esta ruta seguira valiendo.
+             */
+            'url' => '/storage',
+
             'visibility' => 'public',
             'throw' => false,
             'report' => false,
