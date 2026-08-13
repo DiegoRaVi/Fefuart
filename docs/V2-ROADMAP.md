@@ -2,7 +2,7 @@
 
 > **Documento vivo.** Se actualiza cuando una decisión importante cambia la arquitectura o el plan.
 > **Punto de partida:** [AUDIT.md](AUDIT.md) — auditoría de v1, 2026-08-11.
-> **Última actualización:** 2026-08-11.
+> **Última actualización:** 2026-08-13.
 
 ---
 
@@ -43,6 +43,10 @@ Todo el desarrollo se realiza **en local**. El despliegue a staging y producció
 | **D18** | **Precios con IVA incluido, sin facturación automática** | El precio mostrado es el final; las facturas se gestionan fuera del sistema. Se evita así toda la complejidad de numeración correlativa, datos fiscales y desglose. Revisar si el negocio pasa a necesitar facturación desde la web. |
 | **D19** | **Sin fase de aprobación de boceto** | La máquina de estados de pedido se mantiene simple: no hay ida y vuelta de propuestas dentro del sistema. |
 | **D20** | **Entrega digital desde el detalle del pedido** | La artista sube el archivo final y el cliente lo descarga con el acceso verificado por Policy. Cierra una funcionalidad que en v1 se cobraba (estilo «Digital», 20 €) pero no existía. |
+| **D24** | **El carrito y la consulta de pedidos entran en la Fase 2** | La Fase 2 se comprometía a cerrar SEC-003, SEC-004, SEC-006 y SEC-008 sin construir ninguna ruta que los tocara. Pero el principio de testing del proyecto es que **cada hallazgo se cierra con el test que lo reproduce**, y el test que reproduce SEC-006 es «mando `price` en el cuerpo y compruebo que se ignora»: eso exige `POST /api/cart/items`. Una Policy sin ruta solo se prueba a nivel unitario (`$user->can(…)`), que no es el IDOR. Se traen desde la Fase 4 el carrito, el listado y el detalle de pedido y la cancelación. La Fase 4 queda como frontend, backoffice y eventos. |
+| **D25** | **Migraciones reescritas en sitio, no apiladas** | Consecuencia directa de D4: sin datos reales ni producción, el árbol de migraciones debe leerse como el esquema objetivo, no como su historia. Se reescriben las de v1 (`orders`, `products`, `events`) en lugar de encadenar `ALTER`s encima, y `users` pasa a crear también `roles`. El coste es un `migrate:fresh` local, con backup previo fuera del repositorio. |
+| **D26** | **Copia adicional: 10 € en físico; en digital, `max_quantity = 1`** | N4 exigía un `additional_copy_price` que ningún documento fijaba. Las variantes físicas cobran 10 € por lámina adicional: la primera copia paga el trabajo artístico, las siguientes solo la impresión. En «Digital» una copia adicional del mismo fichero no significa nada, así que el producto limita la cantidad a 1 en vez de cobrar 0 por un concepto vacío. Ambos valores son semilla y se editan desde el backoffice (D5). Resuelve P4. |
+| **D27** | **`events` en la Fase 2 solo con el esquema base** | Se rehace la tabla con los campos que N14 necesita para presupuestar (`guest_count`, `duration_hours`, `event_type`) y se escribe `EventPolicy`. Las columnas de presupuesto y señal, y el `confirmed_slot` de N16, esperan a la Fase 5: es donde nace el flujo y donde la colisión de fechas se puede probar de verdad. Además `confirmed_slot` es una columna generada con sintaxis de MariaDB y los tests corren en SQLite; esa portabilidad se resuelve cuando la columna tenga uso, no antes. |
 
 **Decisiones de bajo impacto adoptadas sin consulta:** React Router para rutas · React Hook Form + Zod para formularios · Pest para backend · Vitest + Testing Library + Playwright para frontend.
 
@@ -53,9 +57,9 @@ Todo el desarrollo se realiza **en local**. El despliegue a staging y producció
 | P1 | Política de caducidad del presupuesto de evento (`quote_expires_at`) | Fase 5 |
 | P2 | ¿Se devuelve la señal si se cancela un evento ya confirmado? | Fase 5 |
 | ~~P3~~ | **Resuelta:** eliminación de cuenta → D21 (desactivación reversible) + D22 (supresión por anonimización). **Se implementa al final de la Fase 4 y antes de la Fase 5.** El motivo es técnico: hoy suprimir una cuenta sería `$user->delete()`, pero en cuanto existan pedidos pagados y eventos confirmados hay que anonimizar en vez de borrar. Escribirlo antes significa escribirlo dos veces. Antes de la Fase 5 sí es exigible: con pagos reales entran datos de terceros y el margen se estrecha. | Fin de Fase 4 |
-| P4 | ¿Los precios actuales (30/40/20 € por variante, 5 € de envío) son los definitivos? Se siembran como semilla y son editables desde el backoffice, así que no bloquea | Fase 2 |
+| ~~P4~~ | **Resuelta:** los precios (30/40/20 € por variante, 40 € ramo y letras, 5 € de envío) se siembran tal cual, y el hueco que faltaba —el precio de la copia adicional— lo fija **D26**. Todos son semilla editable desde el backoffice, así que ninguno queda congelado en código. | Fase 2 |
 
-*Resueltas:* destino de las tablas huérfanas de la BD local (DB-001, Fase 0) · continuidad del frontend legacy (D15) · semántica de `quantity` (D16) · cálculo del envío (D17) · IVA y facturación (D18) · fase de boceto (D19) · entrega digital (D20) · cálculo de la señal (N15) · política de cancelación (N12).
+*Resueltas:* destino de las tablas huérfanas de la BD local (DB-001, Fase 0) · continuidad del frontend legacy (D15) · semántica de `quantity` (D16) · cálculo del envío (D17) · IVA y facturación (D18) · fase de boceto (D19) · entrega digital (D20) · cálculo de la señal (N15) · política de cancelación (N12) · precios de semilla y copia adicional (D26).
 
 ---
 
@@ -318,9 +322,11 @@ Prioridad: **P0** crítico · **P1** importante · **P2** mejora · **P3** opcio
 
 > Mailpit hace falta desde esta fase, no desde la 6: sin él no se prueban ni la recuperación de contraseña ni la verificación de email.
 
-### Fase 2 — Catálogo, esquema y Policies · P0 · ⬅️ siguiente
-Migraciones de `products`, `product_variants`, `shipping_methods`, pivot y `media_assets` · `PricingService` con las 3 fórmulas · seeder del catálogo real · endpoints públicos de catálogo · subida de imágenes de referencia con Policy de propiedad · CRUD de administración · índices de DB-003.
-Incluye además la tabla `roles` con `1 = cliente, 2 = admin` (D23) y **las Policies traídas de la Fase 1**: `OrderPolicy`, `EventPolicy`, `MediaAssetPolicy`, cada una con el test del IDOR que bloquea.
+### Fase 2 — Catálogo, precios de servidor y Policies · P0 · ⬅️ en curso
+
+Tabla `roles` con `1 = cliente, 2 = admin` (D23) · migraciones de `products`, `product_variants`, `shipping_methods`, pivot, `media_assets`, `orders` y `order_items` · índices de DB-003 · `PricingService` con las 3 fórmulas · seeder del catálogo real · endpoints públicos de catálogo · subida de imágenes de referencia · CRUD de catálogo para la administradora (D5).
+
+Incluye **las Policies traídas de la Fase 1** —`OrderPolicy`, `EventPolicy`, `MediaAssetPolicy`, cada una con el test del IDOR que bloquea— y, por **D24**, el carrito y la consulta de pedidos que hacen falta para que esos tests existan. El esquema de `events` se rehace solo en su parte base (**D27**).
 
 **Cierra:** SEC-003, SEC-004, SEC-006, SEC-008, SEC-009, SEC-014, DB-002, DB-003.
 *Depende de: Fase 1.*
@@ -331,7 +337,7 @@ Vite + React + TypeScript + Tailwind con la paleta extraída de v1 · proxy haci
 *Depende de: Fase 1.*
 
 ### Fase 4 — Flujos funcionales · P1
-Catálogo y ficha de producto · **formulario de encargo a medida** (descripción + imagen de referencia + variante + envío) · carrito con precios de servidor · pedidos del cliente · solicitud de LiveArt · backoffice de pedidos, eventos y catálogo, con la imagen de referencia visible en cada línea.
+Pantallas de catálogo y ficha de producto · **formulario de encargo a medida** (descripción + imagen de referencia + variante + envío) · carrito y pedidos en la SPA, contra los endpoints que ya entregó la Fase 2 (D24) · solicitud de LiveArt, con el presupuesto de la administradora en la Fase 5 · backoffice de pedidos, eventos y catálogo, con la imagen de referencia visible en cada línea.
 **Cierra:** SEC-010, BUG-001 a BUG-008, PERF-001, PERF-002, PERF-004.
 *Depende de: Fases 2 y 3.*
 
