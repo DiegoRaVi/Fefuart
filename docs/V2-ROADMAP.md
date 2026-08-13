@@ -380,8 +380,8 @@ Es la fase más grande, así que va por tandas.
 |---|---|---|
 | **4a** | Localización del backend (P5) · endpoints de eventos | ✅ `b0c24d9`, `34b5b47` — cierra **SEC-010** y **BUG-002** |
 | **4b** | `POST /api/cart/checkout` · `/api/admin/orders` y `/api/admin/events` con sus transiciones | ✅ `bcddc41`, `43003d3`, `2dc0bc3` — cierra **PERF-001**, **PERF-004** |
-| **4c** | Catálogo y ficha de producto en la SPA | ⬅️ siguiente |
-| **4d** | Formulario de encargo a medida, carrito y checkout en la SPA | |
+| **4c** | Catálogo y ficha de producto en la SPA | ✅ `8c21a18` |
+| **4d** | Formulario de encargo a medida, carrito y checkout en la SPA | ⬅️ siguiente |
 | **4e** | Mis pedidos y solicitud de LiveArt en la SPA | |
 | **4f** | Backoffice: pedidos, eventos y catálogo | |
 
