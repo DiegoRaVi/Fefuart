@@ -1,8 +1,10 @@
 import { BrowserRouter, Route, Routes } from 'react-router'
 
 import { Login } from '@/features/auth/pages/Login'
+import { Carrito } from '@/features/cart/pages/Carrito'
 import { Catalogo } from '@/features/catalog/pages/Catalogo'
 import { FichaProducto } from '@/features/catalog/pages/FichaProducto'
+import { FormularioDeEncargo } from '@/features/catalog/pages/FormularioDeEncargo'
 import { RecuperarContrasena } from '@/features/auth/pages/RecuperarContrasena'
 import { Registro } from '@/features/auth/pages/Registro'
 import { RestablecerContrasena } from '@/features/auth/pages/RestablecerContrasena'
@@ -45,6 +47,10 @@ export function App() {
                 {/* Tambien el destino del enlace de verificacion de email,
                     que redirige aqui con ?verificado=1. */}
                 <Route path="perfil" element={<Perfil />} />
+
+                {/* N18 — encargar exige cuenta; mirar el catalogo no. */}
+                <Route path="encargos/:slug/encargar" element={<FormularioDeEncargo />} />
+                <Route path="carrito" element={<Carrito />} />
               </Route>
             </Route>
           </Routes>

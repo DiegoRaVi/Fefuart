@@ -79,9 +79,16 @@ export function FichaProducto() {
           </li>
         </ul>
 
-        {/* El formulario de encargo llega en la tanda siguiente, con la
-            subida de la foto y el carrito. */}
       </section>
+
+      {/* N18 — encargar exige cuenta. Si no la hay, RutaProtegida manda al
+          login y devuelve aqui despues. */}
+      <Link
+        to={`/encargos/${producto.slug}/encargar`}
+        className="inline-block rounded-fefu bg-piedra px-6 py-3 text-white transition-colors duration-300 hover:bg-verde"
+      >
+        Encargar
+      </Link>
     </article>
   )
 }
