@@ -1,0 +1,18 @@
+# SEC-002 — Apache no sirve la SPA.
+#
+# El DocumentRoot de XAMPP es C:/xampp/htdocs, la carpeta padre del proyecto,
+# asi que todo lo que caiga bajo app/Client/ queda servido como estatico. El
+# .htaccess raiz apaga el listado de directorios y bloquea los ficheros
+# ocultos, pero eso no impide el acceso directo por ruta, y las rutas de
+# node_modules son adivinables:
+#
+#   node_modules/react/package.json   ->  200   (antes de este fichero)
+#   node_modules/                     ->  403   (Options -Indexes)
+#
+# Aqui no hay nada que Apache deba servir. En desarrollo la SPA la sirve Vite
+# en :5173, y en produccion se publica el `dist/` compilado desde el
+# VirtualHost de la Fase 8 — nunca este directorio.
+#
+# Ver docs/AUDIT.md, hallazgo SEC-002.
+
+Require all denied
