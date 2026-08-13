@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Cart\CheckoutRequest;
 use App\Http\Requests\Cart\StoreCartItemRequest;
 use App\Http\Requests\Cart\UpdateCartItemRequest;
 use App\Http\Resources\OrderResource;
@@ -12,6 +13,7 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\ShippingMethod;
 use App\Services\CartService;
+use App\Services\CheckoutService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 
@@ -23,7 +25,10 @@ use Illuminate\Http\Response;
  */
 class CartController extends Controller
 {
-    public function __construct(private readonly CartService $cart) {}
+    public function __construct(
+        private readonly CartService $cart,
+        private readonly CheckoutService $checkout,
+    ) {}
 
     public function show(): OrderResource
     {
@@ -75,6 +80,19 @@ class CartController extends Controller
         $this->authorizeCartItem($item);
 
         return OrderResource::make($this->cart->removeItem($item));
+    }
+
+    /**
+     * El carrito pasa a pedido. Sin pago todavia: la Fase 5 inserta el cobro
+     * entre `pending_payment` y `paid`.
+     */
+    public function checkout(CheckoutRequest $request): JsonResponse
+    {
+        $order = $this->checkout->checkout($request->user(), $request->validated());
+
+        return OrderResource::make($order)
+            ->response()
+            ->setStatusCode(Response::HTTP_CREATED);
     }
 
     /**

@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Api\Admin\ProductController as AdminProductController;
+use App\Http\Controllers\Api\Admin\ProductVariantController as AdminVariantController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\CatalogController;
@@ -7,8 +9,6 @@ use App\Http\Controllers\Api\EmailVerificationController;
 use App\Http\Controllers\Api\EventController;
 use App\Http\Controllers\Api\MediaController;
 use App\Http\Controllers\Api\OrderController;
-use App\Http\Controllers\Api\Admin\ProductController as AdminProductController;
-use App\Http\Controllers\Api\Admin\ProductVariantController as AdminVariantController;
 use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -98,6 +98,7 @@ Route::middleware('auth:sanctum')->prefix('cart')->group(function () {
     Route::post('items', [CartController::class, 'store'])->name('cart.items.store');
     Route::patch('items/{item}', [CartController::class, 'update'])->name('cart.items.update');
     Route::delete('items/{item}', [CartController::class, 'destroy'])->name('cart.items.destroy');
+    Route::post('checkout', [CartController::class, 'checkout'])->name('cart.checkout');
 });
 
 // Pedidos. Las transiciones de estado van por sub-recurso, nunca por un
