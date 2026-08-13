@@ -379,8 +379,8 @@ Es la fase más grande, así que va por tandas.
 | Tanda | Contenido | Estado |
 |---|---|---|
 | **4a** | Localización del backend (P5) · endpoints de eventos | ✅ `b0c24d9`, `34b5b47` — cierra **SEC-010** y **BUG-002** |
-| **4b** | `POST /api/cart/checkout` · `/api/admin/orders` y `/api/admin/events` con sus transiciones | ⬅️ siguiente |
-| **4c** | Catálogo y ficha de producto en la SPA | |
+| **4b** | `POST /api/cart/checkout` · `/api/admin/orders` y `/api/admin/events` con sus transiciones | ✅ `bcddc41`, `43003d3`, `2dc0bc3` — cierra **PERF-001**, **PERF-004** |
+| **4c** | Catálogo y ficha de producto en la SPA | ⬅️ siguiente |
 | **4d** | Formulario de encargo a medida, carrito y checkout en la SPA | |
 | **4e** | Mis pedidos y solicitud de LiveArt en la SPA | |
 | **4f** | Backoffice: pedidos, eventos y catálogo | |
@@ -388,6 +388,8 @@ Es la fase más grande, así que va por tandas.
 **El checkout entra aquí, corrigiendo lo que se escribió al cerrar la Fase 2.** Allí se dijo que sin pasarela habría que reescribirlo entero al añadir el PaymentIntent, y no es cierto: `CheckoutService` valida el carrito, captura la dirección, congela los importes y pasa `cart → pending_payment`. La Fase 5 **inserta** el pago entre `pending_payment` y `paid`; no reescribe lo anterior. Sin checkout, además, ni «mis pedidos» ni el backoffice tienen nada real que mostrar.
 
 **Alcance del backoffice:** lo que ya hacía v1, bien hecho — listar pedidos y eventos por estado, buscar pedidos por email, cambiar estados y ver la foto de referencia de cada línea. Con paginación, Policies y sin los N+1 de PERF-001. Las métricas de `GET /api/admin/metrics` se dejan fuera: sin saber qué números mira Felicitas de verdad, es fácil construir el panel equivocado.
+
+**Lo que el backoffice de eventos todavía no puede hacer:** presupuestar y confirmar. Las dos necesitan importe y señal, y esas columnas son de la Fase 5 (D27). El endpoint de estado corta ahí explícitamente en vez de permitir un `quoted` sin importe, que sería un estado a medias y dejaría al cliente sin poder aceptar nada.
 
 **Cierra:** SEC-010 ✅, BUG-002 ✅, P5 ✅, PERF-001, PERF-002, PERF-004.
 *Depende de: Fases 2 y 3.*

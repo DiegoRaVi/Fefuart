@@ -15,7 +15,7 @@
 | Backend | 🟠 Deuda alta — toda la lógica en controllers. | ✅ Form Requests, Resources, Policies y Services en uso. Del código de v1 no queda nada. |
 | Frontend | 🟠 Deuda alta — lógica inline en 13 HTML, XSS por `innerHTML`. | 🟡 SPA de React con la base montada: sesión, rutas protegidas, cuenta y el tema de v1. Las pantallas de catálogo y carrito son de la Fase 4. |
 | Base de datos | 🟠 Modelo incompleto — no existe catálogo. | ✅ Catálogo, variantes, envíos, línea de encargo y media. DB-006 parcial. |
-| Rendimiento | 🟡 Aceptable hoy | 🟡 Índices puestos y eager loading en los endpoints nuevos. PERF-001/002 eran del frontend: Fase 4. |
+| Rendimiento | 🟡 Aceptable hoy | ✅ Los cuatro cerrados: índices, eager loading con test de que no crece con las filas, paginación y un carrito que se recalcula de una vez. |
 | Testing | 🔴 Inexistente — 2 tests de plantilla, 0 % real. | 🟢 207 tests: 151 de backend y 56 de la SPA, con regresión explícita de cada hallazgo cerrado. |
 | Entorno local | ✅ Corregido | ✅ Segunda tanda de SEC-002 al montar la SPA. El VirtualHost definitivo sigue siendo de la Fase 8. |
 | Git | 🟡 Ordenado | 🟡 `develop` con 36 commits sin subir; `autotest` intacta bajo su tag. |
@@ -422,10 +422,10 @@ Medido donde se indica; el resto es análisis estático.
 
 | ID | Problema |
 |---|---|
-| PERF-001 | N+1 real en `admin.js:92,276`: una petición `GET /user/{id}` por cada fila renderizada. |
-| PERF-002 | N peticiones `PATCH` por cada render del carrito (consecuencia de BUG-005). |
-| PERF-003 | Los listados del backoffice hacen full scan por falta de índices (DB-003). |
-| PERF-004 | Los endpoints de eventos devuelven todas las filas sin paginar, con `user` eager-loaded. |
+| PERF-001 | ✅ **Corregido `43003d3`.** N+1 real en `admin.js:92,276`: una petición `GET /user/{id}` por cada fila renderizada. El listado va eager-loaded y el test comprueba que el número de consultas **no crece con el de pedidos**, que es lo único que distingue de verdad un eager load de un N+1. |
+| PERF-002 | ✅ **Corregido `d797fcb`.** N peticiones `PATCH` por cada render del carrito (consecuencia de BUG-005). Cada respuesta del carrito trae el pedido entero recalculado. |
+| PERF-003 | ✅ **Corregido.** Los listados del backoffice hacían full scan por falta de índices; los de DB-003 están puestos. |
+| PERF-004 | ✅ **Corregido `43003d3`, `2dc0bc3`.** Los endpoints de eventos devolvían todas las filas sin paginar, con `user` eager-loaded. Pedidos y eventos van paginados de 20. |
 
 > **Hipótesis, no medido:** con el volumen actual (decenas de filas) nada de esto resulta perceptible. Son problemas de diseño a corregir en v2, no incidencias en curso. **No se ha ejecutado profiling ni `EXPLAIN`.**
 
