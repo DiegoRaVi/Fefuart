@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CatalogController;
 use App\Http\Controllers\Api\EmailVerificationController;
 use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\ProfileController;
@@ -64,6 +65,14 @@ Route::prefix('auth')->group(function () {
             ->middleware('throttle:6,1')
             ->name('verification.send');
     });
+});
+
+// Catalogo publico: cualquiera puede ver que se vende. Encargar si exige
+// cuenta (N18). Es de donde el cliente **lee** el precio; el carrito no lo
+// acepta de vuelta (SEC-006).
+Route::prefix('catalog')->group(function () {
+    Route::get('products', [CatalogController::class, 'index'])->name('catalog.products.index');
+    Route::get('products/{product}', [CatalogController::class, 'show'])->name('catalog.products.show');
 });
 
 // N19: perfil. Todo requiere sesion; nada aqui permite tocar el rol.
