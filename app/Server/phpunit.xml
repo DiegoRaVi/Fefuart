@@ -19,6 +19,10 @@
     </source>
     <php>
         <env name="APP_ENV" value="testing"/>
+        <!-- Fijado aqui y no heredado del .env: los tests que comprueban un
+             mensaje no pueden depender del idioma que tenga configurado quien
+             los ejecuta. -->
+        <env name="APP_LOCALE" value="es"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="CACHE_STORE" value="array"/>
