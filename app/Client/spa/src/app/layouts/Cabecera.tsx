@@ -31,6 +31,15 @@ export function Cabecera() {
         </Link>
 
         <div className="flex items-center gap-4 text-verde">
+          <NavLink
+            to="/encargos"
+            className={({ isActive }) =>
+              `rounded-fefu px-3 py-1 hover:bg-rosa-hondo ${isActive ? 'bg-rosa-hondo' : ''}`
+            }
+          >
+            Encargos
+          </NavLink>
+
           {esAdmin && (
             <NavLink
               to="/backoffice"

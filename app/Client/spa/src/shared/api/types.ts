@@ -36,6 +36,44 @@ export interface User {
   email_verified_at: string | null
 }
 
+/** N7 — como se entrega una linea. Coincide con `shipping_methods.code`. */
+export type DeliveryType = 'physical' | 'digital'
+
+export interface ShippingMethod {
+  id: number
+  code: DeliveryType
+  name: string
+  /** Decimal con dos cifras, tal cual lo devuelve el servidor: '5.00'. */
+  price: string
+}
+
+/**
+ * Donde vive el precio (N4). Llega para pintarlo; el carrito recibe
+ * `variant_id` y lo vuelve a calcular en servidor (SEC-006).
+ */
+export interface ProductVariant {
+  id: number
+  name: string
+  price: string
+  additional_copy_price: string
+  /** N7 — que entregas admite esta variante. */
+  shipping_methods: ShippingMethod[]
+}
+
+export interface Product {
+  id: number
+  slug: string
+  name: string
+  description: string | null
+  category: string
+  /** N9 — la foto es el material de partida, no un adjunto. */
+  requires_reference_image: boolean
+  requires_notes: boolean
+  max_quantity: number
+  delivery_days: number
+  variants: ProductVariant[]
+}
+
 export interface Credentials {
   email: string
   password: string

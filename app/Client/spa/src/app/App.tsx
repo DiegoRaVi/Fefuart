@@ -1,6 +1,8 @@
 import { BrowserRouter, Route, Routes } from 'react-router'
 
 import { Login } from '@/features/auth/pages/Login'
+import { Catalogo } from '@/features/catalog/pages/Catalogo'
+import { FichaProducto } from '@/features/catalog/pages/FichaProducto'
 import { RecuperarContrasena } from '@/features/auth/pages/RecuperarContrasena'
 import { Registro } from '@/features/auth/pages/Registro'
 import { RestablecerContrasena } from '@/features/auth/pages/RestablecerContrasena'
@@ -25,6 +27,10 @@ export function App() {
           <Routes>
             <Route element={<LayoutPrincipal />}>
               <Route index element={<Portada />} />
+
+              {/* Publico: mirar no exige cuenta, encargar si (N18). */}
+              <Route path="encargos" element={<Catalogo />} />
+              <Route path="encargos/:slug" element={<FichaProducto />} />
 
               <Route element={<RutaDeInvitado />}>
                 <Route path="login" element={<Login />} />
