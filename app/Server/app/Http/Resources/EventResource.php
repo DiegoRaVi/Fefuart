@@ -40,6 +40,17 @@ class EventResource extends JsonResource
                 'cancel' => $request->user()?->can('cancel', $this->resource) ?? false,
             ],
             'created_at' => $this->created_at?->toAtomString(),
+
+            // SEC-009 — mismo criterio que en OrderResource: administradora
+            // **y** relacion cargada a proposito.
+            'customer' => $this->when(
+                $request->user()?->isAdmin() === true && $this->relationLoaded('user'),
+                fn () => [
+                    'id' => $this->user->id,
+                    'name' => $this->user->name,
+                    'email' => $this->user->email,
+                ],
+            ),
         ];
     }
 }

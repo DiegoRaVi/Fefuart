@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\Admin\EventController as AdminEventController;
 use App\Http\Controllers\Api\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Api\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Api\Admin\ProductVariantController as AdminVariantController;
@@ -138,6 +139,13 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->name('admin.')->g
     Route::get('orders/{order}', [AdminOrderController::class, 'show'])->name('orders.show');
     Route::post('orders/{order}/status', [AdminOrderController::class, 'updateStatus'])
         ->name('orders.status');
+
+    // Eventos: rechazar, cancelar y completar. Presupuestar y confirmar
+    // necesitan importe y señal, y llegan con la Fase 5 (D27).
+    Route::get('events', [AdminEventController::class, 'index'])->name('events.index');
+    Route::get('events/{event}', [AdminEventController::class, 'show'])->name('events.show');
+    Route::post('events/{event}/status', [AdminEventController::class, 'updateStatus'])
+        ->name('events.status');
 });
 
 // Solicitudes de Live Art. Ninguna ruta acepta `status` en el cuerpo: eso
