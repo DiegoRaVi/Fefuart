@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CatalogController;
 use App\Http\Controllers\Api\EmailVerificationController;
+use App\Http\Controllers\Api\MediaController;
 use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -73,6 +74,16 @@ Route::prefix('auth')->group(function () {
 Route::prefix('catalog')->group(function () {
     Route::get('products', [CatalogController::class, 'index'])->name('catalog.products.index');
     Route::get('products/{product}', [CatalogController::class, 'show'])->name('catalog.products.show');
+});
+
+// N9: la foto de partida se sube antes que el encargo y devuelve un id.
+// El borrado pasa por MediaAssetPolicy (SEC-004).
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('media', [MediaController::class, 'store'])
+        ->middleware('throttle:30,1')
+        ->name('media.store');
+
+    Route::delete('media/{media}', [MediaController::class, 'destroy'])->name('media.destroy');
 });
 
 // N19: perfil. Todo requiere sesion; nada aqui permite tocar el rol.
