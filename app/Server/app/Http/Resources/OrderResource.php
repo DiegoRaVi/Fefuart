@@ -26,6 +26,23 @@ class OrderResource extends JsonResource
             'total' => $this->total,
             'shipping_method' => ShippingMethodResource::make($this->whenLoaded('shippingMethod')),
             'placed_at' => $this->placed_at?->toAtomString(),
+
+            /**
+             * SEC-009 — los datos del cliente salen solo para la
+             * administradora, y ademas solo si la relacion se ha cargado a
+             * proposito. La doble condicion es deliberada: con solo el
+             * `whenLoaded`, un eager load despistado en una ruta de cliente
+             * publicaria el email de otra persona, que es exactamente lo que
+             * hacia `GET /api/user/{id}` en v1.
+             */
+            'customer' => $this->when(
+                $request->user()?->isAdmin() === true && $this->relationLoaded('user'),
+                fn () => [
+                    'id' => $this->user->id,
+                    'name' => $this->user->name,
+                    'email' => $this->user->email,
+                ],
+            ),
             'shipping_address' => [
                 'name' => $this->shipping_name,
                 'phone' => $this->shipping_phone,

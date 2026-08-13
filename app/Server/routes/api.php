@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Api\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Api\Admin\ProductVariantController as AdminVariantController;
 use App\Http\Controllers\Api\AuthController;
@@ -130,6 +131,13 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->name('admin.')->g
         ->name('variants.update');
     Route::delete('variants/{variant}', [AdminVariantController::class, 'destroy'])
         ->name('variants.destroy');
+
+    // Pedidos: lo que v1 hacia en admin.html, ahora con paginacion, filtros
+    // validados y sin la peticion por fila de PERF-001.
+    Route::get('orders', [AdminOrderController::class, 'index'])->name('orders.index');
+    Route::get('orders/{order}', [AdminOrderController::class, 'show'])->name('orders.show');
+    Route::post('orders/{order}/status', [AdminOrderController::class, 'updateStatus'])
+        ->name('orders.status');
 });
 
 // Solicitudes de Live Art. Ninguna ruta acepta `status` en el cuerpo: eso
