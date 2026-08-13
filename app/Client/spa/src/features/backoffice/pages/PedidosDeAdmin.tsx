@@ -8,6 +8,7 @@ import { Aviso } from '@/shared/ui/Aviso'
 import { Cargando } from '@/shared/ui/Cargando'
 
 import { usePedidosDeAdmin } from '../api'
+import type { CampoDeBusqueda } from '../components/BusquedaPrecisa'
 import { Filtros } from '../components/Filtros'
 import { Paginacion } from '../components/Paginacion'
 
@@ -16,8 +17,24 @@ const ESTADOS_DE_PEDIDO = Object.fromEntries(
   Object.entries(ESTADOS).filter(([valor]) => valor !== 'cart'),
 )
 
+/**
+ * Los datos por los que se puede buscar de forma precisa. Tienen que cuadrar
+ * con lo que admite `buscar_por` en el backend; si aqui apareciera uno mas,
+ * el servidor lo rechazaria con 422.
+ *
+ * «Nombre» mira en el de la cuenta y en el del envio: quien busca no sabe
+ * cual le han dado, y separarlos le trasladaria el problema.
+ */
+const CAMPOS: CampoDeBusqueda[] = [
+  { valor: 'numero', etiqueta: 'Numero de pedido', ayuda: '7', tipo: 'number' },
+  { valor: 'nombre', etiqueta: 'Nombre', ayuda: 'De la cuenta o del envio' },
+  { valor: 'email', etiqueta: 'Correo', ayuda: 'marta@ejemplo.com', tipo: 'email' },
+  { valor: 'telefono', etiqueta: 'Telefono', ayuda: '600123456', tipo: 'tel' },
+]
+
 export function PedidosDeAdmin() {
   const [q, setQ] = useState('')
+  const [campo, setCampo] = useState<string | null>(null)
   const [estado, setEstado] = useState('')
   const [desde, setDesde] = useState('')
   const [hasta, setHasta] = useState('')
@@ -27,13 +44,21 @@ export function PedidosDeAdmin() {
   // «marta», y contaria contra el limitador de la API.
   const busqueda = useDebounce(q)
 
-  const filtros = { q: busqueda, status: estado, desde, hasta, page: pagina }
+  const filtros = {
+    q: busqueda,
+    buscar_por: campo ?? '',
+    status: estado,
+    desde,
+    hasta,
+    page: pagina,
+  }
   const { data, isPending, isError, error, isFetching } = usePedidosDeAdmin(filtros)
 
   const hayFiltros = Boolean(q || estado || desde || hasta)
 
   function limpiar() {
     setQ('')
+    setCampo(null)
     setEstado('')
     setDesde('')
     setHasta('')
@@ -54,7 +79,19 @@ export function PedidosDeAdmin() {
 
       <Filtros
         q={q}
-        onQ={cambiar(setQ)}
+        onQ={(valor) => {
+          setQ(valor)
+          // Escribir en la caja deshace la acotacion: la caja mira en todo.
+          setCampo(null)
+          setPagina(1)
+        }}
+        campo={campo}
+        onCampo={(nuevoCampo, termino) => {
+          setCampo(nuevoCampo)
+          setQ(termino)
+          setPagina(1)
+        }}
+        campos={CAMPOS}
         estado={estado}
         onEstado={cambiar(setEstado)}
         estados={ESTADOS_DE_PEDIDO}

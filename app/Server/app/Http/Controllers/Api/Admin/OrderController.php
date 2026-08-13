@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Admin;
 
+use App\Enums\CampoDeBusqueda;
 use App\Enums\OrderStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\IndexOrdersRequest;
@@ -41,10 +42,25 @@ class OrderController extends Controller
                 isset($filtros['status']),
                 fn ($query) => $query->where('status', $filtros['status']),
             )
-            ->buscar(
-                $filtros['q'] ?? null,
-                columnas: ['shipping_name', 'shipping_phone'],
-                relaciones: ['user' => ['name', 'email']],
+            // Con `buscar_por`, la busqueda precisa del modal: solo ese
+            // campo. Sin el, la caja rapida mira en todos.
+            ->when(
+                isset($filtros['buscar_por']),
+                function ($query) use ($filtros) {
+                    $campo = CampoDeBusqueda::from($filtros['buscar_por']);
+
+                    $query->buscar(
+                        $filtros['q'],
+                        columnas: $campo->columnasDePedido(),
+                        relaciones: $campo->relacionesDePedido(),
+                        porId: $campo->buscaPorId(),
+                    );
+                },
+                fn ($query) => $query->buscar(
+                    $filtros['q'] ?? null,
+                    columnas: ['shipping_name', 'shipping_phone'],
+                    relaciones: ['user' => ['name', 'email']],
+                ),
             )
             ->entreFechas('placed_at', $filtros['desde'] ?? null, $filtros['hasta'] ?? null)
             ->orderByDesc('placed_at')

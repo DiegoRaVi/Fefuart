@@ -8,6 +8,8 @@ import type { Envelope, Paginated, Product } from '@/shared/api/types'
 export interface FiltrosDePedidos {
   status?: string
   q?: string
+  /** Acota la busqueda a un solo campo. Vacio = la caja rapida mira en todo. */
+  buscar_por?: string
   desde?: string
   hasta?: string
   page?: number

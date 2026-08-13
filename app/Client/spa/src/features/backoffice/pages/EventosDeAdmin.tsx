@@ -8,6 +8,7 @@ import { Boton } from '@/shared/ui/Boton'
 import { Cargando } from '@/shared/ui/Cargando'
 
 import { useCambiarEstadoDeEvento, useEventosDeAdmin } from '../api'
+import type { CampoDeBusqueda } from '../components/BusquedaPrecisa'
 import { Filtros } from '../components/Filtros'
 import { Paginacion } from '../components/Paginacion'
 
@@ -20,6 +21,20 @@ const ESTADOS: Record<string, string> = {
   rejected: 'No disponible',
   cancelled: 'Cancelado',
 }
+
+/**
+ * En eventos no se busca por numero —nadie llama diciendo «el evento numero
+ * siete»— y si por titulo y lugar, que se parecen lo bastante como para que
+ * mezclarlos confunda: «Toledo» puede ser el nombre de la boda o donde se
+ * celebra.
+ */
+const CAMPOS: CampoDeBusqueda[] = [
+  { valor: 'titulo', etiqueta: 'Titulo', ayuda: 'Boda de Marta y Luis' },
+  { valor: 'lugar', etiqueta: 'Lugar', ayuda: 'Finca El Olivar, Toledo' },
+  { valor: 'nombre', etiqueta: 'Nombre', ayuda: 'Quien lo pidio' },
+  { valor: 'email', etiqueta: 'Correo', ayuda: 'marta@ejemplo.com', tipo: 'email' },
+  { valor: 'telefono', etiqueta: 'Telefono', ayuda: '600123456', tipo: 'tel' },
+]
 
 /**
  * D27 — presupuestar y confirmar necesitan importe y señal, que son columnas
@@ -38,6 +53,7 @@ const SIGUIENTES: Record<string, EventStatus[]> = {
 
 export function EventosDeAdmin() {
   const [q, setQ] = useState('')
+  const [campo, setCampo] = useState<string | null>(null)
   const [estado, setEstado] = useState('')
   const [desde, setDesde] = useState('')
   const [hasta, setHasta] = useState('')
@@ -46,6 +62,7 @@ export function EventosDeAdmin() {
   const busqueda = useDebounce(q)
   const { data, isPending, isError, error, isFetching } = useEventosDeAdmin({
     q: busqueda,
+    buscar_por: campo ?? '',
     status: estado,
     desde,
     hasta,
@@ -67,7 +84,18 @@ export function EventosDeAdmin() {
 
       <Filtros
         q={q}
-        onQ={cambiar(setQ)}
+        onQ={(valor) => {
+          setQ(valor)
+          setCampo(null)
+          setPagina(1)
+        }}
+        campo={campo}
+        onCampo={(nuevoCampo, termino) => {
+          setCampo(nuevoCampo)
+          setQ(termino)
+          setPagina(1)
+        }}
+        campos={CAMPOS}
         estado={estado}
         onEstado={cambiar(setEstado)}
         estados={ESTADOS}
@@ -79,6 +107,7 @@ export function EventosDeAdmin() {
         hayFiltros={hayFiltros}
         onLimpiar={() => {
           setQ('')
+          setCampo(null)
           setEstado('')
           setDesde('')
           setHasta('')

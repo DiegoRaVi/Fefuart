@@ -22,6 +22,11 @@ trait SeBusca
      * y el filtro de estado deja de aplicarse: salen pedidos de cualquier
      * estado en cuanto se escribe algo en el buscador.
      *
+     * Sirve para las dos formas de buscar del backoffice: la caja rapida, que
+     * mira en todo, y la busqueda precisa, que acota a un campo. La segunda
+     * es la misma consulta con menos columnas, no otra distinta — de ahi que
+     * el `scopeBuscarEn` de abajo se limite a elegir cuales pasan.
+     *
      * Nota de rendimiento: el comodin por delante (`%marta%`) impide usar
      * indice, asi que esto es un escaneo. Con el volumen de este negocio
      * —decenas o cientos de filas— es irrelevante; si algun dia deja de

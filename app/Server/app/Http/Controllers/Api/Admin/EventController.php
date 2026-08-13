@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Admin;
 
+use App\Enums\CampoDeBusqueda;
 use App\Enums\EventStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\IndexEventsRequest;
@@ -37,11 +38,24 @@ class EventController extends Controller
             // Un evento se recuerda por el titulo o por donde era, ademas de
             // por quien lo pidio. El id no entra: nadie llama diciendo «el
             // evento numero siete».
-            ->buscar(
-                $filtros['q'] ?? null,
-                columnas: ['title', 'location', 'phone'],
-                relaciones: ['user' => ['name', 'email']],
-                porId: false,
+            ->when(
+                isset($filtros['buscar_por']),
+                function ($query) use ($filtros) {
+                    $campo = CampoDeBusqueda::from($filtros['buscar_por']);
+
+                    $query->buscar(
+                        $filtros['q'],
+                        columnas: $campo->columnasDeEvento(),
+                        relaciones: $campo->relacionesDeEvento(),
+                        porId: false,
+                    );
+                },
+                fn ($query) => $query->buscar(
+                    $filtros['q'] ?? null,
+                    columnas: ['title', 'location', 'phone'],
+                    relaciones: ['user' => ['name', 'email']],
+                    porId: false,
+                ),
             )
             ->entreFechas('event_date', $filtros['desde'] ?? null, $filtros['hasta'] ?? null)
             ->orderBy('event_date')
