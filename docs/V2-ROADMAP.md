@@ -301,16 +301,28 @@ Prioridad: **P0** crítico · **P1** importante · **P2** mejora · **P3** opcio
 
 **Fase 0 completada.** El backup del esquema previo (15 tablas) está fuera del repositorio, en el scratchpad de la sesión. La recreación del esquema limpio se hace en la Fase 2, cuando existan las migraciones de v2.
 
-### Fase 1 — Núcleo del backend · P0
-Sanctum en modo SPA y retirada de `jwt-auth` · CORS con orígenes explícitos y `supports_credentials` · registro seguro y throttle · **recuperación de contraseña, verificación de email y edición de perfil** (N19) · Policies y `EnsureIsAdmin` · Enums de estado · esqueleto de `/api` con Form Requests, Resources y formato de error único · tests de autenticación y autorización.
-**Cierra:** SEC-001, SEC-003, SEC-004, SEC-007, SEC-008, SEC-009, SEC-011, SEC-013, ARCH-001, ARCH-002, ARCH-004.
-*Depende de: Fase 0.*
+### Fase 1 — Núcleo del backend · P0 · ✅ completada (2026-08-12)
 
-> Mailpit hace falta ya en esta fase, no en la 6: sin él no se pueden probar ni la recuperación de contraseña ni la verificación de email.
+| Entregado | Estado |
+|---|---|
+| Sanctum en modo SPA; retirada de `jwt-auth`, `config/jwt.php` y `JWT_SECRET` | ✅ `2b67f1e` |
+| CORS con orígenes explícitos y `supports_credentials` | ✅ cierra **SEC-013** |
+| `EnsureIsAdmin` (sustituye a `IsAdmin`); `auth:sanctum` sustituye a `IsUserAuth` | ✅ cierra **ARCH-002** |
+| Registro sin rol asignable + throttle por ruta y por email+IP | ✅ cierra **SEC-001**, **SEC-007** |
+| Sesión por cookie HttpOnly, revocable | ✅ cierra **SEC-011** |
+| Form Requests, API Resources, formato de error JSON único | ✅ cierra **ARCH-005**, parte de **ARCH-001** |
+| Recuperación de contraseña, verificación de email, perfil (N19) | ✅ `a1a21f0` |
+| 26 tests, con regresión explícita de SEC-001 y SEC-007 | ✅ |
 
-### Fase 2 — Catálogo y esquema · P0
+**Movido a la Fase 2: las Policies** (SEC-003, SEC-004, SEC-008, SEC-009). Protegen `Order`, `OrderItem`, `Event` y `MediaAsset`, y los cuatro modelos se rehacen enteros en la Fase 2 (catálogo separado de línea de pedido, envío a nivel de pedido, snapshots de precio). Escribirlas antes significaría escribirlas dos veces. **Ningún endpoint de esos recursos existe hoy**, así que los hallazgos no son explotables mientras tanto — pero siguen abiertos y se cierran ahí.
+
+> Mailpit hace falta desde esta fase, no desde la 6: sin él no se prueban ni la recuperación de contraseña ni la verificación de email.
+
+### Fase 2 — Catálogo, esquema y Policies · P0 · ⬅️ siguiente
 Migraciones de `products`, `product_variants`, `shipping_methods`, pivot y `media_assets` · `PricingService` con las 3 fórmulas · seeder del catálogo real · endpoints públicos de catálogo · subida de imágenes de referencia con Policy de propiedad · CRUD de administración · índices de DB-003.
-**Cierra:** SEC-006, SEC-014, DB-002, DB-003.
+Incluye además la tabla `roles` con `1 = cliente, 2 = admin` (D23) y **las Policies traídas de la Fase 1**: `OrderPolicy`, `EventPolicy`, `MediaAssetPolicy`, cada una con el test del IDOR que bloquea.
+
+**Cierra:** SEC-003, SEC-004, SEC-006, SEC-008, SEC-009, SEC-014, DB-002, DB-003.
 *Depende de: Fase 1.*
 
 ### Fase 3 — Base de la SPA · P0

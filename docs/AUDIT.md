@@ -101,17 +101,17 @@ Todos confirmados por lectura de código. ✅ = además verificado ejecutando en
 | ID | Sev. | Título | Estado |
 |---|---|---|---|
 | [SEC-002](#sec-002) | CRÍTICO | Apache expone todo el proyecto ✅ | ✅ **Corregido** `2fda29c` |
-| [SEC-001](#sec-001) | CRÍTICO | Escalada de privilegios en el registro | ⏳ Fase 1 |
-| [SEC-003](#sec-003) | CRÍTICO | Cualquier usuario modifica cualquier pedido | ⏳ Fase 1 |
-| [SEC-004](#sec-004) | CRÍTICO | Cualquier usuario crea y borra productos ajenos | ⏳ Fase 1 |
+| [SEC-001](#sec-001) | CRÍTICO | Escalada de privilegios en el registro | ✅ **Corregido** `c4ff820` |
+| [SEC-003](#sec-003) | CRÍTICO | Cualquier usuario modifica cualquier pedido | ⏳ Fase 2 |
+| [SEC-004](#sec-004) | CRÍTICO | Cualquier usuario crea y borra productos ajenos | ⏳ Fase 2 |
 | [SEC-005](#sec-005) | CRÍTICO | XSS almacenado → toma de control de la admin | ⏳ Fase 3 |
 | [SEC-006](#sec-006) | ALTO | Precio y total calculados en el cliente | ⏳ Fase 2 |
-| [SEC-007](#sec-007) | ALTO | Sin rate limiting en login ni registro ✅ | ⏳ Fase 1 |
-| [SEC-008](#sec-008) | ALTO | IDOR de lectura en productos de pedido | ⏳ Fase 1 |
-| [SEC-009](#sec-009) | ALTO | IDOR de lectura en usuarios | ⏳ Fase 1 |
+| [SEC-007](#sec-007) | ALTO | Sin rate limiting en login ni registro ✅ | ✅ **Corregido** `c4ff820` |
+| [SEC-008](#sec-008) | ALTO | IDOR de lectura en productos de pedido | ⏳ Fase 2 |
+| [SEC-009](#sec-009) | ALTO | IDOR de lectura en usuarios | ⏳ Fase 2 |
 | [SEC-012](#sec-012) | ALTO | Excepción de login devuelta al cliente | ✅ **Corregido** `b0eac92` |
-| [SEC-011](#sec-011) | MEDIO | Ciclo de vida del JWT | ⏳ Fase 1 (D2) |
-| [SEC-013](#sec-013) | MEDIO | CORS abierto | ⏳ Fase 1 |
+| [SEC-011](#sec-011) | MEDIO | Ciclo de vida del JWT | ✅ **Corregido** `2b67f1e` (D2) |
+| [SEC-013](#sec-013) | MEDIO | CORS abierto | ✅ **Corregido** `2b67f1e` |
 | [SEC-010](#sec-010) | LATENTE | Un usuario podría confirmar su propio evento | ⏳ Fase 4 |
 | [SEC-014](#sec-014) | BAJO | Subida de ficheros sin re-encodificación | ⏳ Fase 2 |
 
