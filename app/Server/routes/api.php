@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\CatalogController;
 use App\Http\Controllers\Api\EmailVerificationController;
 use App\Http\Controllers\Api\MediaController;
@@ -84,6 +85,15 @@ Route::middleware('auth:sanctum')->group(function () {
         ->name('media.store');
 
     Route::delete('media/{media}', [MediaController::class, 'destroy'])->name('media.destroy');
+});
+
+// SEC-006: el cuerpo dice *que* se encarga, nunca cuanto cuesta. Cada
+// respuesta devuelve el pedido entero recalculado en servidor.
+Route::middleware('auth:sanctum')->prefix('cart')->group(function () {
+    Route::get('/', [CartController::class, 'show'])->name('cart.show');
+    Route::post('items', [CartController::class, 'store'])->name('cart.items.store');
+    Route::patch('items/{item}', [CartController::class, 'update'])->name('cart.items.update');
+    Route::delete('items/{item}', [CartController::class, 'destroy'])->name('cart.items.destroy');
 });
 
 // N19: perfil. Todo requiere sesion; nada aqui permite tocar el rol.
