@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\CatalogController;
 use App\Http\Controllers\Api\EmailVerificationController;
 use App\Http\Controllers\Api\MediaController;
+use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -94,6 +95,15 @@ Route::middleware('auth:sanctum')->prefix('cart')->group(function () {
     Route::post('items', [CartController::class, 'store'])->name('cart.items.store');
     Route::patch('items/{item}', [CartController::class, 'update'])->name('cart.items.update');
     Route::delete('items/{item}', [CartController::class, 'destroy'])->name('cart.items.destroy');
+});
+
+// Pedidos. Las transiciones de estado van por sub-recurso, nunca por un
+// `PATCH {status}` como en v1 (SEC-003): no hay ningun endpoint que acepte
+// el estado o el total en el cuerpo.
+Route::middleware('auth:sanctum')->prefix('orders')->group(function () {
+    Route::get('/', [OrderController::class, 'index'])->name('orders.index');
+    Route::get('{order}', [OrderController::class, 'show'])->name('orders.show');
+    Route::post('{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
 });
 
 // N19: perfil. Todo requiere sesion; nada aqui permite tocar el rol.
