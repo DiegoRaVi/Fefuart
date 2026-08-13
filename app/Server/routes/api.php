@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\CatalogController;
 use App\Http\Controllers\Api\EmailVerificationController;
+use App\Http\Controllers\Api\EventController;
 use App\Http\Controllers\Api\MediaController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\Admin\ProductController as AdminProductController;
@@ -128,6 +129,18 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->name('admin.')->g
         ->name('variants.update');
     Route::delete('variants/{variant}', [AdminVariantController::class, 'destroy'])
         ->name('variants.destroy');
+});
+
+// Solicitudes de Live Art. Ninguna ruta acepta `status` en el cuerpo: eso
+// era SEC-010, y se activaba justo al arreglar BUG-002 (el PATCH que en v1
+// apuntaba a un metodo inexistente). Presupuestar y confirmar son del
+// backoffice.
+Route::middleware('auth:sanctum')->prefix('events')->group(function () {
+    Route::get('/', [EventController::class, 'index'])->name('events.index');
+    Route::post('/', [EventController::class, 'store'])->name('events.store');
+    Route::get('{event}', [EventController::class, 'show'])->name('events.show');
+    Route::patch('{event}', [EventController::class, 'update'])->name('events.update');
+    Route::post('{event}/cancel', [EventController::class, 'cancel'])->name('events.cancel');
 });
 
 // N19: perfil. Todo requiere sesion; nada aqui permite tocar el rol.
