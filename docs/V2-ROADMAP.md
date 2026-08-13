@@ -46,6 +46,7 @@ Todo el desarrollo se realiza **en local**. El despliegue a staging y producció
 | **D24** | **El carrito y la consulta de pedidos entran en la Fase 2** | La Fase 2 se comprometía a cerrar SEC-003, SEC-004, SEC-006 y SEC-008 sin construir ninguna ruta que los tocara. Pero el principio de testing del proyecto es que **cada hallazgo se cierra con el test que lo reproduce**, y el test que reproduce SEC-006 es «mando `price` en el cuerpo y compruebo que se ignora»: eso exige `POST /api/cart/items`. Una Policy sin ruta solo se prueba a nivel unitario (`$user->can(…)`), que no es el IDOR. Se traen desde la Fase 4 el carrito, el listado y el detalle de pedido y la cancelación. La Fase 4 queda como frontend, backoffice y eventos. |
 | **D25** | **Migraciones reescritas en sitio, no apiladas** | Consecuencia directa de D4: sin datos reales ni producción, el árbol de migraciones debe leerse como el esquema objetivo, no como su historia. Se reescriben las de v1 (`orders`, `products`, `events`) en lugar de encadenar `ALTER`s encima, y `users` pasa a crear también `roles`. El coste es un `migrate:fresh` local, con backup previo fuera del repositorio. |
 | **D26** | **Copia adicional: 10 €. El límite de una copia lo pone la *entrega*, no el producto** | N4 exigía un `additional_copy_price` que ningún documento fijaba: son 10 € en **todas** las variantes. La primera copia paga el trabajo artístico; las siguientes, solo la impresión. *Afinado al implementarlo:* «Digital» es una **variante**, no un tipo de entrega, y esa variante también se puede imprimir — así que también cobra la copia. Lo que no admite copias es la **entrega digital**, porque es el mismo fichero, y eso depende del `delivery_type` de la línea, no del producto: lo aplica `CartService`. `products.max_quantity` queda como el tope general del producto. Ambos importes son semilla editable desde el backoffice (D5). Resuelve P4. |
+| **D28** | **Una sola caja de búsqueda en el backoffice, no un campo por dato** | Quien pregunta por su encargo da lo que tiene a mano: a veces el número de pedido que le llegó por correo, a veces solo un nombre, a veces un teléfono desde el que llamó. Obligar a Felicitas a decidir en cuál de cuatro casillas escribirlo traslada al usuario un problema que resuelve mejor el servidor. La caja mira número, nombre y email de la cuenta, nombre del envío y teléfono; en eventos, además, título y lugar. Dos detalles que salieron al implementarlo: los `OR` van agrupados o el filtro de estado deja de aplicarse, y un número de menos de cuatro cifras se busca **solo** como número de pedido, porque buscar «1» también por teléfono devolvía casi todo. |
 | **D27** | **`events` en la Fase 2 solo con el esquema base** | Se rehace la tabla con los campos que N14 necesita para presupuestar (`guest_count`, `duration_hours`, `event_type`) y se escribe `EventPolicy`. Las columnas de presupuesto y señal, y el `confirmed_slot` de N16, esperan a la Fase 5: es donde nace el flujo y donde la colisión de fechas se puede probar de verdad. Además `confirmed_slot` es una columna generada con sintaxis de MariaDB y los tests corren en SQLite; esa portabilidad se resuelve cuando la columna tenga uso, no antes. |
 
 **Decisiones de bajo impacto adoptadas sin consulta:** React Router para rutas · React Hook Form + Zod para formularios · Pest para backend · Vitest + Testing Library + Playwright para frontend.
@@ -372,9 +373,9 @@ Prioridad: **P0** crítico · **P1** importante · **P2** mejora · **P3** opcio
 
 *Dependía de: Fase 1.*
 
-### Fase 4 — Flujos funcionales · P1 · ⬅️ en curso
+### Fase 4 — Flujos funcionales · P1 · ✅ completada (2026-08-13)
 
-Es la fase más grande, así que va por tandas.
+Es la fase más grande, así que fue por tandas.
 
 | Tanda | Contenido | Estado |
 |---|---|---|
@@ -383,13 +384,17 @@ Es la fase más grande, así que va por tandas.
 | **4c** | Catálogo y ficha de producto en la SPA | ✅ `8c21a18` |
 | **4d** | Formulario de encargo a medida y carrito en la SPA · comando de limpieza de ficheros huérfanos | ✅ `deb5480`, `6a0c87d`, `7f3fd92`, `c39e664` |
 | **4e** | Checkout, mis pedidos y solicitud de LiveArt en la SPA | ✅ `88a959a`, `3c3db3c`, `755df9a` |
-| **4f** | Backoffice: pedidos, eventos y catálogo | ⬅️ siguiente |
+| **4f** | Backoffice: pedidos, eventos y catálogo · buscador único y rango de fechas | ✅ `296170e`, `4593245` |
 
 **El checkout entra aquí, corrigiendo lo que se escribió al cerrar la Fase 2.** Allí se dijo que sin pasarela habría que reescribirlo entero al añadir el PaymentIntent, y no es cierto: `CheckoutService` valida el carrito, captura la dirección, congela los importes y pasa `cart → pending_payment`. La Fase 5 **inserta** el pago entre `pending_payment` y `paid`; no reescribe lo anterior. Sin checkout, además, ni «mis pedidos» ni el backoffice tienen nada real que mostrar.
 
 **Alcance del backoffice:** lo que ya hacía v1, bien hecho — listar pedidos y eventos por estado, buscar pedidos por email, cambiar estados y ver la foto de referencia de cada línea. Con paginación, Policies y sin los N+1 de PERF-001. Las métricas de `GET /api/admin/metrics` se dejan fuera: sin saber qué números mira Felicitas de verdad, es fácil construir el panel equivocado.
 
-**Lo que el backoffice de eventos todavía no puede hacer:** presupuestar y confirmar. Las dos necesitan importe y señal, y esas columnas son de la Fase 5 (D27). El endpoint de estado corta ahí explícitamente en vez de permitir un `quoted` sin importe, que sería un estado a medias y dejaría al cliente sin poder aceptar nada.
+**Lo que el backoffice de eventos todavía no puede hacer:** presupuestar y confirmar. Las dos necesitan importe y señal, y esas columnas son de la Fase 5 (D27). El endpoint de estado corta ahí explícitamente en vez de permitir un `quoted` sin importe, que sería un estado a medias y dejaría al cliente sin poder aceptar nada. La pantalla lo dice en vez de callárselo.
+
+**El buscador del backoffice** (D28) es una sola caja que mira número de pedido, nombre y email de la cuenta, nombre del envío y teléfono. El nombre del envío entra porque puede no ser el de la cuenta —un regalo, o alguien que pide para otra persona—, y ese es justo el caso en el que hace falta buscar. Con rango de fechas sobre `placed_at` y `event_date`.
+
+**Deuda consciente:** el comodín por delante (`%marta%`) impide usar índice, así que la búsqueda es un escaneo. Con el volumen de este negocio es irrelevante; si deja de serlo, la salida es un índice de texto completo, no reordenar la consulta.
 
 **Cierra:** SEC-010 ✅, BUG-002 ✅, P5 ✅, PERF-001, PERF-002, PERF-004.
 *Depende de: Fases 2 y 3.*
