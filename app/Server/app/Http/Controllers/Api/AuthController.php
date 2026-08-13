@@ -23,7 +23,7 @@ class AuthController extends Controller
     public function register(RegisterRequest $request): JsonResponse
     {
         $user = new User($request->validated());
-        $user->role = UserRole::default();
+        $user->role_id = UserRole::default();
         $user->save();
 
         Auth::login($user);

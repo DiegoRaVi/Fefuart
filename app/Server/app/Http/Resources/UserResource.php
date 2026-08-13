@@ -23,7 +23,8 @@ class UserResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'email' => $this->email,
-            'role' => $this->role->value,
+            // El nombre, nunca el id (D23).
+            'role' => $this->role_id->slug(),
             'email_verified_at' => $this->email_verified_at?->toAtomString(),
         ];
     }

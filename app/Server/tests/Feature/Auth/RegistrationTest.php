@@ -26,7 +26,7 @@ it('registra un usuario y abre sesion', function () {
 
     $response->assertCreated()
         ->assertJsonPath('data.email', 'felicitas@fefuart.test')
-        ->assertJsonPath('data.role', 'user');
+        ->assertJsonPath('data.role', 'customer');
 
     $this->assertAuthenticated();
 });
@@ -37,6 +37,9 @@ it('registra un usuario y abre sesion', function () {
  * En v1, AuthController leia `$request->get('role', 'user')` y `role` era
  * fillable, asi que esta misma peticion creaba un administrador contra un
  * endpoint publico y sin autenticacion previa.
+ *
+ * Se envian las dos formas del ataque: la de v1 (`role` por nombre) y la
+ * que abriria el cambio a entero de D23 (`role_id` por id).
  */
 it('ignora el rol enviado por el cliente al registrarse', function () {
     $this->postJson(route('auth.register'), [
@@ -45,11 +48,12 @@ it('ignora el rol enviado por el cliente al registrarse', function () {
         'password' => 'contrasena-larga',
         'password_confirmation' => 'contrasena-larga',
         'role' => 'admin',
-    ])->assertCreated()->assertJsonPath('data.role', 'user');
+        'role_id' => 2,
+    ])->assertCreated()->assertJsonPath('data.role', 'customer');
 
     $user = User::where('email', 'intruso@fefuart.test')->sole();
 
-    expect($user->role)->toBe(UserRole::User)
+    expect($user->role_id)->toBe(UserRole::Customer)
         ->and($user->isAdmin())->toBeFalse();
 });
 

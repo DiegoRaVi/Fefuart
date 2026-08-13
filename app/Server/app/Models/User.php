@@ -18,10 +18,11 @@ class User extends Authenticatable implements MustVerifyEmail
     use HasFactory, Notifiable;
 
     /**
-     * SEC-001: `role` NO figura aqui. En v1 si lo hacia, y el registro lo
-     * tomaba del cuerpo de la peticion (`$request->get('role', 'user')`),
-     * de modo que cualquiera podia crearse una cuenta de administrador
-     * enviando `"role": "admin"` a un endpoint publico.
+     * SEC-001: `role_id` NO figura aqui. En v1 el equivalente (`role`) si lo
+     * hacia, y el registro lo tomaba del cuerpo de la peticion
+     * (`$request->get('role', 'user')`), de modo que cualquiera podia crearse
+     * una cuenta de administrador enviando `"role": "admin"` a un endpoint
+     * publico.
      *
      * @var list<string>
      */
@@ -40,6 +41,10 @@ class User extends Authenticatable implements MustVerifyEmail
     ];
 
     /**
+     * `role_id` se lee siempre como enum, nunca como numero (D23). Es la
+     * columna real —la clave foranea a `roles`— y no se duplica en un
+     * accesor `role`: un mismo dato con dos nombres acaba divergiendo.
+     *
      * @return array<string, string>
      */
     protected function casts(): array
@@ -47,13 +52,13 @@ class User extends Authenticatable implements MustVerifyEmail
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'role' => UserRole::class,
+            'role_id' => UserRole::class,
         ];
     }
 
     public function isAdmin(): bool
     {
-        return $this->role === UserRole::Admin;
+        return $this->role_id === UserRole::Admin;
     }
 
     public function orders()

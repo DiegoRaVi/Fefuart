@@ -28,18 +28,22 @@ it('actualiza el nombre', function () {
 
 /**
  * SEC-001 — regresion por otra via. El perfil no puede ser una puerta
- * trasera para cambiarse el rol: `role` no esta en las reglas del
- * UpdateProfileRequest ni es fillable en el modelo.
+ * trasera para cambiarse el rol: ni `role` ni `role_id` estan en las reglas
+ * del UpdateProfileRequest ni son fillable en el modelo.
  */
 it('ignora el rol enviado al actualizar el perfil', function () {
     $user = User::factory()->create();
 
     $this->actingAs($user)
-        ->patchJson(route('profile.update'), ['name' => 'Intruso', 'role' => 'admin'])
+        ->patchJson(route('profile.update'), [
+            'name' => 'Intruso',
+            'role' => 'admin',
+            'role_id' => 2,
+        ])
         ->assertOk()
-        ->assertJsonPath('data.role', 'user');
+        ->assertJsonPath('data.role', 'customer');
 
-    expect($user->fresh()->role)->toBe(UserRole::User);
+    expect($user->fresh()->role_id)->toBe(UserRole::Customer);
 });
 
 it('invalida la verificacion al cambiar de correo', function () {

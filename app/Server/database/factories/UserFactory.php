@@ -25,18 +25,18 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
-            'role' => UserRole::User,
+            'role_id' => UserRole::Customer,
         ];
     }
 
     /**
-     * `role` no es fillable (SEC-001), asi que la unica via para crear un
+     * `role_id` no es fillable (SEC-001), asi que la unica via para crear un
      * administrador es esta: factory, seeder o comando. Nunca una peticion.
      */
     public function admin(): static
     {
         return $this->state(fn (array $attributes) => [
-            'role' => UserRole::Admin,
+            'role_id' => UserRole::Admin,
         ]);
     }
 
