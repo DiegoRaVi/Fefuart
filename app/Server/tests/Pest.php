@@ -17,31 +17,14 @@ pest()->extend(Tests\TestCase::class)
 
 /*
 |--------------------------------------------------------------------------
-| Expectations
+| Expectations y helpers
 |--------------------------------------------------------------------------
 |
-| When you're writing tests, you often need to check that values meet certain conditions. The
-| "expect()" function gives you access to a set of "expectations" methods that you can use
-| to assert different things. Of course, you may extend the Expectation API at any time.
+| Aqui van las expectativas propias y los helpers globales de los tests. De
+| momento no hace falta ninguno: los helpers que existen viven en el fichero
+| que los usa, que es donde se leen.
+|
+| Se retiran los de plantilla (`toBeOne`, `something()`) junto con los dos
+| ExampleTest que la auditoria contaba como la totalidad de la cobertura.
 |
 */
-
-expect()->extend('toBeOne', function () {
-    return $this->toBe(1);
-});
-
-/*
-|--------------------------------------------------------------------------
-| Functions
-|--------------------------------------------------------------------------
-|
-| While Pest is very powerful out-of-the-box, you may have some testing code specific to your
-| project that you don't want to repeat in every file. Here you can also expose helpers as
-| global functions to help you to reduce the number of lines of code in your test files.
-|
-*/
-
-function something()
-{
-    // ..
-}
