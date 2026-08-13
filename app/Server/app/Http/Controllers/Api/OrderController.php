@@ -27,9 +27,12 @@ class OrderController extends Controller
      */
     public function index(Request $request): AnonymousResourceCollection
     {
+        // Mismo criterio que en el backoffice: el listado enseña cuantos
+        // encargos hay y el total, no los encargos.
         $orders = $request->user()->orders()
             ->placed()
-            ->with(['items.referenceMedia', 'shippingMethod'])
+            ->withCount('items')
+            ->with('shippingMethod')
             ->orderByDesc('placed_at')
             ->paginate(15);
 

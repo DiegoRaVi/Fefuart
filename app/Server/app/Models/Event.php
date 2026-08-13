@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\EventStatus;
+use App\Models\Concerns\SeBusca;
 use Database\Factories\EventFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -15,7 +16,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Event extends Model
 {
     /** @use HasFactory<EventFactory> */
-    use HasFactory, SoftDeletes;
+    use HasFactory, SeBusca, SoftDeletes;
 
     /**
      * SEC-010: `status` NO figura aqui. En v1 `updateEvent` hacia

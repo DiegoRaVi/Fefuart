@@ -66,14 +66,16 @@ it('rechaza un estado inventado en el filtro', function () {
 
 /**
  * v1 tenia busqueda de pedidos por email de cliente y es lo que Felicitas
- * usa para localizar un encargo cuando alguien escribe preguntando.
+ * usa para localizar un encargo cuando alguien escribe preguntando. En v2 es
+ * una sola caja que mira tambien el numero, el nombre y el telefono; los
+ * casos concretos estan en AdminOrdersBusquedaTest.
  */
 it('busca pedidos por email del cliente', function () {
     Order::factory()->for($this->cliente)->placed()->create();
     Order::factory()->for($this->otroCliente)->placed()->create();
 
     $this->actingAs($this->admin)
-        ->getJson(route('admin.orders.index', ['email' => 'marta@']))
+        ->getJson(route('admin.orders.index', ['q' => 'marta@']))
         ->assertOk()
         ->assertJsonCount(1, 'data')
         ->assertJsonPath('data.0.customer.email', 'marta@fefuart.test');
@@ -83,7 +85,7 @@ it('devuelve lista vacia si la busqueda no encuentra nada', function () {
     Order::factory()->for($this->cliente)->placed()->create();
 
     $this->actingAs($this->admin)
-        ->getJson(route('admin.orders.index', ['email' => 'nadie@']))
+        ->getJson(route('admin.orders.index', ['q' => 'nadie@']))
         ->assertOk()
         ->assertJsonPath('data', []);
 });
@@ -207,7 +209,9 @@ it('no hace mas consultas por listar mas pedidos', function () {
             ->assertOk()
             // Si esto falta, el listado no sirve aunque cueste una consulta.
             ->assertJsonPath('data.0.customer.email', 'marta@fefuart.test')
-            ->assertJsonPath('data.0.items.0.product_name', fn ($v) => $v !== null);
+            // El listado cuenta las lineas en vez de traerlas, pero contarlas
+            // tambien puede degenerar en una consulta por fila.
+            ->assertJsonPath('data.0.items_count', 2);
 
         return count(DB::getQueryLog());
     };

@@ -40,7 +40,9 @@ export interface Order {
   shipping_method?: { id: number; code: DeliveryType; name: string; price: string }
   placed_at: string | null
   shipping_address: ShippingAddress
+  /** Solo en el detalle. Los listados traen `items_count`. */
   items: OrderItem[]
+  items_count?: number
 }
 
 export const CLAVE_CARRITO = ['cart'] as const

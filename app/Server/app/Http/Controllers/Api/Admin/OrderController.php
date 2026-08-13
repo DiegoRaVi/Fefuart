@@ -32,20 +32,21 @@ class OrderController extends Controller
 
         $orders = Order::query()
             ->placed()
-            ->with(['user', 'items.referenceMedia', 'shippingMethod'])
+            // El listado enseña el numero de lineas y el total, no las
+            // lineas: cargarlas con su foto de referencia para veinte
+            // pedidos por pagina es traer datos que despues se tiran.
+            ->withCount('items')
+            ->with(['user', 'shippingMethod'])
             ->when(
                 isset($filtros['status']),
                 fn ($query) => $query->where('status', $filtros['status']),
             )
-            // La busqueda por email de v1, que es como Felicitas localiza un
-            // encargo cuando alguien escribe preguntando.
-            ->when(
-                isset($filtros['email']),
-                fn ($query) => $query->whereHas(
-                    'user',
-                    fn ($u) => $u->where('email', 'like', '%'.$filtros['email'].'%'),
-                ),
+            ->buscar(
+                $filtros['q'] ?? null,
+                columnas: ['shipping_name', 'shipping_phone'],
+                relaciones: ['user' => ['name', 'email']],
             )
+            ->entreFechas('placed_at', $filtros['desde'] ?? null, $filtros['hasta'] ?? null)
             ->orderByDesc('placed_at')
             ->paginate(20)
             ->withQueryString();

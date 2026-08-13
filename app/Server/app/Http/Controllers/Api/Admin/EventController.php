@@ -34,6 +34,16 @@ class EventController extends Controller
                 isset($filtros['status']),
                 fn ($query) => $query->where('status', $filtros['status']),
             )
+            // Un evento se recuerda por el titulo o por donde era, ademas de
+            // por quien lo pidio. El id no entra: nadie llama diciendo «el
+            // evento numero siete».
+            ->buscar(
+                $filtros['q'] ?? null,
+                columnas: ['title', 'location', 'phone'],
+                relaciones: ['user' => ['name', 'email']],
+                porId: false,
+            )
+            ->entreFechas('event_date', $filtros['desde'] ?? null, $filtros['hasta'] ?? null)
             ->orderBy('event_date')
             ->paginate(20)
             ->withQueryString();

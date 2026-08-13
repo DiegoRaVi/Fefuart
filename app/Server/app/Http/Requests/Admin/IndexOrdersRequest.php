@@ -20,7 +20,13 @@ class IndexOrdersRequest extends FormRequest
     {
         return [
             'status' => ['sometimes', Rule::enum(OrderStatus::class)],
-            'email' => ['sometimes', 'string', 'max:255'],
+
+            // Una sola caja: numero de pedido, nombre y email de la cuenta,
+            // nombre del envio o telefono. Lo que Felicitas tenga delante.
+            'q' => ['sometimes', 'string', 'max:255'],
+
+            'desde' => ['sometimes', 'date'],
+            'hasta' => ['sometimes', 'date', 'after_or_equal:desde'],
         ];
     }
 
@@ -29,6 +35,21 @@ class IndexOrdersRequest extends FormRequest
      */
     public function attributes(): array
     {
-        return ['status' => 'estado', 'email' => 'correo'];
+        return [
+            'status' => 'estado',
+            'q' => 'busqueda',
+            'desde' => 'fecha de inicio',
+            'hasta' => 'fecha de fin',
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'hasta.after_or_equal' => 'La fecha de fin no puede ser anterior a la de inicio.',
+        ];
     }
 }

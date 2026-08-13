@@ -54,6 +54,9 @@ class OrderResource extends JsonResource
                 'country' => $this->shipping_country,
             ],
             'items' => OrderItemResource::collection($this->whenLoaded('items')),
+            // En los listados basta con cuantas son; las lineas enteras solo
+            // se cargan en el detalle.
+            'items_count' => $this->whenCounted('items'),
         ];
     }
 }

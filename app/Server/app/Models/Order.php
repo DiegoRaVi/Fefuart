@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\OrderStatus;
+use App\Models\Concerns\SeBusca;
 use Database\Factories\OrderFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -18,7 +19,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Order extends Model
 {
     /** @use HasFactory<OrderFactory> */
-    use HasFactory, SoftDeletes;
+    use HasFactory, SeBusca, SoftDeletes;
 
     /**
      * SEC-003/SEC-006: ni `status`, ni `subtotal`, ni `shipping_total`, ni

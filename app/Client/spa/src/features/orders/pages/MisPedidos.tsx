@@ -58,8 +58,7 @@ export function MisPedidos() {
                       year: 'numeric',
                     })}
                   {' · '}
-                  {pedido.items.length}{' '}
-                  {pedido.items.length === 1 ? 'encargo' : 'encargos'}
+                  {pedido.items_count} {pedido.items_count === 1 ? 'encargo' : 'encargos'}
                 </p>
               </div>
 
