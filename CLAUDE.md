@@ -69,6 +69,16 @@ Modelo de datos: el catálogo (`products` + `product_variants`, con el precio) e
 
 Se trabaja en **`develop`**. `master` es la v1 congelada como referencia. Ramas `feature/…`, `fix/…`, `refactor/…`, `docs/…`. Commits pequeños, de un solo tema; no mezclar refactor con funcionalidad ni con cambios de esquema. Nunca `reset --hard`, ni borrado de ramas, ni force push.
 
+### Formato de los commits
+
+```
+[Tipo]: resumen del commit
+```
+
+`[Fix]`, `[Feat]`, `[Docs]`, `[Chore]`, `[Refactor]`. El resumen en una línea; el cuerpo, si hace falta, explica el porqué y cita el hallazgo que cierra (`SEC-001`, `BUG-004`…).
+
+**Prohibido firmar los commits.** Nada de `Co-Authored-By`, `Generated with`, ni ninguna otra atribución al pie. El historial es del autor del repositorio.
+
 **La rama `autotest`** contiene un intento previo de v2 (~16.300 líneas: backend modular DDD, SPA React/TS, CI) que se descartó (D1). Está etiquetada como `archive/v2-autonomous-attempt`. **Déjala intacta** — no se mergea, no se borra, y no se usa como referencia de arquitectura.
 
 ## Testing
