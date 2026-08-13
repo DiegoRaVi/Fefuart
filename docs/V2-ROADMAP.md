@@ -57,7 +57,7 @@ Todo el desarrollo se realiza **en local**. El despliegue a staging y producció
 | P1 | Política de caducidad del presupuesto de evento (`quote_expires_at`) | Fase 5 |
 | P2 | ¿Se devuelve la señal si se cancela un evento ya confirmado? | Fase 5 |
 | ~~P3~~ | **Resuelta:** eliminación de cuenta → D21 (desactivación reversible) + D22 (supresión por anonimización). **Se implementa al final de la Fase 4 y antes de la Fase 5.** El motivo es técnico: hoy suprimir una cuenta sería `$user->delete()`, pero en cuanto existan pedidos pagados y eventos confirmados hay que anonimizar en vez de borrar. Escribirlo antes significa escribirlo dos veces. Antes de la Fase 5 sí es exigible: con pagos reales entran datos de terceros y el margen se estrecha. | Fin de Fase 4 |
-| P5 | **El backend responde en inglés.** Detectado al montar los formularios en la Fase 3: la validación devuelve *«The password field must be at least 8 characters.»* y el correo de recuperación llega con el asunto *«Reset Password Notification»*. La SPA está en español y esos textos se pintan tal cual delante del cliente. Se arregla con `lang/es` de Laravel más los asuntos de las notificaciones; es un cambio de backend, así que no cabía dentro de la Fase 3 | Fase 4 |
+| ~~P5~~ | **Resuelta** en `b0c24d9` (Fase 4a). El backend responde en español, nombres de campo incluidos, y los asuntos de las notificaciones también. `APP_LOCALE` se fija además en `phpunit.xml` para que los tests no dependan del `.env` de quien los ejecute. El fallback se queda en inglés a propósito: si algún día falta una clave, es preferible ver el texto original que la clave cruda. | Fase 4 |
 | ~~P4~~ | **Resuelta:** los precios (30/40/20 € por variante, 40 € ramo y letras, 5 € de envío) se siembran tal cual, y el hueco que faltaba —el precio de la copia adicional— lo fija **D26**. Todos son semilla editable desde el backoffice, así que ninguno queda congelado en código. | Fase 2 |
 
 *Resueltas:* destino de las tablas huérfanas de la BD local (DB-001, Fase 0) · continuidad del frontend legacy (D15) · semántica de `quantity` (D16) · cálculo del envío (D17) · IVA y facturación (D18) · fase de boceto (D19) · entrega digital (D20) · cálculo de la señal (N15) · política de cancelación (N12) · precios de semilla y copia adicional (D26).
@@ -372,9 +372,24 @@ Prioridad: **P0** crítico · **P1** importante · **P2** mejora · **P3** opcio
 
 *Dependía de: Fase 1.*
 
-### Fase 4 — Flujos funcionales · P1 · ⬅️ siguiente
-Pantallas de catálogo y ficha de producto · **formulario de encargo a medida** (descripción + imagen de referencia + variante + envío) · carrito y pedidos en la SPA, contra los endpoints que ya entregó la Fase 2 (D24) · **endpoints de eventos** (`POST /api/events`, listado y detalle), que son los que faltan para cerrar SEC-010 y BUG-002 con su IDOR sobre HTTP · backoffice de pedidos, eventos y catálogo, con la imagen de referencia visible en cada línea.
-**Cierra:** SEC-010, BUG-002, PERF-001, PERF-002, PERF-004. *(BUG-001 y BUG-003 a BUG-008 ya se cerraron en la Fase 2.)*
+### Fase 4 — Flujos funcionales · P1 · ⬅️ en curso
+
+Es la fase más grande, así que va por tandas.
+
+| Tanda | Contenido | Estado |
+|---|---|---|
+| **4a** | Localización del backend (P5) · endpoints de eventos | ✅ `b0c24d9`, `34b5b47` — cierra **SEC-010** y **BUG-002** |
+| **4b** | `POST /api/cart/checkout` · `/api/admin/orders` y `/api/admin/events` con sus transiciones | ⬅️ siguiente |
+| **4c** | Catálogo y ficha de producto en la SPA | |
+| **4d** | Formulario de encargo a medida, carrito y checkout en la SPA | |
+| **4e** | Mis pedidos y solicitud de LiveArt en la SPA | |
+| **4f** | Backoffice: pedidos, eventos y catálogo | |
+
+**El checkout entra aquí, corrigiendo lo que se escribió al cerrar la Fase 2.** Allí se dijo que sin pasarela habría que reescribirlo entero al añadir el PaymentIntent, y no es cierto: `CheckoutService` valida el carrito, captura la dirección, congela los importes y pasa `cart → pending_payment`. La Fase 5 **inserta** el pago entre `pending_payment` y `paid`; no reescribe lo anterior. Sin checkout, además, ni «mis pedidos» ni el backoffice tienen nada real que mostrar.
+
+**Alcance del backoffice:** lo que ya hacía v1, bien hecho — listar pedidos y eventos por estado, buscar pedidos por email, cambiar estados y ver la foto de referencia de cada línea. Con paginación, Policies y sin los N+1 de PERF-001. Las métricas de `GET /api/admin/metrics` se dejan fuera: sin saber qué números mira Felicitas de verdad, es fácil construir el panel equivocado.
+
+**Cierra:** SEC-010 ✅, BUG-002 ✅, P5 ✅, PERF-001, PERF-002, PERF-004.
 *Depende de: Fases 2 y 3.*
 
 ### Fase 5 — Pagos · P1 · ⚠️ riesgo alto

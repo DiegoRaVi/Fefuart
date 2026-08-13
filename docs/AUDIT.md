@@ -9,9 +9,9 @@
 
 ## 1. Resumen ejecutivo
 
-| Área | Estado en la auditoría | Hoy (2026-08-13, fin de Fase 3) |
+| Área | Estado en la auditoría | Hoy (2026-08-13, Fase 4 en curso) |
 |---|---|---|
-| Seguridad | 🔴 Crítico — 5 hallazgos críticos. El rol y el precio los decide el cliente. | 🟢 13 de 14 cerrados. Solo queda SEC-010, desarmado a la espera de sus endpoints (Fase 4). |
+| Seguridad | 🔴 Crítico — 5 hallazgos críticos. El rol y el precio los decide el cliente. | 🟢 **Los 14 cerrados.** Queda pendiente la CSP, que va con el despliegue. |
 | Backend | 🟠 Deuda alta — toda la lógica en controllers. | ✅ Form Requests, Resources, Policies y Services en uso. Del código de v1 no queda nada. |
 | Frontend | 🟠 Deuda alta — lógica inline en 13 HTML, XSS por `innerHTML`. | 🟡 SPA de React con la base montada: sesión, rutas protegidas, cuenta y el tema de v1. Las pantallas de catálogo y carrito son de la Fase 4. |
 | Base de datos | 🟠 Modelo incompleto — no existe catálogo. | ✅ Catálogo, variantes, envíos, línea de encargo y media. DB-006 parcial. |
@@ -112,7 +112,7 @@ Todos confirmados por lectura de código. ✅ = además verificado ejecutando en
 | [SEC-012](#sec-012) | ALTO | Excepción de login devuelta al cliente | ✅ **Corregido** `b0eac92` |
 | [SEC-011](#sec-011) | MEDIO | Ciclo de vida del JWT | ✅ **Corregido** `2b67f1e` (D2) |
 | [SEC-013](#sec-013) | MEDIO | CORS abierto | ✅ **Corregido** `2b67f1e` |
-| [SEC-010](#sec-010) | LATENTE | Un usuario podría confirmar su propio evento | 🟡 Desarmado `0915390`; se cierra en Fase 4 |
+| [SEC-010](#sec-010) | LATENTE | Un usuario podría confirmar su propio evento | ✅ **Corregido** `34b5b47` |
 | [SEC-014](#sec-014) | BAJO | Subida de ficheros sin re-encodificación | ✅ **Corregido** `4d59836` |
 
 ---
@@ -336,7 +336,17 @@ $event->update($request->only(['title','description','date','location','status']
 
 **Por qué es latente y no activo:** la única ruta de usuario que llega aquí es `PATCH /api/events/{id}` → `EventController@updateEvent`, y ese método **no existe** (ver BUG-002), por lo que la petición falla antes. **Se activaría en el momento en que se arregle esa ruta.**
 
-**Desarmado** (commit `0915390`): `status` sale de `$fillable`, así que el `$event->update($request->only([… 'status']))` de v1 ya no puede confirmar nada, y `EventPolicy` separa `quote` y `confirm` como abilities solo de la administradora. **Queda abierto** porque los endpoints de eventos son de la Fase 4 (D27): hasta que existan, la regresión es un test de Policy y no un IDOR sobre HTTP. Se cierra allí.
+**Desarmado** (commit `0915390`): `status` sale de `$fillable`, así que el `$event->update($request->only([… 'status']))` de v1 ya no puede confirmar nada, y `EventPolicy` separa `quote` y `confirm` como abilities solo de la administradora.
+
+**Cerrado** (commit `34b5b47`): con los endpoints ya construidos, la regresión es un ataque real y no un test de Policy. Ninguna ruta acepta `status` en el cuerpo — ni al crear ni al editar.
+
+Lo interesante es que este hallazgo y BUG-002 son el mismo sitio: el `PATCH` estaba roto, y arreglarlo sin tocar lo demás habría activado la escalada. Verificado a mano con el ataque exacto de v1:
+
+```
+PATCH /api/events/{id}  {"status":"confirmed"}
+  -> 200            (BUG-002 arreglado: antes era 500)
+  -> "requested"    (SEC-010 no se activa)
+```
 
 ---
 
@@ -370,7 +380,7 @@ $event->update($request->only(['title','description','date','location','status']
 | ID | Ubicación | Problema | Estado |
 |---|---|---|---|
 | BUG-001 | `routes/api.php:25` | `ProductController@getProducts` **no existe** → `GET /api/products` responde 500 a cualquier usuario autenticado. | ✅ `d47cf29` — lo sustituye `GET /api/catalog/products` |
-| BUG-002 | `routes/api.php:35` | `EventController@updateEvent` **no existe** → `PATCH /api/events/{id}` responde 500. Consecuencia: el usuario no puede editar su propio evento. | ⏳ Fase 4 — `EventPolicy@update` ya lo permite; falta el endpoint |
+| BUG-002 | `routes/api.php:35` | `EventController@updateEvent` **no existe** → `PATCH /api/events/{id}` responde 500. Consecuencia: el usuario no puede editar su propio evento. | ✅ `34b5b47` — arreglado sin activar SEC-010, que era lo delicado |
 | BUG-003 | `routes/api.php:40` | `GET /user-orders` apunta a `getOrdersByUserId($id)` pero la ruta no define `{id}` → 500. | ✅ `2501b84` — `GET /api/orders` sale de la sesión, no de la URL |
 | BUG-004 | `OrderController.php:59` | `$user->role !== $order->user_id` compara un rol con un id. Un usuario normal **nunca** puede ver su propio pedido: siempre 403. | ✅ `2501b84` — con test de que el cliente sí ve su pedido |
 | BUG-005 | `views/cart.html:76-79` | `patchOrder()` se llama dentro del `forEach` → N peticiones PATCH, cada una con un total parcial. | ✅ `d797fcb` — cada respuesta trae el pedido entero recalculado |
