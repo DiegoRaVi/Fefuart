@@ -118,3 +118,40 @@ export function useCambiarCantidad() {
 export function useQuitarLinea() {
   return useEscrituraDeCarrito(quitarLinea)
 }
+
+export interface DireccionDeEnvio {
+  shipping_name?: string
+  shipping_phone?: string
+  shipping_line1?: string
+  shipping_line2?: string
+  shipping_city?: string
+  shipping_province?: string
+  shipping_postal_code?: string
+  shipping_country?: string
+}
+
+/**
+ * SEC-006 — tampoco aqui viaja ningun importe. El servidor vuelve a calcular
+ * contra el catalogo vivo antes de dar el pedido por hecho.
+ */
+export async function hacerPedido(direccion: DireccionDeEnvio): Promise<Order> {
+  const { data } = await api.post<Envelope<Order>>('/cart/checkout', direccion)
+
+  return data.data
+}
+
+export function useHacerPedido() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: hacerPedido,
+    onSuccess: () => {
+      // El carrito ha dejado de existir como tal: el mismo pedido pasa a
+      // `pending_payment`.
+      queryClient.invalidateQueries({ queryKey: CLAVE_CARRITO })
+      queryClient.invalidateQueries({ queryKey: CLAVE_PEDIDOS })
+    },
+  })
+}
+
+export const CLAVE_PEDIDOS = ['orders'] as const

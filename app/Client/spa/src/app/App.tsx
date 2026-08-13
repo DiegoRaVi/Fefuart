@@ -2,13 +2,17 @@ import { BrowserRouter, Route, Routes } from 'react-router'
 
 import { Login } from '@/features/auth/pages/Login'
 import { Carrito } from '@/features/cart/pages/Carrito'
+import { Checkout } from '@/features/cart/pages/Checkout'
 import { Catalogo } from '@/features/catalog/pages/Catalogo'
 import { FichaProducto } from '@/features/catalog/pages/FichaProducto'
 import { FormularioDeEncargo } from '@/features/catalog/pages/FormularioDeEncargo'
 import { RecuperarContrasena } from '@/features/auth/pages/RecuperarContrasena'
 import { Registro } from '@/features/auth/pages/Registro'
 import { RestablecerContrasena } from '@/features/auth/pages/RestablecerContrasena'
+import { LiveArt } from '@/features/eventos/pages/LiveArt'
 import { Portada } from '@/features/inicio/Portada'
+import { DetalleDePedido } from '@/features/orders/pages/DetalleDePedido'
+import { MisPedidos } from '@/features/orders/pages/MisPedidos'
 import { Perfil } from '@/features/perfil/pages/Perfil'
 
 import { LayoutPrincipal } from './layouts/LayoutPrincipal'
@@ -51,6 +55,12 @@ export function App() {
                 {/* N18 — encargar exige cuenta; mirar el catalogo no. */}
                 <Route path="encargos/:slug/encargar" element={<FormularioDeEncargo />} />
                 <Route path="carrito" element={<Carrito />} />
+                <Route path="carrito/confirmar" element={<Checkout />} />
+                <Route path="pedidos" element={<MisPedidos />} />
+                <Route path="pedidos/:id" element={<DetalleDePedido />} />
+                {/* N18 — pedir presupuesto tambien exige cuenta: la artista
+                    tiene que poder responder a alguien. */}
+                <Route path="live-art" element={<LiveArt />} />
               </Route>
             </Route>
           </Routes>

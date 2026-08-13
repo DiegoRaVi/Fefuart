@@ -49,7 +49,12 @@ export function Carrito() {
         metodo={carrito.shipping_method?.name}
       />
 
-      {/* El checkout llega en la tanda siguiente. */}
+      <Link
+        to="/carrito/confirmar"
+        className="inline-block rounded-fefu bg-piedra px-6 py-3 text-white transition-colors duration-300 hover:bg-verde"
+      >
+        Continuar
+      </Link>
     </div>
   )
 }
