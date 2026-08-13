@@ -1,1 +1,101 @@
 @import 'tailwindcss';
+
+/**
+ * D9 — la identidad visual de v1, extraida de sus 2.038 lineas de CSS antes
+ * de descartarlas. Los colores y la familia tipografica son literalmente los
+ * de v1; lo que cambia es el reparto de papeles, por el motivo que se explica
+ * mas abajo.
+ *
+ * Frecuencia de uso en el CSS original: #ffffff 26, #255035 23, #000000 18,
+ * #ddbacc 14, #584f50 14.
+ */
+@theme {
+  /* --- Marca -------------------------------------------------------- */
+
+  /* Rosa empolvado. En v1 es el fondo del header, del footer y de las
+     secciones destacadas de la portada: es el color que se reconoce. */
+  --color-rosa: #ddbacc;
+  --color-rosa-suave: #fdf5f8;
+  /* Derivado, no estaba en v1: hace falta un estado hover sobre el rosa. */
+  --color-rosa-hondo: #c99bb3;
+
+  /* Verde profundo. En v1 es el color de acento: el hover de los enlaces del
+     header y del footer, y el fondo del boton al pasar por encima. */
+  --color-verde: #255035;
+  --color-verde-hondo: #1a3826;
+
+  /* Gris calido. En v1 es el fondo base de `.btn`. */
+  --color-piedra: #584f50;
+
+  /* --- Tipografia --------------------------------------------------- */
+
+  /* La misma pila de v1, sin Google Fonts: la serif es la identidad. */
+  --font-serif:
+    Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+
+  /* v1: h1 2rem, h2 1.8rem, h3 1.5rem. Se conservan. */
+  --text-titulo: 2rem;
+  --text-seccion: 1.8rem;
+  --text-apartado: 1.5rem;
+
+  /* --- Formas ------------------------------------------------------- */
+
+  /* 0.5rem y 8px son los dos radios dominantes en v1, y son el mismo valor. */
+  --radius-fefu: 0.5rem;
+}
+
+/**
+ * El texto sobre el rosa.
+ *
+ * v1 ponia texto blanco sobre #ddbacc en el header y en el footer, y eso da
+ * 1,75:1 cuando la WCAG AA pide 4,5:1 — practicamente ilegible a plena luz.
+ * La paleta no tiene la culpa: el reparto si. Sobre el rosa se escribe en
+ * verde (5,26:1) o en piedra (4,52:1), que ya son colores de la casa, asi
+ * que la web se sigue reconociendo como la misma y deja de tener texto
+ * ilegible.
+ *
+ * Estas parejas las comprueba `src/test/contraste.test.ts` calculando el
+ * contraste real desde este mismo fichero. Si alguien vuelve a poner blanco
+ * sobre rosa, la suite cae.
+ *
+ *   CONTRASTE-AA: rosa / verde
+ *   CONTRASTE-AA: rosa / piedra
+ *   CONTRASTE-AA: rosa-suave / piedra
+ *   CONTRASTE-AA: verde / rosa-suave
+ */
+
+@layer base {
+  html {
+    font-family: var(--font-serif);
+  }
+
+  body {
+    background-color: var(--color-white);
+    color: var(--color-piedra);
+    /* v1 usaba 1.4rem de cuerpo, que en movil obliga a reflujo constante.
+       Se baja a 1.125rem, que conserva la sensacion generosa del original
+       sin ese coste. Es el unico numero de la tipografia que cambia, y se
+       cambia aqui. */
+    font-size: 1.125rem;
+    line-height: 1.6;
+  }
+
+  h1 {
+    font-size: var(--text-titulo);
+  }
+
+  h2 {
+    font-size: var(--text-seccion);
+  }
+
+  h3 {
+    font-size: var(--text-apartado);
+  }
+
+  /* Foco visible siempre: v1 no lo tocaba y el estilo por defecto se perdia
+     bajo los fondos rosas. */
+  :focus-visible {
+    outline: 2px solid var(--color-verde);
+    outline-offset: 2px;
+  }
+}
