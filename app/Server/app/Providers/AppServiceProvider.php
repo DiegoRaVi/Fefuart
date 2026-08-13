@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -17,6 +18,23 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureRateLimiting();
+        $this->configurePasswordResetUrl();
+    }
+
+    /**
+     * El enlace de recuperacion tiene que llevar a la SPA, no a una ruta del
+     * backend: es React quien muestra el formulario y luego llama a la API.
+     */
+    private function configurePasswordResetUrl(): void
+    {
+        ResetPassword::createUrlUsing(function (object $notifiable, string $token) {
+            return sprintf(
+                '%s/restablecer-contrasena?token=%s&email=%s',
+                rtrim((string) config('app.frontend_url'), '/'),
+                $token,
+                urlencode($notifiable->getEmailForPasswordReset())
+            );
+        });
     }
 
     /**

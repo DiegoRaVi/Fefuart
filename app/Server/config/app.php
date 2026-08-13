@@ -54,6 +54,10 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
 
+    // Base de la SPA. Los enlaces de recuperacion de contrasena y de
+    // verificacion de email tienen que apuntar aqui, no al backend.
+    'frontend_url' => env('FRONTEND_URL', 'http://localhost:5173'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone

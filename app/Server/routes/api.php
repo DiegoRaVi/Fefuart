@@ -1,6 +1,9 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\EmailVerificationController;
+use App\Http\Controllers\Api\PasswordResetController;
+use App\Http\Controllers\Api\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -36,8 +39,36 @@ Route::prefix('auth')->group(function () {
         ->middleware('throttle:10,1')
         ->name('auth.login');
 
+    // N19: recuperacion de contrasena. Limitada con mano dura — es un
+    // endpoint publico que dispara envio de correo.
+    Route::post('forgot-password', [PasswordResetController::class, 'sendResetLink'])
+        ->middleware('throttle:5,1')
+        ->name('password.email');
+
+    Route::post('reset-password', [PasswordResetController::class, 'reset'])
+        ->middleware('throttle:5,1')
+        ->name('password.store');
+
+    // Destino del enlace firmado del correo de verificacion. No lleva
+    // auth:sanctum: quien pincha desde el gestor de correo puede no traer
+    // cookie de sesion. La firma de la URL es lo que autoriza.
+    Route::get('verify-email/{id}/{hash}', [EmailVerificationController::class, 'verify'])
+        ->middleware(['signed', 'throttle:6,1'])
+        ->name('verification.verify');
+
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('logout', [AuthController::class, 'logout'])->name('auth.logout');
         Route::get('me', [AuthController::class, 'me'])->name('auth.me');
+
+        Route::post('email/verification-notification', [EmailVerificationController::class, 'resend'])
+            ->middleware('throttle:6,1')
+            ->name('verification.send');
     });
+});
+
+// N19: perfil. Todo requiere sesion; nada aqui permite tocar el rol.
+Route::middleware('auth:sanctum')->prefix('profile')->group(function () {
+    Route::get('/', [ProfileController::class, 'show'])->name('profile.show');
+    Route::patch('/', [ProfileController::class, 'update'])->name('profile.update');
+    Route::put('password', [ProfileController::class, 'updatePassword'])->name('profile.password');
 });
