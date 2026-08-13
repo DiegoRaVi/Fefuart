@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Event;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -11,7 +12,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
  * El presupuesto y la señal no salen todavia porque las columnas no existen:
  * llegan en la Fase 5 (D27).
  *
- * @mixin \App\Models\Event
+ * @mixin Event
  */
 class EventResource extends JsonResource
 {

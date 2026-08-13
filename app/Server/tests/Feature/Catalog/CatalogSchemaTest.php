@@ -4,6 +4,7 @@ use App\Enums\DeliveryType;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\ShippingMethod;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Schema;
 
 /**
@@ -68,7 +69,7 @@ it('no admite dos productos con el mismo slug', function () {
     Product::factory()->create(['slug' => 'dibujo-por-encargo']);
 
     expect(fn () => Product::factory()->create(['slug' => 'dibujo-por-encargo']))
-        ->toThrow(Illuminate\Database\QueryException::class);
+        ->toThrow(QueryException::class);
 });
 
 /**

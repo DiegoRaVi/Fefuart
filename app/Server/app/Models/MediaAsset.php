@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Database\Factories\MediaAssetFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class MediaAsset extends Model
 {
-    /** @use HasFactory<\Database\Factories\MediaAssetFactory> */
+    /** @use HasFactory<MediaAssetFactory> */
     use HasFactory;
 
     protected $fillable = [

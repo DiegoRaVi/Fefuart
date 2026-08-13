@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\OrderItem;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -9,7 +10,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
  * Los importes que salen aqui son los del snapshot: lo que se cobro, no lo
  * que el catalogo valga hoy.
  *
- * @mixin \App\Models\OrderItem
+ * @mixin OrderItem
  */
 class OrderItemResource extends JsonResource
 {

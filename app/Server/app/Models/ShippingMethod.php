@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\DeliveryType;
+use Database\Factories\ShippingMethodFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -12,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  */
 class ShippingMethod extends Model
 {
-    /** @use HasFactory<\Database\Factories\ShippingMethodFactory> */
+    /** @use HasFactory<ShippingMethodFactory> */
     use HasFactory;
 
     protected $fillable = [

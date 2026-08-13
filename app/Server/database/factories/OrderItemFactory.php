@@ -4,17 +4,15 @@ namespace Database\Factories;
 
 use App\Enums\DeliveryType;
 use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\ProductVariant;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\OrderItem>
+ * @extends Factory<OrderItem>
  */
 class OrderItemFactory extends Factory
 {
-    /**
-     * @return array<string, mixed>
-     */
     /**
      * La variante se crea de forma perezosa. Las claves que un `state` —como
      * `fromVariant()`— sobrescribe nunca llegan a evaluar su closure, asi que

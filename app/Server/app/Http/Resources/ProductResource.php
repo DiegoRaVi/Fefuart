@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -9,7 +10,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
  * ARCH-005 — v1 devolvia el modelo Eloquent crudo y el contrato de la API
  * quedaba atado al esquema.
  *
- * @mixin \App\Models\Product
+ * @mixin Product
  */
 class ProductResource extends JsonResource
 {

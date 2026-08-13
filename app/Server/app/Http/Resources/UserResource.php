@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -10,7 +11,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
  * contrato de la API quedaba atado al esquema y cualquier columna nueva se
  * publicaba sola. Aqui los campos expuestos se declaran uno a uno.
  *
- * @mixin \App\Models\User
+ * @mixin User
  */
 class UserResource extends JsonResource
 {

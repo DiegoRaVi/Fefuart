@@ -3,10 +3,11 @@
 namespace Database\Factories;
 
 use App\Enums\DeliveryType;
+use App\Models\ShippingMethod;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\ShippingMethod>
+ * @extends Factory<ShippingMethod>
  */
 class ShippingMethodFactory extends Factory
 {

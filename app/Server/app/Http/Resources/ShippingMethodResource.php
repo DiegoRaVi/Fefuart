@@ -2,11 +2,12 @@
 
 namespace App\Http\Resources;
 
+use App\Models\ShippingMethod;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * @mixin \App\Models\ShippingMethod
+ * @mixin ShippingMethod
  */
 class ShippingMethodResource extends JsonResource
 {

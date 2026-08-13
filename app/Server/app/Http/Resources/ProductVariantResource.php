@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\ProductVariant;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -10,7 +11,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
  * devuelva: el carrito recibe `variant_id` y lo vuelve a calcular en
  * servidor (SEC-006).
  *
- * @mixin \App\Models\ProductVariant
+ * @mixin ProductVariant
  */
 class ProductVariantResource extends JsonResource
 {

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Database\Factories\ProductVariantFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -15,7 +16,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class ProductVariant extends Model
 {
-    /** @use HasFactory<\Database\Factories\ProductVariantFactory> */
+    /** @use HasFactory<ProductVariantFactory> */
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
