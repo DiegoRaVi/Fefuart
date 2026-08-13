@@ -43,6 +43,12 @@ export interface Order {
   /** Solo en el detalle. Los listados traen `items_count`. */
   items: OrderItem[]
   items_count?: number
+  /**
+   * SEC-009 — el servidor solo lo incluye para la administradora. Que aqui
+   * sea opcional no es descuido: en las rutas de cliente no viene, y hay
+   * test de backend que lo comprueba.
+   */
+  customer?: { id: number; name: string; email: string }
 }
 
 export const CLAVE_CARRITO = ['cart'] as const

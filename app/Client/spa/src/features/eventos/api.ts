@@ -27,6 +27,8 @@ export interface Evento {
   /** Resuelto en servidor: el cliente no deduce permisos del estado. */
   can: { update: boolean; cancel: boolean }
   created_at: string | null
+  /** SEC-009 — solo llega si quien pregunta es la administradora. */
+  customer?: { id: number; name: string; email: string }
 }
 
 export interface NuevaSolicitud {

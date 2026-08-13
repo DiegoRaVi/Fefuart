@@ -1,6 +1,11 @@
-import { BrowserRouter, Route, Routes } from 'react-router'
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router'
 
 import { Login } from '@/features/auth/pages/Login'
+import { LayoutDeBackoffice } from '@/features/backoffice/LayoutDeBackoffice'
+import { CatalogoDeAdmin } from '@/features/backoffice/pages/CatalogoDeAdmin'
+import { EventosDeAdmin } from '@/features/backoffice/pages/EventosDeAdmin'
+import { PedidoDeAdmin } from '@/features/backoffice/pages/PedidoDeAdmin'
+import { PedidosDeAdmin } from '@/features/backoffice/pages/PedidosDeAdmin'
 import { Carrito } from '@/features/cart/pages/Carrito'
 import { Checkout } from '@/features/cart/pages/Checkout'
 import { Catalogo } from '@/features/catalog/pages/Catalogo'
@@ -18,7 +23,7 @@ import { Perfil } from '@/features/perfil/pages/Perfil'
 import { LayoutPrincipal } from './layouts/LayoutPrincipal'
 import { AuthProvider } from './providers/AuthProvider'
 import { QueryProvider } from './providers/QueryProvider'
-import { RutaDeInvitado, RutaProtegida } from './routes/RutaProtegida'
+import { RutaDeAdmin, RutaDeInvitado, RutaProtegida } from './routes/RutaProtegida'
 
 /**
  * El orden importa: QueryProvider envuelve a AuthProvider porque la sesion
@@ -61,6 +66,19 @@ export function App() {
                 {/* N18 — pedir presupuesto tambien exige cuenta: la artista
                     tiene que poder responder a alguien. */}
                 <Route path="live-art" element={<LiveArt />} />
+              </Route>
+
+              {/* N20 — el backoffice es de la administradora. El rol sale de
+                  `GET /api/auth/me`, y cada endpoint lo vuelve a comprobar
+                  con el middleware `admin`. */}
+              <Route element={<RutaDeAdmin />}>
+                <Route path="backoffice" element={<LayoutDeBackoffice />}>
+                  <Route index element={<Navigate to="/backoffice/pedidos" replace />} />
+                  <Route path="pedidos" element={<PedidosDeAdmin />} />
+                  <Route path="pedidos/:id" element={<PedidoDeAdmin />} />
+                  <Route path="eventos" element={<EventosDeAdmin />} />
+                  <Route path="catalogo" element={<CatalogoDeAdmin />} />
+                </Route>
               </Route>
             </Route>
           </Routes>
