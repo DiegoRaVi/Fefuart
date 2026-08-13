@@ -9,16 +9,16 @@
 
 ## 1. Resumen ejecutivo
 
-| Área | Estado | Nota |
+| Área | Estado en la auditoría | Hoy (2026-08-13, fin de Fase 2) |
 |---|---|---|
-| Seguridad | 🔴 Crítico | 5 hallazgos críticos. El rol y el precio los decide el cliente. |
-| Backend | 🟠 Deuda alta | Toda la lógica en controllers. 0 Form Requests, Resources, Policies o Services. |
-| Frontend | 🟠 Deuda alta | Lógica en `<script>` inline en 13 HTML. Sin build. XSS por `innerHTML`. |
-| Base de datos | 🟠 Modelo incompleto | No existe catálogo: no hay tabla que defina qué se encarga ni a qué precio. |
-| Rendimiento | 🟡 Aceptable hoy | N+1 y full scans reales, pero con volumen trivial. No urgente. |
-| Testing | 🔴 Inexistente | 2 tests de plantilla. 0 % de cobertura real. |
-| Entorno local | ✅ Corregido | Apache servía todo el repositorio. Cerrado el 2026-08-11. |
-| Git | 🟡 Ordenado | `develop` sincronizada. `autotest` archivada bajo tag. |
+| Seguridad | 🔴 Crítico — 5 hallazgos críticos. El rol y el precio los decide el cliente. | 🟡 12 de 14 cerrados. Queda SEC-005 (Fase 3, por construcción) y SEC-010 desarmado a la espera de sus endpoints. |
+| Backend | 🟠 Deuda alta — toda la lógica en controllers. | ✅ Form Requests, Resources, Policies y Services en uso. Del código de v1 no queda nada. |
+| Frontend | 🟠 Deuda alta — lógica inline en 13 HTML, XSS por `innerHTML`. | 🔴 Sin tocar. La SPA es la Fase 3; el legacy ya no funciona, y es intencionado (D15). |
+| Base de datos | 🟠 Modelo incompleto — no existe catálogo. | ✅ Catálogo, variantes, envíos, línea de encargo y media. DB-006 parcial. |
+| Rendimiento | 🟡 Aceptable hoy | 🟡 Índices puestos y eager loading en los endpoints nuevos. PERF-001/002 eran del frontend: Fase 4. |
+| Testing | 🔴 Inexistente — 2 tests de plantilla, 0 % real. | 🟢 151 tests, con regresión explícita de cada hallazgo cerrado. |
+| Entorno local | ✅ Corregido | ✅ Sin cambios. El VirtualHost definitivo sigue siendo de la Fase 8. |
+| Git | 🟡 Ordenado | 🟡 `develop` con 26 commits sin subir; `autotest` intacta bajo su tag. |
 
 **Diagnóstico de fondo.** Fefuart v1 funciona como demostración, pero su modelo de confianza está invertido: el navegador decide el rol del usuario, el precio del producto y el estado del pedido. Eso no se corrige refactorizando — hay que rediseñar la frontera cliente/servidor. Es la razón por la que v2 se construye de nuevo en lugar de endurecer v1.
 
@@ -101,19 +101,19 @@ Todos confirmados por lectura de código. ✅ = además verificado ejecutando en
 | ID | Sev. | Título | Estado |
 |---|---|---|---|
 | [SEC-002](#sec-002) | CRÍTICO | Apache expone todo el proyecto ✅ | ✅ **Corregido** `2fda29c` |
-| [SEC-001](#sec-001) | CRÍTICO | Escalada de privilegios en el registro | ✅ **Corregido** `c4ff820` |
-| [SEC-003](#sec-003) | CRÍTICO | Cualquier usuario modifica cualquier pedido | ⏳ Fase 2 |
-| [SEC-004](#sec-004) | CRÍTICO | Cualquier usuario crea y borra productos ajenos | ⏳ Fase 2 |
+| [SEC-001](#sec-001) | CRÍTICO | Escalada de privilegios en el registro | ✅ **Corregido** `c4ff820`, ampliado `3e1f292` |
+| [SEC-003](#sec-003) | CRÍTICO | Cualquier usuario modifica cualquier pedido | ✅ **Corregido** `2501b84` |
+| [SEC-004](#sec-004) | CRÍTICO | Cualquier usuario crea y borra productos ajenos | ✅ **Corregido** `4d59836`, `d797fcb` |
 | [SEC-005](#sec-005) | CRÍTICO | XSS almacenado → toma de control de la admin | ⏳ Fase 3 |
-| [SEC-006](#sec-006) | ALTO | Precio y total calculados en el cliente | ⏳ Fase 2 |
+| [SEC-006](#sec-006) | ALTO | Precio y total calculados en el cliente | ✅ **Corregido** `3669964`, `d797fcb` |
 | [SEC-007](#sec-007) | ALTO | Sin rate limiting en login ni registro ✅ | ✅ **Corregido** `c4ff820` |
-| [SEC-008](#sec-008) | ALTO | IDOR de lectura en productos de pedido | ⏳ Fase 2 |
-| [SEC-009](#sec-009) | ALTO | IDOR de lectura en usuarios | ⏳ Fase 2 |
+| [SEC-008](#sec-008) | ALTO | IDOR de lectura en productos de pedido | ✅ **Corregido** `2501b84` |
+| [SEC-009](#sec-009) | ALTO | IDOR de lectura en usuarios | ✅ **Corregido** `2501b84` (por ausencia) |
 | [SEC-012](#sec-012) | ALTO | Excepción de login devuelta al cliente | ✅ **Corregido** `b0eac92` |
 | [SEC-011](#sec-011) | MEDIO | Ciclo de vida del JWT | ✅ **Corregido** `2b67f1e` (D2) |
 | [SEC-013](#sec-013) | MEDIO | CORS abierto | ✅ **Corregido** `2b67f1e` |
-| [SEC-010](#sec-010) | LATENTE | Un usuario podría confirmar su propio evento | ⏳ Fase 4 |
-| [SEC-014](#sec-014) | BAJO | Subida de ficheros sin re-encodificación | ⏳ Fase 2 |
+| [SEC-010](#sec-010) | LATENTE | Un usuario podría confirmar su propio evento | 🟡 Desarmado `0915390`; se cierra en Fase 4 |
+| [SEC-014](#sec-014) | BAJO | Subida de ficheros sin re-encodificación | ✅ **Corregido** `4d59836` |
 
 ---
 
@@ -175,7 +175,9 @@ Todos confirmados por lectura de código. ✅ = además verificado ejecutando en
 
 **Impacto:** fraude (marcarse pedidos como pagados), sabotaje y alteración de datos de envío ajenos.
 
-**Solución:** `OrderPolicy@update`; separar la transición permitida al cliente (`cart → pending`) de las que solo puede hacer la administradora.
+**Solución aplicada** (commit `2501b84`): existe `OrderPolicy` y **no queda ningún endpoint que acepte un estado o un total en el cuerpo**. El `PATCH /orders/{id}` se sustituye por `POST /orders/{id}/cancel`, y las transiciones válidas las declara `OrderStatus`. Un test recorre la tabla de rutas y comprueba que el `PATCH` ya no existe; otro comprueba que cancelar el pedido de otro responde 403.
+
+N12 se refleja en la Policy: el cliente cancela solo antes de pagar; después lo hace la administradora.
 
 ---
 
@@ -188,7 +190,7 @@ Todos confirmados por lectura de código. ✅ = además verificado ejecutando en
 
 **Explotación:** `DELETE /api/products/42` borra el producto de otro usuario y su imagen del disco. `POST /products` con un `order_id` ajeno inyecta líneas en el pedido de otro.
 
-**Solución:** verificar la propiedad a través de `order.user_id` mediante Policy; permitir el borrado únicamente sobre carritos propios.
+**Solución aplicada** (commits `4d59836`, `d797fcb`): la línea de pedido se autoriza a través de su pedido con `OrderPolicy@updateCart`, y el fichero por `MediaAssetPolicy`. Además, adjuntar una `reference_media_id` ajena responde 403 — era la vía equivalente a inyectar un `order_id` ajeno. Hay test de las tres cosas.
 
 ---
 
@@ -220,7 +222,11 @@ Cuando la administradora abre el panel, el script se ejecuta en su sesión.
 
 **Impacto:** pedidos a precio arbitrario. Es la razón de fondo por la que v2 necesita un catálogo en servidor, y bloquea la integración de pagos reales.
 
-**Solución:** catálogo con precios en base de datos; el cliente envía `product_id` + `variant_id` + `shipping_method_id` y el servidor calcula línea y total (`PricingService`).
+**Solución aplicada** (commits `3669964`, `d797fcb`): el catálogo vive en `products` + `product_variants` y `PricingService` es el único sitio donde se decide un precio. `StoreCartItemRequest` **no tiene ningún campo de precio**: el cuerpo dice qué se encarga, no cuánto cuesta.
+
+La regresión manda `price`, `unit_price`, `line_total`, `total` y `shipping_total` envenenados y comprueba que el pedido sale al precio del catálogo. Verificado además a mano contra `php artisan serve`: el cliente envía `price=0.01` y `total=0.00`, el servidor cobra 55,00 €.
+
+El cálculo va en céntimos enteros. Con floats, `0.1 + 0.2` no es `0.3`, y en un pedido de varias líneas ese error acaba descuadrando el cobro.
 
 ---
 
@@ -238,22 +244,26 @@ Cuando la administradora abre el panel, el script se ejecuta en su sesión.
 ---
 
 <a id="sec-008"></a>
-### SEC-008 · ALTO · IDOR de lectura en productos de pedido
+### SEC-008 · ALTO · IDOR de lectura en productos de pedido ✅ CORREGIDO
 
 **Ubicación:** `ProductController.php:58-71` — `getProductsByOrderId` no comprueba la propiedad.
 
 **Explotación:** `GET /api/products/1..N` enumera las líneas de todos los pedidos del sistema.
 
+**Solución aplicada** (commit `2501b84`): las líneas ya no son un recurso de primer nivel — se leen dentro de su pedido, y `GET /api/orders/{id}` pasa por `OrderPolicy@view`. Un pedido ajeno responde 403.
+
 ---
 
 <a id="sec-009"></a>
-### SEC-009 · ALTO · IDOR de lectura en usuarios
+### SEC-009 · ALTO · IDOR de lectura en usuarios ✅ CORREGIDO
 
 **Ubicación:** `AuthController.php:82-91` · `routes/api.php:21` (bajo `IsUserAuth`, no `IsAdmin`)
 
 **Explotación:** `GET /api/user/1..N` devuelve el modelo `User` completo (nombre, email, rol, fechas) de cualquier usuario. `password` sí está en `$hidden`.
 
 **Impacto:** fuga de datos personales de clientes. Relevante a efectos de RGPD.
+
+**Solución aplicada** (commit `2501b84`): **por ausencia.** En v2 no existe ninguna ruta que devuelva otro usuario por id; el perfil solo devuelve la cuenta propia. El test recorre la tabla de rutas y comprueba que no aparece ninguna, de modo que reintroducirla rompe la suite.
 
 ---
 
@@ -311,14 +321,20 @@ $event->update($request->only(['title','description','date','location','status']
 
 **Por qué es latente y no activo:** la única ruta de usuario que llega aquí es `PATCH /api/events/{id}` → `EventController@updateEvent`, y ese método **no existe** (ver BUG-002), por lo que la petición falla antes. **Se activaría en el momento en que se arregle esa ruta.**
 
+**Desarmado** (commit `0915390`): `status` sale de `$fillable`, así que el `$event->update($request->only([… 'status']))` de v1 ya no puede confirmar nada, y `EventPolicy` separa `quote` y `confirm` como abilities solo de la administradora. **Queda abierto** porque los endpoints de eventos son de la Fase 4 (D27): hasta que existan, la regresión es un test de Policy y no un IDOR sobre HTTP. Se cierra allí.
+
 ---
 
 <a id="sec-014"></a>
-### SEC-014 · BAJO · Subida de ficheros
+### SEC-014 · BAJO · Subida de ficheros ✅ CORREGIDO
 
 **Ubicación:** `ProductController.php:27,37-39`
 
 **Estado:** razonablemente correcto — valida `image|mimes:jpeg,png,jpg,gif|max:2048` y el nombre lo genera Laravel. Falta re-encodificación y límite de dimensiones. Riesgo bajo; mejorable en v2.
+
+**Solución aplicada** (commit `4d59836`): `MediaStorageService` decodifica los píxeles y escribe una imagen nueva desde cero, así que EXIF, comentarios y payloads pegados se quedan fuera. El test construye un JPEG válido con `<?php system($_GET[0]); ?>` pegado detrás —que pasa entera la validación de v1— y comprueba que el fichero guardado ya no lo contiene y sigue siendo un JPEG legible. El lado mayor se limita a 2400 px: v1 acotaba el peso pero no las dimensiones, y un JPEG muy comprimido de 12000×12000 pesa poco y agota la memoria al abrirlo.
+
+**Hallazgo nuevo, encontrado al escribir el test:** `mimes:` se fía de lo que declara el cliente. Un fichero que la pasa pero que GD no sabe decodificar producía un **500 con traza** en vez de un 422. Se añade la regla `DecodableImage`, que mira los bytes.
 
 ---
 
@@ -336,16 +352,16 @@ $event->update($request->only(['title','description','date','location','status']
 
 ## 5. Errores funcionales
 
-| ID | Ubicación | Problema |
-|---|---|---|
-| BUG-001 | `routes/api.php:25` | `ProductController@getProducts` **no existe** → `GET /api/products` responde 500 a cualquier usuario autenticado. |
-| BUG-002 | `routes/api.php:35` | `EventController@updateEvent` **no existe** → `PATCH /api/events/{id}` responde 500. Consecuencia: el usuario no puede editar su propio evento. |
-| BUG-003 | `routes/api.php:40` | `GET /user-orders` apunta a `getOrdersByUserId($id)` pero la ruta no define `{id}` → 500. |
-| BUG-004 | `OrderController.php:59` | `$user->role !== $order->user_id` compara un rol con un id. Un usuario normal **nunca** puede ver su propio pedido: siempre 403. |
-| BUG-005 | `views/cart.html:76-79` | `patchOrder()` se llama dentro del `forEach` → N peticiones PATCH, cada una con un total parcial. |
-| BUG-006 | `ProductController.php:110-122` | Valida 9 campos y persiste solo 3 (`name`, `price`, `delivery_type`). El resto se descarta en silencio. |
-| BUG-007 | `ProductController.php:91,133` | `response()->json(['message'=>'…', 404])` — el 404 va como elemento del array, así que el HTTP status real es **200**. |
-| BUG-008 | varios | Una colección vacía devuelve 404 (`getUserOrders`, `getEvents`, `getConfirmedEvents`…). Semánticamente debe ser 200 con lista vacía. |
+| ID | Ubicación | Problema | Estado |
+|---|---|---|---|
+| BUG-001 | `routes/api.php:25` | `ProductController@getProducts` **no existe** → `GET /api/products` responde 500 a cualquier usuario autenticado. | ✅ `d47cf29` — lo sustituye `GET /api/catalog/products` |
+| BUG-002 | `routes/api.php:35` | `EventController@updateEvent` **no existe** → `PATCH /api/events/{id}` responde 500. Consecuencia: el usuario no puede editar su propio evento. | ⏳ Fase 4 — `EventPolicy@update` ya lo permite; falta el endpoint |
+| BUG-003 | `routes/api.php:40` | `GET /user-orders` apunta a `getOrdersByUserId($id)` pero la ruta no define `{id}` → 500. | ✅ `2501b84` — `GET /api/orders` sale de la sesión, no de la URL |
+| BUG-004 | `OrderController.php:59` | `$user->role !== $order->user_id` compara un rol con un id. Un usuario normal **nunca** puede ver su propio pedido: siempre 403. | ✅ `2501b84` — con test de que el cliente sí ve su pedido |
+| BUG-005 | `views/cart.html:76-79` | `patchOrder()` se llama dentro del `forEach` → N peticiones PATCH, cada una con un total parcial. | ✅ `d797fcb` — cada respuesta trae el pedido entero recalculado |
+| BUG-006 | `ProductController.php:110-122` | Valida 9 campos y persiste solo 3 (`name`, `price`, `delivery_type`). El resto se descarta en silencio. | ✅ `d03f156` — Form Request + `update($request->validated())` |
+| BUG-007 | `ProductController.php:91,133` | `response()->json(['message'=>'…', 404])` — el 404 va como elemento del array, así que el HTTP status real es **200**. | ✅ `d47cf29` — con test de que un slug inexistente da 404 de verdad |
+| BUG-008 | varios | Una colección vacía devuelve 404 (`getUserOrders`, `getEvents`, `getConfirmedEvents`…). Semánticamente debe ser 200 con lista vacía. | ✅ `d47cf29` — con test de catálogo vacío |
 
 ---
 
@@ -353,11 +369,11 @@ $event->update($request->only(['title','description','date','location','status']
 
 | ID | Sev. | Problema |
 |---|---|---|
-| ARCH-001 | Alto | 0 Form Requests, 0 API Resources, 0 Policies, 0 Services. Validación, autorización, negocio y query conviven en cada método de controller. |
-| ARCH-002 | Medio | `bootstrap/app.php:17-20` contiene sentencias sin efecto (`IsUserAuth::class;`). Además, la comprobación `role !== 'admin'` se repite inline en ~10 métodos que **ya** están tras el middleware `IsAdmin`. |
-| ARCH-003 | Medio | Sin versionado de API. Nomenclatura incoherente: `/product/{id}` vs `/products`, `/order/{id}` vs `/orders`, `/my-orders` vs `/user-orders`. |
-| ARCH-004 | Bajo | `laravel/sanctum` instalado, ruta `sanctum/csrf-cookie` registrada y tabla `personal_access_tokens` creada: **todo sin usar**. |
-| ARCH-005 | Medio | Se devuelven modelos Eloquent crudos como respuesta: el contrato de la API queda acoplado al esquema de base de datos. |
+| ARCH-001 | Alto | ✅ **Corregido.** Form Requests, API Resources, Policies y Services existen y están en uso. Validación, autorización, negocio y query están separados. |
+| ARCH-002 | Medio | ✅ **Corregido `2b67f1e`.** `bootstrap/app.php` registra los middlewares de verdad y la comprobación de rol vive solo en `EnsureIsAdmin`. |
+| ARCH-003 | Medio | ✅ **Corregido.** Sustantivos en plural, sub-recursos para las transiciones de estado y sin prefijo de versión (D13). |
+| ARCH-004 | Bajo | ✅ **Corregido `3e14d0a`.** Se retira `personal_access_tokens`: el modo cookie de Sanctum no emite tokens personales. |
+| ARCH-005 | Medio | ✅ **Corregido.** Todas las respuestas van por API Resource; ningún modelo Eloquent crudo sale de un controller. |
 
 ---
 
@@ -366,11 +382,11 @@ $event->update($request->only(['title','description','date','location','status']
 | ID | Sev. | Problema |
 |---|---|---|
 | DB-001 | Alto | ✅ **Corregido 2026-08-11.** *Deriva de esquema:* había 9 migraciones aplicadas en MySQL frente a 7 ficheros en el repositorio — `media_assets` y `operational_notifications` existían en la base de datos pero sus migraciones solo estaban en la rama `autotest`, dejando `migrate:status` engañoso y `migrate:rollback` roto. Ambas tablas estaban vacías y ninguna clave foránea apuntaba hacia ellas: se eliminaron junto con sus dos filas de `migrations`. Backup previo del esquema completo fuera del repositorio. Estado actual: 7 migraciones = 7 ficheros, ninguna pendiente, datos de v1 intactos. |
-| DB-002 | Alto | **No existe catálogo.** `products.order_id` hace que la tabla `products` sea en realidad la de líneas de pedido. *Matiz:* que cada línea sea única y lleve su propia imagen y descripción es correcto y necesario — un dibujo por encargo es distinto de otro. El problema es que **ninguna tabla define qué se puede encargar ni a qué precio**, y por eso el precio solo puede venir del navegador (SEC-006). |
-| DB-003 | Medio | Índices existentes: solo PK, `users.email` único y las claves foráneas. **Faltan** `orders(status, order_date)`, `events(status, date)` y `products(category)` — exactamente los campos por los que filtra y ordena el backoffice. |
-| DB-004 | Medio | Sin soft deletes. `deleteOrderById` borra el pedido y sus productos de forma irreversible y sin traza de auditoría. |
-| DB-005 | Bajo | `orders.order_date` es `DATE` (sin hora) pero se usa para ordenar cronológicamente. `orders.address` es un string plano. |
-| DB-006 | Bajo | Nada impide varias órdenes en estado `cart` por usuario; `getCartOrder` hace `->first()`. |
+| DB-002 | Alto | ✅ **Corregido `4ac9ae3`.** **No existía catálogo.** `products.order_id` hacía que la tabla `products` fuese en realidad la de líneas de pedido. *Matiz:* que cada línea sea única y lleve su propia imagen y descripción es correcto y necesario — un dibujo por encargo es distinto de otro. El problema era que **ninguna tabla definía qué se puede encargar ni a qué precio**, y por eso el precio solo podía venir del navegador (SEC-006). Ahora `products` describe el tipo de encargo, el precio vive en `product_variants` y el encargo concreto en `order_items`. Un test comprueba que `products` no tiene ni `price` ni `order_id`. |
+| DB-003 | Medio | ✅ **Corregido `4ac9ae3`, `3e14d0a`, `0915390`.** Índices `products(is_active, category)`, `orders(user_id, status)`, `orders(status, placed_at)` y `events(status, event_date)`, con test que los verifica sobre el esquema real. |
+| DB-004 | Medio | ✅ **Corregido `3e14d0a`, `4ac9ae3`, `0915390`.** softDeletes en `orders`, `products`, `product_variants` y `events`. Un producto retirado desaparece del catálogo público y el pedido que lo compró conserva su nombre en el snapshot; hay test. |
+| DB-005 | Bajo | ✅ **Corregido `3e14d0a`.** `order_date` pasa a `placed_at` (timestamp, nulo mientras es carrito) y la dirección se desglosa en campos. |
+| DB-006 | Bajo | 🟡 **Parcial `d797fcb`.** `CartService` garantiza un solo carrito por usuario en aplicación, con test. La garantía en base de datos necesita el mismo índice sobre columna generada que N16 y va con él en la Fase 5. |
 | DB-008 | Info | **No hay datos reales.** 2 usuarios (`journey-user@example.com`, `admin@local.test`), 12 pedidos idénticos (45,00 €, `pending`) y 18 productos: todo son fixtures de los E2E de la rama `autotest`. |
 
 ---
@@ -395,6 +411,10 @@ Medido donde se indica; el resto es análisis estático.
 `tests/Feature/ExampleTest.php` y `tests/Unit/ExampleTest.php`, ambos de plantilla. **Cobertura real: 0 %.**
 
 No hay tests de frontend ni E2E. Nada cubre autenticación, autorización, cálculo de precios ni transiciones de estado — que es exactamente donde se concentran los cinco hallazgos críticos.
+
+**Estado al cerrar la Fase 2:** 151 tests. Los dos de plantilla se retiraron en `7d9e795`. Cada hallazgo cerrado tiene su regresión, y varias están escritas para que reintroducir el fallo rompa la suite aunque nadie recuerde por qué: el test de SEC-009 recorre la tabla de rutas buscando un endpoint que devuelva otro usuario, y el de SEC-003 busca un `PATCH` sobre un pedido.
+
+Sigue sin haber tests de frontend ni E2E: van con la SPA, en las Fases 3 y 7.
 
 ---
 
