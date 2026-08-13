@@ -57,6 +57,7 @@ Todo el desarrollo se realiza **en local**. El despliegue a staging y producció
 | P1 | Política de caducidad del presupuesto de evento (`quote_expires_at`) | Fase 5 |
 | P2 | ¿Se devuelve la señal si se cancela un evento ya confirmado? | Fase 5 |
 | ~~P3~~ | **Resuelta:** eliminación de cuenta → D21 (desactivación reversible) + D22 (supresión por anonimización). **Se implementa al final de la Fase 4 y antes de la Fase 5.** El motivo es técnico: hoy suprimir una cuenta sería `$user->delete()`, pero en cuanto existan pedidos pagados y eventos confirmados hay que anonimizar en vez de borrar. Escribirlo antes significa escribirlo dos veces. Antes de la Fase 5 sí es exigible: con pagos reales entran datos de terceros y el margen se estrecha. | Fin de Fase 4 |
+| P5 | **El backend responde en inglés.** Detectado al montar los formularios en la Fase 3: la validación devuelve *«The password field must be at least 8 characters.»* y el correo de recuperación llega con el asunto *«Reset Password Notification»*. La SPA está en español y esos textos se pintan tal cual delante del cliente. Se arregla con `lang/es` de Laravel más los asuntos de las notificaciones; es un cambio de backend, así que no cabía dentro de la Fase 3 | Fase 4 |
 | ~~P4~~ | **Resuelta:** los precios (30/40/20 € por variante, 40 € ramo y letras, 5 € de envío) se siembran tal cual, y el hueco que faltaba —el precio de la copia adicional— lo fija **D26**. Todos son semilla editable desde el backoffice, así que ninguno queda congelado en código. | Fase 2 |
 
 *Resueltas:* destino de las tablas huérfanas de la BD local (DB-001, Fase 0) · continuidad del frontend legacy (D15) · semántica de `quantity` (D16) · cálculo del envío (D17) · IVA y facturación (D18) · fase de boceto (D19) · entrega digital (D20) · cálculo de la señal (N15) · política de cancelación (N12) · precios de semilla y copia adicional (D26).
@@ -278,7 +279,7 @@ Todo el desarrollo ocurre en local. Piezas necesarias para levantar el proyecto:
 | Backend Laravel | `cd app/Server && php artisan serve --host=127.0.0.1 --port=8000` | http://127.0.0.1:8000 |
 | MySQL (MariaDB 10.4) | XAMPP Control Panel | BD `fefuart`, usuario `root` sin contraseña |
 | **Mailpit** | `C:\xampp\mailpit\mailpit.exe --listen 127.0.0.1:8025 --smtp 127.0.0.1:1025` | Bandeja en http://127.0.0.1:8025 |
-| SPA React | `cd app/Client/spa && npm run dev` | pendiente de la Fase 3 |
+| SPA React | `cd app/Client/spa && npm run dev` | http://localhost:5173 |
 | Apache | XAMPP Control Panel | solo sirve el frontend legacy; **no** sirve el backend (SEC-002) |
 
 **Mailpit** (v1.30.7) captura todo el correo saliente sin enviarlo a ninguna parte: hace falta desde la Fase 1 para probar la recuperación de contraseña y la verificación de email. El binario se descargó de las releases oficiales de `axllent/mailpit` y su SHA-256 se verificó contra el digest publicado por la API de GitHub. Vive fuera del repositorio, en `C:\xampp\mailpit`.
@@ -351,12 +352,27 @@ Prioridad: **P0** crítico · **P1** importante · **P2** mejora · **P3** opcio
 
 *Dependía de: Fase 1.*
 
-### Fase 3 — Base de la SPA · P0 · ⬅️ siguiente
-Vite + React + TypeScript + Tailwind con la paleta extraída de v1 · proxy hacia la API · cliente axios con CSRF · AuthProvider y rutas protegidas · layout y navegación · páginas de login y registro.
-**Cierra:** SEC-005 (por construcción).
-*Depende de: Fase 1.*
+### Fase 3 — Base de la SPA · P0 · ✅ completada (2026-08-13)
 
-### Fase 4 — Flujos funcionales · P1
+| Entregado | Estado |
+|---|---|
+| `app/Client/spa/.htaccess` — Apache no sirve la SPA | ✅ `a012e20` amplía **SEC-002** |
+| Vite 6 + React 19 + TypeScript strict, proxy `/api`, Vitest | ✅ `362c9e6` cierra **SEC-005** |
+| Tema Tailwind 4 con la paleta y la tipografía de v1 | ✅ `d89ced7` (D9) |
+| Cliente axios con cookie de sesión, CSRF y TanStack Query | ✅ `831c7fb` (D2, D12) |
+| `AuthProvider` y rutas protegidas por sesión y por rol | ✅ `17c764b` |
+| Layout, cabecera y pie con la identidad de v1 | ✅ `322a030` |
+| Login y registro | ✅ `4ff4b54` |
+| Recuperación, verificación de email y perfil (N19) | ✅ `5e62db1` |
+| 56 tests de SPA (207 en total con el backend) | ✅ |
+
+**Sobre el contraste.** v1 escribía en blanco sobre el rosa de la marca: 1,75:1 donde la AA pide 4,5:1. Se conservan los cuatro colores y cambia el reparto — sobre el rosa se escribe en verde (5,26:1) o en piedra (4,52:1). Las parejas válidas se declaran en el propio CSS y un test calcula el contraste real desde ahí, así que reintroducir el blanco rompe la suite.
+
+**Ampliación de alcance sobre lo escrito:** entraron también las pantallas de recuperación, verificación y perfil. El motivo es concreto: el correo que ya enviaba la Fase 1 apuntaba a `{FRONTEND_URL}/restablecer-contrasena`, una ruta que no existía, así que ese flujo estaba roto de punta a punta. Probado entero con Mailpit.
+
+*Dependía de: Fase 1.*
+
+### Fase 4 — Flujos funcionales · P1 · ⬅️ siguiente
 Pantallas de catálogo y ficha de producto · **formulario de encargo a medida** (descripción + imagen de referencia + variante + envío) · carrito y pedidos en la SPA, contra los endpoints que ya entregó la Fase 2 (D24) · **endpoints de eventos** (`POST /api/events`, listado y detalle), que son los que faltan para cerrar SEC-010 y BUG-002 con su IDOR sobre HTTP · backoffice de pedidos, eventos y catálogo, con la imagen de referencia visible en cada línea.
 **Cierra:** SEC-010, BUG-002, PERF-001, PERF-002, PERF-004. *(BUG-001 y BUG-003 a BUG-008 ya se cerraron en la Fase 2.)*
 *Depende de: Fases 2 y 3.*

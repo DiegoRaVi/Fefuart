@@ -9,16 +9,16 @@
 
 ## 1. Resumen ejecutivo
 
-| Área | Estado en la auditoría | Hoy (2026-08-13, fin de Fase 2) |
+| Área | Estado en la auditoría | Hoy (2026-08-13, fin de Fase 3) |
 |---|---|---|
-| Seguridad | 🔴 Crítico — 5 hallazgos críticos. El rol y el precio los decide el cliente. | 🟡 12 de 14 cerrados. Queda SEC-005 (Fase 3, por construcción) y SEC-010 desarmado a la espera de sus endpoints. |
+| Seguridad | 🔴 Crítico — 5 hallazgos críticos. El rol y el precio los decide el cliente. | 🟢 13 de 14 cerrados. Solo queda SEC-010, desarmado a la espera de sus endpoints (Fase 4). |
 | Backend | 🟠 Deuda alta — toda la lógica en controllers. | ✅ Form Requests, Resources, Policies y Services en uso. Del código de v1 no queda nada. |
-| Frontend | 🟠 Deuda alta — lógica inline en 13 HTML, XSS por `innerHTML`. | 🔴 Sin tocar. La SPA es la Fase 3; el legacy ya no funciona, y es intencionado (D15). |
+| Frontend | 🟠 Deuda alta — lógica inline en 13 HTML, XSS por `innerHTML`. | 🟡 SPA de React con la base montada: sesión, rutas protegidas, cuenta y el tema de v1. Las pantallas de catálogo y carrito son de la Fase 4. |
 | Base de datos | 🟠 Modelo incompleto — no existe catálogo. | ✅ Catálogo, variantes, envíos, línea de encargo y media. DB-006 parcial. |
 | Rendimiento | 🟡 Aceptable hoy | 🟡 Índices puestos y eager loading en los endpoints nuevos. PERF-001/002 eran del frontend: Fase 4. |
-| Testing | 🔴 Inexistente — 2 tests de plantilla, 0 % real. | 🟢 151 tests, con regresión explícita de cada hallazgo cerrado. |
-| Entorno local | ✅ Corregido | ✅ Sin cambios. El VirtualHost definitivo sigue siendo de la Fase 8. |
-| Git | 🟡 Ordenado | 🟡 `develop` con 26 commits sin subir; `autotest` intacta bajo su tag. |
+| Testing | 🔴 Inexistente — 2 tests de plantilla, 0 % real. | 🟢 207 tests: 151 de backend y 56 de la SPA, con regresión explícita de cada hallazgo cerrado. |
+| Entorno local | ✅ Corregido | ✅ Segunda tanda de SEC-002 al montar la SPA. El VirtualHost definitivo sigue siendo de la Fase 8. |
+| Git | 🟡 Ordenado | 🟡 `develop` con 36 commits sin subir; `autotest` intacta bajo su tag. |
 
 **Diagnóstico de fondo.** Fefuart v1 funciona como demostración, pero su modelo de confianza está invertido: el navegador decide el rol del usuario, el precio del producto y el estado del pedido. Eso no se corrige refactorizando — hay que rediseñar la frontera cliente/servidor. Es la razón por la que v2 se construye de nuevo en lugar de endurecer v1.
 
@@ -104,7 +104,7 @@ Todos confirmados por lectura de código. ✅ = además verificado ejecutando en
 | [SEC-001](#sec-001) | CRÍTICO | Escalada de privilegios en el registro | ✅ **Corregido** `c4ff820`, ampliado `3e1f292` |
 | [SEC-003](#sec-003) | CRÍTICO | Cualquier usuario modifica cualquier pedido | ✅ **Corregido** `2501b84` |
 | [SEC-004](#sec-004) | CRÍTICO | Cualquier usuario crea y borra productos ajenos | ✅ **Corregido** `4d59836`, `d797fcb` |
-| [SEC-005](#sec-005) | CRÍTICO | XSS almacenado → toma de control de la admin | ⏳ Fase 3 |
+| [SEC-005](#sec-005) | CRÍTICO | XSS almacenado → toma de control de la admin | ✅ **Corregido** `362c9e6` |
 | [SEC-006](#sec-006) | ALTO | Precio y total calculados en el cliente | ✅ **Corregido** `3669964`, `d797fcb` |
 | [SEC-007](#sec-007) | ALTO | Sin rate limiting en login ni registro ✅ | ✅ **Corregido** `c4ff820` |
 | [SEC-008](#sec-008) | ALTO | IDOR de lectura en productos de pedido | ✅ **Corregido** `2501b84` |
@@ -140,6 +140,15 @@ Todos confirmados por lectura de código. ✅ = además verificado ejecutando en
 - **`APP_KEY` y `JWT_SECRET` rotados** el 2026-08-11 (se consideran comprometidos). Copia del `.env` previo fuera del repositorio.
 
 **Verificado tras la corrección:** todos los recursos anteriores devuelven **403**; el frontend legacy sigue devolviendo 200.
+
+**Segunda tanda** (commit `a012e20`, Fase 3): al montar la SPA apareció una extensión del mismo hallazgo. `Options -Indexes` apaga el listado de directorios pero **no impide el acceso directo por ruta**, y las rutas de `node_modules` son adivinables:
+
+```
+app/Client/spa/node_modules/react/package.json  ->  200
+app/Client/spa/node_modules/                    ->  403
+```
+
+Había además 95 MB de `node_modules` huérfano en `app/Client/spa`, sin versionar, de la rama `autotest` descartada. Se retiró, y `app/Client/spa/.htaccess` con `Require all denied` deja el directorio entero fuera de alcance: en desarrollo lo sirve Vite en `:5173` y en producción se publica el `dist/` compilado.
 
 **Pendiente para la fase de despliegue:** en producción el DocumentRoot debe apuntar directamente a `app/Server/public` mediante VirtualHost. El `.htaccess` es contención, no la arquitectura definitiva.
 
@@ -207,7 +216,13 @@ Cuando la administradora abre el panel, el script se ejecuta en su sesión.
 
 **Impacto:** el JWT se guarda en `localStorage` (`auth.js:8-9`), de modo que el payload lo roba directamente. **Cadena completa: usuario sin privilegios → administrador.**
 
-**Solución:** en v2, React escapa por defecto; se prohíbe `dangerouslySetInnerHTML` por regla de ESLint. La decisión D2 (cookies HttpOnly) elimina además el token del alcance de JavaScript, cortando la cadena en su segundo eslabón. Añadir CSP.
+**Solución aplicada** (commit `362c9e6`): React escapa por defecto y `dangerouslySetInnerHTML` es error de lint por `react/no-danger`.
+
+Se prueban las dos mitades, porque «por construcción» son dos cosas distintas. Un título de evento con el payload de arriba se pinta como texto y no llega a crearse ninguna etiqueta. Y que la regla esté escrita en `eslint.config.js` no prueba que esté activa: el test **arranca ESLint de verdad** con la configuración del proyecto sobre el componente que reintroduciría el fallo, y comprueba que salta.
+
+El segundo eslabón lo cortó antes D2: con la sesión en una cookie HttpOnly no hay token que robar desde JavaScript, y hay test de que tras un login correcto no queda nada en `localStorage` ni en `sessionStorage`.
+
+**Pendiente:** la CSP, que va con el despliegue (Fase 7/8).
 
 ---
 

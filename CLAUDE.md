@@ -16,9 +16,10 @@ Léelos antes de proponer arquitectura o de tocar precios, pedidos o eventos. Mu
 ## Estructura
 
 ```
-app/Server/    Laravel 12 — API. La v1 vive aquí y se reescribe encima.
-app/Client/    Frontend legacy (13 HTML con JS inline). Solo referencia (D15).
-docs/          AUDIT.md + V2-ROADMAP.md. Documentos vivos.
+app/Server/       Laravel 12 — API.
+app/Client/spa/   SPA de React + TypeScript + Vite. Aquí se trabaja.
+app/Client/views/ Frontend legacy (13 HTML con JS inline). Solo referencia (D15).
+docs/             AUDIT.md + V2-ROADMAP.md. Documentos vivos.
 ```
 
 ## Comandos
@@ -32,6 +33,13 @@ php artisan test tests/Feature/AuthTest.php   # un solo fichero
 php artisan route:list                        # rutas y middleware reales
 php artisan migrate:status
 composer audit                                # el lock se dejó limpio el 2026-08-12
+
+# SPA (siempre desde app/Client/spa)
+npm run dev          # Vite en :5173 — strictPort, ver la trampa de abajo
+npm test             # Vitest
+npm run lint         # ESLint; react/no-danger cierra SEC-005
+npm run typecheck    # tsc -b --noEmit
+npm run build
 
 # Base de datos (MariaDB 10.4 vía XAMPP, BD `fefuart`, root sin contraseña)
 "/c/xampp/mysql/bin/mysql" -u root fefuart -e "SHOW TABLES;"
@@ -49,6 +57,8 @@ composer audit                                # el lock se dejó limpio el 2026-
 **El backend nunca se prueba por Apache.** Va por `php artisan serve` en `127.0.0.1:8000`. Apache solo sirve `app/Client`.
 
 **El frontend legacy dejará de funcionar en la Fase 1** y es intencionado (D15): la migración a Sanctum y el renombrado de rutas lo rompen entero. No intentes mantenerlo vivo — mantener la API v1 en paralelo obligaría a conservar sus cinco vulnerabilidades críticas. Se conserva como referencia de flujos y diseño hasta la Fase 7.
+
+**La SPA tiene que arrancar en el puerto 5173.** `SANCTUM_STATEFUL_DOMAINS` declara `localhost:5173`, y solo desde un origen declarado arranca la sesión. Por eso `vite.config.ts` lleva `strictPort: true`: si Vite cayera a 5174, el login dejaría de funcionar con un error que no dice por qué. Por lo mismo, para probar la API a mano hay que ir por `http://localhost:8000` con `Referer: http://localhost:5173/` — con `127.0.0.1` la cookie no viaja, porque `SESSION_DOMAIN` es `localhost`.
 
 ## Arquitectura de v2
 
