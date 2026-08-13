@@ -47,6 +47,15 @@ export function Cabecera() {
             Encargos
           </NavLink>
 
+          <NavLink
+            to="/live-art"
+            className={({ isActive }) =>
+              `rounded-fefu px-3 py-1 hover:bg-rosa-hondo ${isActive ? 'bg-rosa-hondo' : ''}`
+            }
+          >
+            Live Art
+          </NavLink>
+
           {esAdmin && (
             <NavLink
               to="/backoffice"
@@ -67,6 +76,15 @@ export function Cabecera() {
                 }
               >
                 Carrito{lineas > 0 && ` (${lineas})`}
+              </NavLink>
+
+              <NavLink
+                to="/pedidos"
+                className={({ isActive }) =>
+                  `rounded-fefu px-3 py-1 hover:bg-rosa-hondo ${isActive ? 'bg-rosa-hondo' : ''}`
+                }
+              >
+                Pedidos
               </NavLink>
 
               <NavLink
