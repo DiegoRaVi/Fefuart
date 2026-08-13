@@ -15,13 +15,30 @@ class OrderItemFactory extends Factory
     /**
      * @return array<string, mixed>
      */
+    /**
+     * La variante se crea de forma perezosa. Las claves que un `state` —como
+     * `fromVariant()`— sobrescribe nunca llegan a evaluar su closure, asi que
+     * los tests que traen su propia variante no acaban con un producto
+     * sobrante en el catalogo.
+     *
+     * @return array<string, mixed>
+     */
     public function definition(): array
     {
-        $variant = ProductVariant::factory()->create();
+        $variant = null;
+        $resolve = function () use (&$variant): ProductVariant {
+            return $variant ??= ProductVariant::factory()->create();
+        };
 
         return [
             'order_id' => Order::factory(),
-            ...$this->snapshotOf($variant),
+            'product_id' => fn () => $resolve()->product_id,
+            'product_variant_id' => fn () => $resolve()->id,
+            'product_name' => fn () => $resolve()->product->name,
+            'variant_name' => fn () => $resolve()->name,
+            'unit_price' => fn () => $resolve()->price,
+            'additional_copy_price' => fn () => $resolve()->additional_copy_price,
+            'line_total' => fn () => $resolve()->price,
             'delivery_type' => DeliveryType::Physical,
             'quantity' => 1,
         ];

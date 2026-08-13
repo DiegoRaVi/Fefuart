@@ -6,6 +6,8 @@ use App\Http\Controllers\Api\CatalogController;
 use App\Http\Controllers\Api\EmailVerificationController;
 use App\Http\Controllers\Api\MediaController;
 use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\Api\Admin\ProductController as AdminProductController;
+use App\Http\Controllers\Api\Admin\ProductVariantController as AdminVariantController;
 use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -104,6 +106,28 @@ Route::middleware('auth:sanctum')->prefix('orders')->group(function () {
     Route::get('/', [OrderController::class, 'index'])->name('orders.index');
     Route::get('{order}', [OrderController::class, 'show'])->name('orders.show');
     Route::post('{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
+});
+
+// D5: el catalogo se gestiona desde el backoffice. `admin` va detras de
+// `auth:sanctum` para que un invitado reciba 401 y un cliente 403; el
+// `IsAdmin` de v1 devolvia 403 en los dos casos (ARCH-002).
+Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    // Por id y no por slug: el catalogo publico resuelve por slug porque es
+    // lo legible en una URL, pero el slug es editable desde aqui y usarlo
+    // como identificador en el backoffice significaria que renombrar un
+    // producto cambia su direccion.
+    Route::get('products', [AdminProductController::class, 'index'])->name('products.index');
+    Route::post('products', [AdminProductController::class, 'store'])->name('products.store');
+    Route::get('products/{product:id}', [AdminProductController::class, 'show'])->name('products.show');
+    Route::patch('products/{product:id}', [AdminProductController::class, 'update'])->name('products.update');
+    Route::delete('products/{product:id}', [AdminProductController::class, 'destroy'])->name('products.destroy');
+
+    Route::post('products/{product:id}/variants', [AdminVariantController::class, 'store'])
+        ->name('products.variants.store');
+    Route::patch('variants/{variant}', [AdminVariantController::class, 'update'])
+        ->name('variants.update');
+    Route::delete('variants/{variant}', [AdminVariantController::class, 'destroy'])
+        ->name('variants.destroy');
 });
 
 // N19: perfil. Todo requiere sesion; nada aqui permite tocar el rol.
