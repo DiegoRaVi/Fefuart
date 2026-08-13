@@ -1,10 +1,13 @@
 import { BrowserRouter, Route, Routes } from 'react-router'
 
+import { Login } from '@/features/auth/pages/Login'
+import { Registro } from '@/features/auth/pages/Registro'
 import { Portada } from '@/features/inicio/Portada'
 
 import { LayoutPrincipal } from './layouts/LayoutPrincipal'
 import { AuthProvider } from './providers/AuthProvider'
 import { QueryProvider } from './providers/QueryProvider'
+import { RutaDeInvitado } from './routes/RutaProtegida'
 
 /**
  * El orden importa: QueryProvider envuelve a AuthProvider porque la sesion
@@ -19,6 +22,11 @@ export function App() {
           <Routes>
             <Route element={<LayoutPrincipal />}>
               <Route index element={<Portada />} />
+
+              <Route element={<RutaDeInvitado />}>
+                <Route path="login" element={<Login />} />
+                <Route path="registro" element={<Registro />} />
+              </Route>
             </Route>
           </Routes>
         </BrowserRouter>
