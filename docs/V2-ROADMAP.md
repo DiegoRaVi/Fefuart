@@ -381,8 +381,8 @@ Es la fase más grande, así que va por tandas.
 | **4a** | Localización del backend (P5) · endpoints de eventos | ✅ `b0c24d9`, `34b5b47` — cierra **SEC-010** y **BUG-002** |
 | **4b** | `POST /api/cart/checkout` · `/api/admin/orders` y `/api/admin/events` con sus transiciones | ✅ `bcddc41`, `43003d3`, `2dc0bc3` — cierra **PERF-001**, **PERF-004** |
 | **4c** | Catálogo y ficha de producto en la SPA | ✅ `8c21a18` |
-| **4d** | Formulario de encargo a medida, carrito y checkout en la SPA | ⬅️ siguiente |
-| **4e** | Mis pedidos y solicitud de LiveArt en la SPA | |
+| **4d** | Formulario de encargo a medida y carrito en la SPA · comando de limpieza de ficheros huérfanos | ✅ `deb5480`, `6a0c87d`, `7f3fd92`, `c39e664` |
+| **4e** | Checkout, mis pedidos y solicitud de LiveArt en la SPA | ⬅️ siguiente |
 | **4f** | Backoffice: pedidos, eventos y catálogo | |
 
 **El checkout entra aquí, corrigiendo lo que se escribió al cerrar la Fase 2.** Allí se dijo que sin pasarela habría que reescribirlo entero al añadir el PaymentIntent, y no es cierto: `CheckoutService` valida el carrito, captura la dirección, congela los importes y pasa `cart → pending_payment`. La Fase 5 **inserta** el pago entre `pending_payment` y `paid`; no reescribe lo anterior. Sin checkout, además, ni «mis pedidos» ni el backoffice tienen nada real que mostrar.

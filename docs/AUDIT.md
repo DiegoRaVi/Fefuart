@@ -361,6 +361,10 @@ PATCH /api/events/{id}  {"status":"confirmed"}
 
 **Hallazgo nuevo, encontrado al escribir el test:** `mimes:` se fía de lo que declara el cliente. Un fichero que la pasa pero que GD no sabe decodificar producía un **500 con traza** en vez de un 422. Se añade la regla `DecodableImage`, que mira los bytes.
 
+**Segundo hallazgo, encontrado mirando el formulario en el navegador** (commit `6a0c87d`): la miniatura salía rota. `Storage::url()` construía `http://localhost/storage/…` a partir de `APP_URL`, o sea Apache en el puerto 80 — donde el `.htaccess` de SEC-002 deniega el backend entero. La URL apuntaba justo al sitio que se cerró en la Fase 0. Ahora es relativa, la pide el mismo origen que la SPA y el proxy la lleva a Laravel.
+
+**Deuda que esto abre y cómo se cierra:** la foto se sube antes de que exista la línea del carrito, así que quien la elige y se va deja el fichero sin dueño. Lo recoge el comando `media:limpiar` (commit `deb5480`), programado a diario.
+
 ---
 
 ### Revisado y no encontrado
