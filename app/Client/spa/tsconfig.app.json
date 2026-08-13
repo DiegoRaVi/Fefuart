@@ -21,7 +21,9 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
 
-    "types": ["vitest/globals", "@testing-library/jest-dom"],
+    // `node` hace falta para los tests que leen ficheros del proyecto, como
+    // el de contraste, que analiza el CSS del tema.
+    "types": ["node", "vitest/globals", "@testing-library/jest-dom"],
 
     "baseUrl": ".",
     "paths": {
