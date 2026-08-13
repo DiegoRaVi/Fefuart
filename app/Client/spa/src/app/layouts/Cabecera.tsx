@@ -2,6 +2,7 @@ import { Link, NavLink } from 'react-router'
 
 import { useCerrarSesion } from '@/features/auth/hooks'
 import { useSesion } from '@/features/auth/sesion'
+import { useCarrito } from '@/features/cart/api'
 
 /**
  * El header de v1: fondo rosa, marca FEFUART y navegacion.
@@ -16,6 +17,12 @@ import { useSesion } from '@/features/auth/sesion'
 export function Cabecera() {
   const { autenticado, esAdmin, usuario } = useSesion()
   const cerrar = useCerrarSesion()
+
+  // Solo con sesion: el carrito vive en el servidor y sin ella no hay nada
+  // que pedir. Un enlace con el numero, no el panel desplegable de v1 —
+  // aquel era donde vivian la peticion por linea y el innerHTML sin escapar.
+  const { data: carrito } = useCarrito(autenticado)
+  const lineas = carrito?.items.length ?? 0
 
   return (
     <header className="sticky top-0 z-50 bg-rosa shadow-[0_2px_8px_rgba(0,0,0,0.1)]">
@@ -53,6 +60,15 @@ export function Cabecera() {
 
           {autenticado ? (
             <>
+              <NavLink
+                to="/carrito"
+                className={({ isActive }) =>
+                  `rounded-fefu px-3 py-1 hover:bg-rosa-hondo ${isActive ? 'bg-rosa-hondo' : ''}`
+                }
+              >
+                Carrito{lineas > 0 && ` (${lineas})`}
+              </NavLink>
+
               <NavLink
                 to="/perfil"
                 className={({ isActive }) =>
