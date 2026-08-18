@@ -9,8 +9,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
 /**
  * ARCH-005 — el contrato se declara aqui, no lo dicta el esquema.
  *
- * El presupuesto y la señal no salen todavia porque las columnas no existen:
- * llegan en la Fase 5 (D27).
+ * El presupuesto y la señal salen siempre que existan: son lo que el cliente
+ * necesita para decidir si acepta.
  *
  * @mixin Event
  */
@@ -33,11 +33,19 @@ class EventResource extends JsonResource
             'duration_hours' => $this->duration_hours,
             'event_type' => $this->event_type,
             'status' => $this->status->value,
+
+            // D6, N15 — nulos mientras la artista no haya presupuestado.
+            'quoted_amount' => $this->quoted_amount,
+            'deposit_amount' => $this->deposit_amount,
+            'quote_expires_at' => $this->quote_expires_at?->toAtomString(),
+            'quote_expired' => $this->presupuestoCaducado(),
             // Que puede hacer quien esta mirando, resuelto en servidor: el
             // cliente no tiene que deducirlo del estado por su cuenta.
             'can' => [
                 'update' => $request->user()?->can('update', $this->resource) ?? false,
                 'cancel' => $request->user()?->can('cancel', $this->resource) ?? false,
+                'accept_quote' => $request->user()?->can('acceptQuote', $this->resource) ?? false,
+                'quote' => $request->user()?->can('quote', $this->resource) ?? false,
             ],
             'created_at' => $this->created_at?->toAtomString(),
 

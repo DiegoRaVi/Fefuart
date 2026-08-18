@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\Admin\EventController as AdminEventController;
 use App\Http\Controllers\Api\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Api\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Api\Admin\ProductVariantController as AdminVariantController;
+use App\Http\Controllers\Api\Admin\SettingsController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\CatalogController;
@@ -153,12 +154,21 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->name('admin.')->g
     Route::post('orders/{order}/status', [AdminOrderController::class, 'updateStatus'])
         ->name('orders.status');
 
-    // Eventos: rechazar, cancelar y completar. Presupuestar y confirmar
-    // necesitan importe y señal, y llegan con la Fase 5 (D27).
+    // Eventos: rechazar, cancelar y completar por `/status`; presupuestar
+    // por su propia ruta, porque no es cambiar un estado sino fijar un
+    // importe, calcular la señal y arrancar un plazo (D6, N15). Confirmar no
+    // esta aqui: lo hace el webhook cuando la señal se cobra.
     Route::get('events', [AdminEventController::class, 'index'])->name('events.index');
     Route::get('events/{event}', [AdminEventController::class, 'show'])->name('events.show');
+    Route::post('events/{event}/quote', [AdminEventController::class, 'quote'])
+        ->name('events.quote');
     Route::post('events/{event}/status', [AdminEventController::class, 'updateStatus'])
         ->name('events.status');
+
+    // N15 — el porcentaje de la señal y la validez del presupuesto, sin
+    // tocar codigo. Que claves existen lo decide SettingsService.
+    Route::get('settings', [SettingsController::class, 'show'])->name('settings.show');
+    Route::patch('settings', [SettingsController::class, 'update'])->name('settings.update');
 });
 
 // Solicitudes de Live Art. Ninguna ruta acepta `status` en el cuerpo: eso
@@ -170,6 +180,11 @@ Route::middleware('auth:sanctum')->prefix('events')->group(function () {
     Route::post('/', [EventController::class, 'store'])->name('events.store');
     Route::get('{event}', [EventController::class, 'show'])->name('events.show');
     Route::patch('{event}', [EventController::class, 'update'])->name('events.update');
+    // D6 — aceptar el presupuesto y pagar la señal son un solo paso para el
+    // cliente. Devuelve la URL de Stripe; confirmar lo hara el webhook.
+    Route::post('{event}/accept-quote', [EventController::class, 'acceptQuote'])
+        ->name('events.accept-quote');
+
     Route::post('{event}/cancel', [EventController::class, 'cancel'])->name('events.cancel');
 });
 

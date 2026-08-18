@@ -2,9 +2,11 @@
 
 namespace App\Services;
 
+use App\Enums\EventStatus;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentKind;
 use App\Enums\PaymentStatus;
+use App\Models\Event;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Payment;
@@ -73,6 +75,52 @@ class StripePaymentService
             'customer_email' => $order->user->email,
             'success_url' => $this->urlSpa("/pedidos/{$order->id}/pago?sesion={CHECKOUT_SESSION_ID}"),
             'cancel_url' => $this->urlSpa("/pedidos/{$order->id}"),
+        ]);
+    }
+
+    /**
+     * N15 — la señal que reserva la fecha de un evento de Live Art.
+     *
+     * El importe sale de `deposit_amount`, que QuoteService calculo y guardo
+     * al presupuestar. No se recalcula aqui a proposito: si el porcentaje
+     * cambio desde el backoffice entre medias, se cobra lo que se le dijo al
+     * cliente, no lo que salga hoy.
+     *
+     * @throws PagoEnCursoException el cliente ya pago y falta el webhook
+     */
+    public function cobrarSenal(Event $event): SesionDePago
+    {
+        if ($event->status !== EventStatus::Accepted) {
+            throw new RuntimeException(
+                "No se puede cobrar la señal de un evento en estado {$event->status->value}."
+            );
+        }
+
+        if (blank($event->deposit_amount)) {
+            throw new RuntimeException("El evento {$event->id} no tiene señal calculada.");
+        }
+
+        $event->loadMissing('user');
+
+        return $this->abrirSesion($event, PaymentKind::Deposit, (string) $event->deposit_amount, [
+            'line_items' => [[
+                'quantity' => 1,
+                'price_data' => [
+                    'currency' => 'eur',
+                    'unit_amount' => $this->pricing->toCents((string) $event->deposit_amount),
+                    'product_data' => [
+                        'name' => "Señal · {$event->title}",
+                        'description' => sprintf(
+                            'Reserva del %s. Presupuesto total: %s EUR.',
+                            $event->event_date->format('d/m/Y'),
+                            $event->quoted_amount
+                        ),
+                    ],
+                ],
+            ]],
+            'customer_email' => $event->user->email,
+            'success_url' => $this->urlSpa("/live-art/{$event->id}/pago?sesion={CHECKOUT_SESSION_ID}"),
+            'cancel_url' => $this->urlSpa("/live-art/{$event->id}"),
         ]);
     }
 

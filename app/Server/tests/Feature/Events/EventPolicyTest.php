@@ -96,18 +96,35 @@ it('guarda lo que hace falta para presupuestar', function () {
 });
 
 /**
- * El presupuesto y la señal siguen siendo de la Fase 5: sin importe, un
- * evento en `quoted` es un estado a medias que ademas deja al cliente sin
- * poder aceptar nada.
- *
- * El `confirmed_slot` de N16 si esta ya —ver AgendaTest—: la portabilidad
- * que D27 aplazaba resulto ser una sola diferencia entre motores, y no
- * justificaba dejar la agenda sin proteger mientras tanto.
+ * D6, N15 — el presupuesto, la señal y su caducidad. Un evento en `quoted`
+ * sin importe seria un estado a medias que ademas deja al cliente sin poder
+ * aceptar nada, asi que las cuatro columnas van juntas.
  */
-it('deja el presupuesto para la fase que lo usa', function () {
-    expect(Schema::hasColumn('events', 'quoted_amount'))->toBeFalse()
-        ->and(Schema::hasColumn('events', 'deposit_amount'))->toBeFalse()
+it('guarda el presupuesto, la señal y su caducidad', function () {
+    expect(Schema::hasColumn('events', 'quoted_amount'))->toBeTrue()
+        ->and(Schema::hasColumn('events', 'deposit_amount'))->toBeTrue()
+        ->and(Schema::hasColumn('events', 'quoted_at'))->toBeTrue()
+        ->and(Schema::hasColumn('events', 'quote_expires_at'))->toBeTrue()
         ->and(Schema::hasColumn('events', 'confirmed_slot'))->toBeTrue();
+});
+
+/**
+ * Ni el importe ni la señal ni el estado son asignables en masa. Que el
+ * presupuesto lo emita la administradora no cambia SEC-006: el importe entra
+ * por QuoteService, y la señal no entra en absoluto porque se calcula.
+ */
+it('no admite el presupuesto por asignacion masiva', function () {
+    $evento = Event::factory()->for($this->duenno)->create();
+
+    $evento->fill([
+        'quoted_amount' => '1.00',
+        'deposit_amount' => '0.01',
+        'title' => 'Renombrada',
+    ]);
+
+    expect($evento->quoted_amount)->toBeNull()
+        ->and($evento->deposit_amount)->toBeNull()
+        ->and($evento->title)->toBe('Renombrada');
 });
 
 /**

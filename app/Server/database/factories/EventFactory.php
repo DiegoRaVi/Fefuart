@@ -36,4 +36,31 @@ class EventFactory extends Factory
     {
         return $this->state(fn () => ['status' => $status]);
     }
+
+    /**
+     * D6, N15 — presupuestado, con la señal ya calculada y un plazo por
+     * delante. Un evento en `quoted` sin importe seria un estado a medias.
+     */
+    public function quoted(string $importe = '1200.00', int $porcentaje = 30): static
+    {
+        return $this->state(fn () => [
+            'status' => EventStatus::Quoted,
+            'quoted_amount' => $importe,
+            'deposit_amount' => number_format((float) $importe * $porcentaje / 100, 2, '.', ''),
+            'quoted_at' => now(),
+            'quote_expires_at' => now()->addDays(14),
+        ]);
+    }
+
+    /** Aceptado y pendiente de que la señal se cobre. */
+    public function accepted(string $importe = '1200.00'): static
+    {
+        return $this->quoted($importe)->state(fn () => ['status' => EventStatus::Accepted]);
+    }
+
+    /** Un presupuesto que ya no se puede aceptar (P1). */
+    public function quoteCaducado(): static
+    {
+        return $this->quoted()->state(fn () => ['quote_expires_at' => now()->subDay()]);
+    }
 }

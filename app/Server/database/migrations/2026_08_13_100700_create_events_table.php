@@ -8,10 +8,10 @@ use Illuminate\Support\Facades\Schema;
 /**
  * Solicitudes de Live Art. Reescribe la tabla de v1 (D25).
  *
- * El presupuesto y la señal siguen siendo de la Fase 5. El `confirmed_slot`
- * de N16 ya esta aqui: la portabilidad que D27 aplazaba resulto ser una sola
- * diferencia entre motores —como se concatenan dos cadenas— y no justificaba
- * dejar la agenda sin proteger.
+ * N13 — el precio siempre es a medida: la artista revisa la solicitud y
+ * emite un presupuesto. De ahi las columnas de presupuesto y señal, que v1
+ * no tenia porque su enum era `pending / confirmed / rejected / done`, sin
+ * sitio para la negociacion.
  */
 return new class extends Migration
 {
@@ -42,6 +42,24 @@ return new class extends Migration
             // de base de datos con `default 'pending'` y el propietario podia
             // moverlo a `confirmed` (SEC-010).
             $table->string('status', 30);
+
+            /*
+             * D6, N15 — el presupuesto de la artista y la señal que reserva
+             * la fecha.
+             *
+             * Los dos importes se guardan, y no solo el presupuesto con el
+             * porcentaje aplicado al vuelo: el porcentaje es configurable
+             * (`settings.deposit_percentage`), y si manana cambia, la señal
+             * de un evento ya presupuestado tiene que seguir siendo la que
+             * se le dijo al cliente.
+             *
+             * P1 — `quote_expires_at` es lo que impide que un presupuesto de
+             * hace ocho meses se pueda aceptar hoy a aquel precio.
+             */
+            $table->decimal('quoted_amount', 10, 2)->nullable();
+            $table->decimal('deposit_amount', 10, 2)->nullable();
+            $table->timestamp('quoted_at')->nullable();
+            $table->timestamp('quote_expires_at')->nullable();
 
             /*
              * N16 — no puede haber dos eventos confirmados en la misma fecha

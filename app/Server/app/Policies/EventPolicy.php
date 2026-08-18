@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\EventStatus;
 use App\Models\Event;
 use App\Models\User;
 
@@ -51,12 +52,17 @@ class EventPolicy
     }
 
     /**
-     * El cliente acepta el presupuesto que le han emitido. Es lo unico del
-     * flujo de negociacion que le corresponde.
+     * El cliente acepta el presupuesto que le han emitido, y con ello pasa a
+     * pagar la señal. Es lo unico del flujo de negociacion que le
+     * corresponde, y la administradora no lo hace en su nombre.
+     *
+     * `accepted` tambien entra: aceptar y abandonar la pagina de pago deja el
+     * evento ahi, y volver a intentarlo tiene que ser posible.
      */
     public function acceptQuote(User $user, Event $event): bool
     {
-        return $this->owns($user, $event);
+        return $this->owns($user, $event)
+            && in_array($event->status, [EventStatus::Quoted, EventStatus::Accepted], strict: true);
     }
 
     public function cancel(User $user, Event $event): bool

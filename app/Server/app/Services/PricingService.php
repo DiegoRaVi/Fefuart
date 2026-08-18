@@ -88,6 +88,23 @@ class PricingService
     }
 
     /**
+     * N15 — la señal de un evento es un porcentaje fijo del presupuesto.
+     *
+     * Vive aqui y no en QuoteService por la misma razon que el resto: el
+     * unico sitio donde se decide cuanto cuesta algo. El calculo es entero y
+     * redondea hacia arriba el medio centimo; con floats, el 30 % de 1.234,55
+     * no siempre da lo mismo dos veces.
+     */
+    public function deposit(string $quoted, int $porcentaje): string
+    {
+        if ($porcentaje < 0 || $porcentaje > 100) {
+            throw new InvalidArgumentException("Un porcentaje de señal de {$porcentaje} no tiene sentido.");
+        }
+
+        return $this->toDecimal(intdiv($this->toCents($quoted) * $porcentaje + 50, 100));
+    }
+
+    /**
      * Convierte una cadena decimal a centimos sin pasar por float. `'40.5'`
      * son 4050 centimos; `'40'`, 4000.
      *

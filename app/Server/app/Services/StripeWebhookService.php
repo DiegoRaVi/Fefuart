@@ -4,14 +4,16 @@ namespace App\Services;
 
 use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
+use App\Models\Event;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\WebhookEvent;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
 use Stripe\Charge;
 use Stripe\Checkout\Session;
-use Stripe\Event;
+use Stripe\Event as StripeEvent;
 use Throwable;
 
 /**
@@ -30,9 +32,12 @@ class StripeWebhookService
 {
     private const PROVEEDOR = 'stripe';
 
-    public function __construct(private readonly PricingService $pricing) {}
+    public function __construct(
+        private readonly PricingService $pricing,
+        private readonly QuoteService $presupuestos,
+    ) {}
 
-    public function procesar(Event $evento): void
+    public function procesar(StripeEvent $evento): void
     {
         $registro = $this->registrar($evento);
 
@@ -66,7 +71,7 @@ class StripeWebhookService
      * El `lockForUpdate` es para dos entregas simultaneas del mismo evento:
      * sin el, las dos leerian `processed_at` a null y las dos entregarian.
      */
-    private function registrar(Event $evento): ?WebhookEvent
+    private function registrar(StripeEvent $evento): ?WebhookEvent
     {
         return DB::transaction(function () use ($evento) {
             $existente = WebhookEvent::query()
@@ -92,7 +97,7 @@ class StripeWebhookService
         });
     }
 
-    private function despachar(Event $evento): void
+    private function despachar(StripeEvent $evento): void
     {
         $objeto = $evento->data->object;
 
@@ -147,21 +152,27 @@ class StripeWebhookService
     {
         $payment = $this->pagoDe($sesion->id);
 
-        if ($payment->status === PaymentStatus::Succeeded) {
-            return;
-        }
+        if ($payment->status !== PaymentStatus::Succeeded) {
+            $this->guardImporte($payment, (int) $sesion->amount_total, (string) $sesion->currency);
 
-        $this->guardImporte($payment, (int) $sesion->amount_total, (string) $sesion->currency);
-
-        DB::transaction(function () use ($payment, $sesion) {
             $payment->status = PaymentStatus::Succeeded;
             $payment->provider_payment_intent_id = $this->idDelIntent($sesion);
             $payment->paid_at = now();
             $payment->failure_reason = null;
             $payment->save();
+        }
 
-            $this->entregar($payment);
-        });
+        /*
+         * La entrega va fuera del guardado del cobro y se reintenta siempre,
+         * tambien cuando el cobro ya constaba.
+         *
+         * Meterlas en la misma transaccion seria peor: si la entrega falla
+         * —el caso real es la colision de franja de N16—, el rollback
+         * borraria tambien el «cobrado», y el dinero se habria movido de
+         * verdad. Asi el cobro queda guardado, el evento se queda donde
+         * estaba y el motivo aparece en `webhook_events.error`.
+         */
+        $this->entregar($payment);
     }
 
     /**
@@ -186,6 +197,34 @@ class StripeWebhookService
 
             $payable->status = OrderStatus::Paid;
             $payable->save();
+
+            return;
+        }
+
+        // N15 — la señal cobrada es lo que confirma la reserva.
+        if ($payable instanceof Event) {
+            try {
+                $this->presupuestos->confirmarPorSenal($payable);
+            } catch (QueryException $e) {
+                /*
+                 * N16 por la via de la base de datos: otro evento se confirmo
+                 * en esa misma fecha y franja mientras este pagaba.
+                 *
+                 * QuoteService lo comprueba al aceptar el presupuesto, asi
+                 * que para llegar aqui hacen falta dos clientes pagando la
+                 * misma franja a la vez. Es raro y no es imposible, y lo que
+                 * no se puede hacer es entregar igual. El cobro queda
+                 * guardado —el dinero se movio— y hay que devolverlo a mano
+                 * desde el panel de Stripe.
+                 */
+                throw new RuntimeException(sprintf(
+                    'La señal del evento %d se cobro pero la franja del %s ya estaba ocupada. '
+                    .'Hay que devolver el cobro %d desde el panel de Stripe.',
+                    $payable->id,
+                    $payable->event_date->format('d/m/Y'),
+                    $payment->id
+                ), previous: $e);
+            }
         }
     }
 

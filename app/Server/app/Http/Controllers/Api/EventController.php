@@ -8,11 +8,15 @@ use App\Http\Requests\Events\StoreEventRequest;
 use App\Http\Requests\Events\UpdateEventRequest;
 use App\Http\Resources\EventResource;
 use App\Models\Event;
+use App\Services\Payments\PagoEnCursoException;
+use App\Services\QuoteService;
+use App\Services\StripePaymentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
 use Illuminate\Validation\ValidationException;
+use Stripe\Exception\ApiErrorException;
 
 /**
  * Solicitudes de Live Art. N13: el precio siempre es a medida, asi que lo
@@ -68,6 +72,47 @@ class EventController extends Controller
         $event->update($request->validated());
 
         return EventResource::make($event);
+    }
+
+    /**
+     * D6, N15 — el cliente acepta el presupuesto y pasa a pagar la señal.
+     *
+     * Los dos pasos van juntos porque para el cliente son uno solo: aceptar
+     * es reservar, y reservar es pagar. Aceptar deja el evento en `accepted`;
+     * quien lo confirma es el webhook cuando la señal se cobra de verdad.
+     *
+     * Se puede repetir. Si abandona la pagina de Stripe, el evento se queda
+     * en `accepted` y volver aqui devuelve la sesion que sigue abierta.
+     */
+    public function acceptQuote(
+        Event $event,
+        QuoteService $presupuestos,
+        StripePaymentService $pagos,
+    ): JsonResponse {
+        $this->authorize('acceptQuote', $event);
+
+        $presupuestos->aceptar($event);
+
+        try {
+            $sesion = $pagos->cobrarSenal($event);
+        } catch (PagoEnCursoException) {
+            return response()->json([
+                'message' => 'Ya hemos recibido tu señal. La estamos confirmando; en unos segundos veras la fecha reservada.',
+            ], 409);
+        } catch (ApiErrorException $e) {
+            // SEC-012 — el detalle va al log, no al cliente.
+            report($e);
+
+            return response()->json([
+                'message' => 'No hemos podido abrir la pasarela de pago. Intentalo de nuevo en unos minutos.',
+            ], 502);
+        }
+
+        return response()->json([
+            'url' => $sesion->url,
+            'payment_id' => $sesion->payment->id,
+            'event' => EventResource::make($event->fresh()),
+        ]);
     }
 
     public function cancel(Event $event): EventResource

@@ -8,6 +8,7 @@ use Database\Factories\EventFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
@@ -47,7 +48,21 @@ class Event extends Model
             'status' => EventStatus::class,
             'guest_count' => 'integer',
             'duration_hours' => 'integer',
+            'quoted_amount' => 'decimal:2',
+            'deposit_amount' => 'decimal:2',
+            'quoted_at' => 'datetime',
+            'quote_expires_at' => 'datetime',
         ];
+    }
+
+    /**
+     * P1 — un presupuesto no vale para siempre. El plazo lo fija
+     * `settings.quote_validity_days` y se congela al presupuestar, para que
+     * cambiarlo no mueva la caducidad de los que ya estan emitidos.
+     */
+    public function presupuestoCaducado(): bool
+    {
+        return $this->quote_expires_at !== null && $this->quote_expires_at->isPast();
     }
 
     /**
@@ -56,5 +71,17 @@ class Event extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * N15 — la señal. Es `morphMany` y no `morphOne` porque un intento
+     * caducado o rechazado no se borra: es el rastro que hace falta cuando
+     * un cliente dice que pago y el evento dice que no.
+     *
+     * @return MorphMany<Payment, $this>
+     */
+    public function payments(): MorphMany
+    {
+        return $this->morphMany(Payment::class, 'payable');
     }
 }

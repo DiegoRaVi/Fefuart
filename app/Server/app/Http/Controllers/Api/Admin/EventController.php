@@ -6,18 +6,21 @@ use App\Enums\CampoDeBusqueda;
 use App\Enums\EventStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\IndexEventsRequest;
+use App\Http\Requests\Admin\QuoteEventRequest;
 use App\Http\Requests\Admin\UpdateEventStatusRequest;
 use App\Http\Resources\EventResource;
 use App\Models\Event;
+use App\Services\QuoteService;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Validation\ValidationException;
 
 /**
  * El backoffice de eventos.
  *
- * De momento solo llega hasta rechazar, cancelar y completar. Presupuestar y
- * confirmar necesitan importe y señal, y esas columnas son de la Fase 5
- * (D27): tendran su propio endpoint cuando haya con que rellenarlas.
+ * Presupuestar tiene endpoint propio y no pasa por `/status`: emitir un
+ * presupuesto no es cambiar un estado, es fijar un importe, calcular la
+ * señal y arrancar un plazo de caducidad. Confirmar no esta aqui en
+ * absoluto — lo hace el webhook cuando la señal se cobra (N15).
  */
 class EventController extends Controller
 {
@@ -67,6 +70,29 @@ class EventController extends Controller
 
     public function show(Event $event): EventResource
     {
+        return EventResource::make($event->load('user'));
+    }
+
+    /**
+     * D6, N13 — la artista emite el presupuesto.
+     *
+     * Del cuerpo solo llega el importe total. La señal la calcula
+     * PricingService con el porcentaje configurado (N15) y se guarda junto
+     * al presupuesto: si manana cambia el porcentaje, este evento sigue
+     * teniendo la señal que se le dijo al cliente.
+     */
+    public function quote(QuoteEventRequest $request, Event $event, QuoteService $presupuestos): EventResource
+    {
+        $this->authorize('quote', $event);
+
+        $datos = $request->validated();
+
+        $presupuestos->presupuestar(
+            $event,
+            (string) $datos['quoted_amount'],
+            $datos['validez_dias'] ?? null,
+        );
+
         return EventResource::make($event->load('user'));
     }
 
