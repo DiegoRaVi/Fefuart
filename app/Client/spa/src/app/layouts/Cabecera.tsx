@@ -1,5 +1,6 @@
 import { Link, NavLink } from 'react-router'
 
+import { EnlaceDeAvisos } from '@/features/avisos/EnlaceDeAvisos'
 import { useCerrarSesion } from '@/features/auth/hooks'
 import { useSesion } from '@/features/auth/sesion'
 import { useCarrito } from '@/features/cart/api'
@@ -86,6 +87,8 @@ export function Cabecera() {
               >
                 Pedidos
               </NavLink>
+
+              <EnlaceDeAvisos />
 
               <NavLink
                 to="/perfil"

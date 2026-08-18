@@ -1,6 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router'
 
 import { Login } from '@/features/auth/pages/Login'
+import { Avisos } from '@/features/avisos/pages/Avisos'
 import { LayoutDeBackoffice } from '@/features/backoffice/LayoutDeBackoffice'
 import { CatalogoDeAdmin } from '@/features/backoffice/pages/CatalogoDeAdmin'
 import { AjustesDeAdmin } from '@/features/backoffice/pages/AjustesDeAdmin'
@@ -58,6 +59,10 @@ export function App() {
                 {/* Tambien el destino del enlace de verificacion de email,
                     que redirige aqui con ?verificado=1. */}
                 <Route path="perfil" element={<Perfil />} />
+
+                {/* D10 — el centro de avisos. Es de quien inicia sesion, asi
+                    que va tras la ruta protegida como el resto. */}
+                <Route path="avisos" element={<Avisos />} />
 
                 {/* N18 — encargar exige cuenta; mirar el catalogo no. */}
                 <Route path="encargos/:slug/encargar" element={<FormularioDeEncargo />} />
