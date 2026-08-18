@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\CatalogController;
 use App\Http\Controllers\Api\EmailVerificationController;
 use App\Http\Controllers\Api\EventController;
 use App\Http\Controllers\Api\MediaController;
+use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\PaymentController;
@@ -186,6 +187,16 @@ Route::middleware('auth:sanctum')->prefix('events')->group(function () {
         ->name('events.accept-quote');
 
     Route::post('{event}/cancel', [EventController::class, 'cancel'])->name('events.cancel');
+});
+
+// D10 — el centro de avisos. Los dos endpoints resuelven por la relacion
+// del usuario en sesion, asi que un aviso ajeno no se encuentra: 404, no
+// 403. No hay Policy porque no queda ninguna comparacion en linea que
+// sustituir (SEC-008).
+Route::middleware('auth:sanctum')->prefix('notifications')->group(function () {
+    Route::get('/', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::patch('{notification}/read', [NotificationController::class, 'read'])
+        ->name('notifications.read');
 });
 
 // N19: perfil. Todo requiere sesion; nada aqui permite tocar el rol.
