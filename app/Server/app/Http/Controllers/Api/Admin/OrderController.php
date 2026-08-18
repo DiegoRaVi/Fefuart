@@ -9,8 +9,8 @@ use App\Http\Requests\Admin\IndexOrdersRequest;
 use App\Http\Requests\Admin\UpdateOrderStatusRequest;
 use App\Http\Resources\OrderResource;
 use App\Models\Order;
+use App\Services\OrderService;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Validation\ValidationException;
 
 /**
  * El backoffice de pedidos: lo que v1 hacia en `admin.html`, con propiedad.
@@ -78,23 +78,16 @@ class OrderController extends Controller
     }
 
     /**
-     * SEC-003 — la transicion la valida el enum, tambien para la
-     * administradora. En v1 cualquiera mandaba `{"status":"paid"}` a
-     * `PATCH /orders/{id}` y el servidor lo aceptaba sin mirar de donde
-     * venia el pedido.
+     * SEC-003 — quien valida la transicion es `OrderService`, no este
+     * metodo: §4 del roadmap dice que la maquina de estados se comprueba en
+     * Services y nunca en el controller.
      */
-    public function updateStatus(UpdateOrderStatusRequest $request, Order $order): OrderResource
-    {
-        $destino = OrderStatus::from($request->validated()['status']);
-
-        if (! $order->status->canTransitionTo($destino)) {
-            throw ValidationException::withMessages([
-                'status' => "Un pedido en «{$order->status->value}» no puede pasar a «{$destino->value}».",
-            ]);
-        }
-
-        $order->status = $destino;
-        $order->save();
+    public function updateStatus(
+        UpdateOrderStatusRequest $request,
+        Order $order,
+        OrderService $pedidos,
+    ): OrderResource {
+        $pedidos->cambiarEstado($order, OrderStatus::from($request->validated()['status']));
 
         return OrderResource::make(
             $order->load(['user', 'items.referenceMedia', 'shippingMethod'])
