@@ -7,10 +7,13 @@ use App\Enums\PaymentStatus;
 use App\Models\Event;
 use App\Models\Order;
 use App\Models\Payment;
+use App\Models\User;
 use App\Models\WebhookEvent;
+use App\Notifications\OrderPaid;
 use App\Notifications\PaymentConfirmed;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use RuntimeException;
 use Stripe\Charge;
 use Stripe\Checkout\Session;
@@ -196,6 +199,9 @@ class StripeWebhookService
 
         if ($payable instanceof Order) {
             $payable->user->notify(new PaymentConfirmed($payment));
+
+            // Y a quien tiene que ponerse a dibujar.
+            Notification::send(User::admins()->get(), new OrderPaid($payment));
         }
     }
 

@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\UserRole;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -60,6 +61,20 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isAdmin(): bool
     {
         return $this->role_id === UserRole::Admin;
+    }
+
+    /**
+     * Quien recibe los avisos de trabajo entrante (D10).
+     *
+     * Por rol y no por un id fijo: hoy Felicitas es la unica administradora,
+     * y escribirlo como «el usuario 1» seria cierto exactamente hasta que
+     * deje de serlo.
+     *
+     * @param  Builder<self>  $query
+     */
+    public function scopeAdmins($query): void
+    {
+        $query->where('role_id', UserRole::Admin);
     }
 
     public function orders()

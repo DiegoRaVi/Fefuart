@@ -8,6 +8,8 @@ use App\Http\Requests\Events\StoreEventRequest;
 use App\Http\Requests\Events\UpdateEventRequest;
 use App\Http\Resources\EventResource;
 use App\Models\Event;
+use App\Models\User;
+use App\Notifications\NewLiveArtRequest;
 use App\Services\Payments\PagoEnCursoException;
 use App\Services\QuoteService;
 use App\Services\StripePaymentService;
@@ -15,6 +17,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Notification;
 use Stripe\Exception\ApiErrorException;
 
 /**
@@ -46,6 +49,11 @@ class EventController extends Controller
         $event->user_id = $request->user()->id;
         $event->status = EventStatus::Requested;
         $event->save();
+
+        // D10 — N13 dice que el precio es siempre a medida, asi que este
+        // flujo se atasca hasta que la artista presupuesta. Si no se entera
+        // de que ha entrado una solicitud, el cliente espera indefinidamente.
+        Notification::send(User::admins()->get(), new NewLiveArtRequest($event));
 
         return EventResource::make($event)
             ->response()

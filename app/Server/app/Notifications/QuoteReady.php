@@ -64,6 +64,6 @@ class QuoteReady extends Aviso
 
     protected function ruta(): string
     {
-        return "/live-art/{$this->event->id}";
+        return '/live-art#mias';
     }
 }

@@ -64,7 +64,7 @@ class EventConfirmed extends Aviso
 
     protected function ruta(): string
     {
-        return "/live-art/{$this->event->id}";
+        return '/live-art#mias';
     }
 
     /** Lo que queda por pagar: se resta en centimos y se vuelve a montar. */
