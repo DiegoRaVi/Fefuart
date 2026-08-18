@@ -35,4 +35,29 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Stripe (D3, D7)
+    |--------------------------------------------------------------------------
+    |
+    | Modo test durante todo el desarrollo: claves `pk_test_` y `sk_test_`,
+    | tarjetas de prueba y sin contrato bancario.
+    |
+    | La secreta y la del webhook no salen nunca del servidor. La publicable
+    | si viaja al navegador, y no pasa nada: esta hecha para eso.
+    |
+    | `webhook.secret` lo da `stripe listen` en local y el panel de Stripe en
+    | produccion. Sin el no se puede verificar la firma, y sin firma cualquiera
+    | podria mandarnos un «pago confirmado».
+    |
+    */
+
+    'stripe' => [
+        'key' => env('STRIPE_KEY'),
+        'secret' => env('STRIPE_SECRET'),
+        'webhook' => [
+            'secret' => env('STRIPE_WEBHOOK_SECRET'),
+        ],
+    ],
+
 ];

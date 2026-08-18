@@ -9,16 +9,16 @@
 
 ## 1. Resumen ejecutivo
 
-| Área | Estado en la auditoría | Hoy (2026-08-13, Fase 4 en curso) |
+| Área | Estado en la auditoría | Hoy (2026-08-13, Fase 5 en curso) |
 |---|---|---|
 | Seguridad | 🔴 Crítico — 5 hallazgos críticos. El rol y el precio los decide el cliente. | 🟢 **Los 14 cerrados.** Queda pendiente la CSP, que va con el despliegue. |
 | Backend | 🟠 Deuda alta — toda la lógica en controllers. | ✅ Form Requests, Resources, Policies y Services en uso. Del código de v1 no queda nada. |
-| Frontend | 🟠 Deuda alta — lógica inline en 13 HTML, XSS por `innerHTML`. | 🟡 SPA de React con la base montada: sesión, rutas protegidas, cuenta y el tema de v1. Las pantallas de catálogo y carrito son de la Fase 4. |
-| Base de datos | 🟠 Modelo incompleto — no existe catálogo. | ✅ Catálogo, variantes, envíos, línea de encargo y media. DB-006 parcial. |
+| Frontend | 🟠 Deuda alta — lógica inline en 13 HTML, XSS por `innerHTML`. | ✅ SPA de React: catálogo, encargo con foto, carrito, checkout, pedidos, Live Art y backoffice. El legacy se retira en la Fase 7. |
+| Base de datos | 🟠 Modelo incompleto — no existe catálogo. | ✅ **Los ocho cerrados**, DB-006 incluido. Faltan `payments` y `webhook_events`, que son de la Fase 5. |
 | Rendimiento | 🟡 Aceptable hoy | ✅ Los cuatro cerrados: índices, eager loading con test de que no crece con las filas, paginación y un carrito que se recalcula de una vez. |
-| Testing | 🔴 Inexistente — 2 tests de plantilla, 0 % real. | 🟢 207 tests: 151 de backend y 56 de la SPA, con regresión explícita de cada hallazgo cerrado. |
+| Testing | 🔴 Inexistente — 2 tests de plantilla, 0 % real. | 🟢 389 tests: 265 de backend y 124 de la SPA, con regresión explícita de cada hallazgo cerrado. |
 | Entorno local | ✅ Corregido | ✅ Segunda tanda de SEC-002 al montar la SPA. El VirtualHost definitivo sigue siendo de la Fase 8. |
-| Git | 🟡 Ordenado | 🟡 `develop` con 36 commits sin subir; `autotest` intacta bajo su tag. |
+| Git | 🟡 Ordenado | 🟡 `develop` con 63 commits sin subir; `autotest` intacta bajo su tag. |
 
 **Diagnóstico de fondo.** Fefuart v1 funciona como demostración, pero su modelo de confianza está invertido: el navegador decide el rol del usuario, el precio del producto y el estado del pedido. Eso no se corrige refactorizando — hay que rediseñar la frontera cliente/servidor. Es la razón por la que v2 se construye de nuevo en lugar de endurecer v1.
 
