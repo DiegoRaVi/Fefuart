@@ -32,6 +32,25 @@ abstract class TestCase extends BaseTestCase
             'services.stripe.key' => 'pk_test_falsa',
             'services.stripe.secret' => 'sk_test_falsa',
             'services.stripe.webhook.secret' => 'whsec_falsa',
+
+            /*
+             * Sin recoleccion de sesiones caducadas.
+             *
+             * La sesion vive en base de datos y Laravel la limpia por sorteo:
+             * `[2, 100]` significa que una de cada cincuenta peticiones lanza
+             * un DELETE de mas. Medido: 3 consultas sin recoleccion, 4 con
+             * ella.
+             *
+             * A cualquier test le da igual, salvo a los que **cuentan
+             * consultas** para probar que no hay N+1 (PERF-001). Ahi el
+             * sorteo hacia que una de cada once ejecuciones de la bateria
+             * comparase 3 con 4 y fallara por algo que no tiene nada que ver
+             * con lo que se esta probando.
+             *
+             * Se apaga aqui y no en el test que lo sufrio porque el problema
+             * no es de ese test: es de cualquiera que mida.
+             */
+            'session.lottery' => [0, 100],
         ]);
     }
 
