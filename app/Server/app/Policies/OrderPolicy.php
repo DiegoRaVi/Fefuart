@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\OrderStatus;
 use App\Models\Order;
 use App\Models\User;
 
@@ -35,6 +36,18 @@ class OrderPolicy
     public function updateCart(User $user, Order $order): bool
     {
         return $this->owns($user, $order) && $order->status->isCancellableByCustomer();
+    }
+
+    /**
+     * Abrir la sesion de pago. Solo su duenno y solo mientras el pedido
+     * espere cobro: pagar dos veces el mismo pedido no es un caso de uso.
+     *
+     * La administradora no entra: no paga en nombre de nadie, y si algun dia
+     * cobra por otra via lo hara desde el panel de Stripe.
+     */
+    public function pay(User $user, Order $order): bool
+    {
+        return $this->owns($user, $order) && $order->status === OrderStatus::PendingPayment;
     }
 
     /**

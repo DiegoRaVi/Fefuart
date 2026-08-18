@@ -12,7 +12,9 @@ use App\Http\Controllers\Api\EventController;
 use App\Http\Controllers\Api\MediaController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\PasswordResetController;
+use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\ProfileController;
+use App\Http\Controllers\Api\StripeWebhookController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -110,7 +112,18 @@ Route::middleware('auth:sanctum')->prefix('orders')->group(function () {
     Route::get('/', [OrderController::class, 'index'])->name('orders.index');
     Route::get('{order}', [OrderController::class, 'show'])->name('orders.show');
     Route::post('{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
+
+    // D3 — abre la sesion de pago y devuelve la URL de Stripe. El cuerpo va
+    // vacio: ni importe ni moneda ni metodo llegan del cliente (SEC-006).
+    // Que el pedido quede pagado no lo decide esta ruta, sino el webhook.
+    Route::post('{order}/pay', [PaymentController::class, 'store'])->name('orders.pay');
 });
+
+// D3, D7 — la unica ruta de la API sin sesion. No la protege `auth:sanctum`
+// —Stripe no tiene cuenta aqui— sino la firma del cuerpo, que se verifica
+// sobre los bytes tal cual llegaron. Es tambien el unico sitio del sistema
+// donde un pedido pasa a `paid`.
+Route::post('webhooks/stripe', StripeWebhookController::class)->name('webhooks.stripe');
 
 // D5: el catalogo se gestiona desde el backoffice. `admin` va detras de
 // `auth:sanctum` para que un invitado reciba 401 y un cliente 403; el

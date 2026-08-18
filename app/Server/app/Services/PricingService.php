@@ -90,8 +90,13 @@ class PricingService
     /**
      * Convierte una cadena decimal a centimos sin pasar por float. `'40.5'`
      * son 4050 centimos; `'40'`, 4000.
+     *
+     * Publico porque Stripe cobra en la unidad minima de la moneda y la
+     * conversion tiene que ser exactamente esta. Duplicarla en el servicio
+     * de pago seria la forma mas facil de que un dia el importe cobrado y
+     * el importe guardado dejaran de coincidir por un centimo.
      */
-    private function toCents(string $amount): int
+    public function toCents(string $amount): int
     {
         [$euros, $cents] = array_pad(explode('.', $amount, 2), 2, '0');
 

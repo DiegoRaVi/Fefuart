@@ -4,6 +4,7 @@ use App\Http\Middleware\EnsureIsAdmin;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Routing\Middleware\ThrottleRequests;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -29,8 +30,14 @@ return Application::configure(basePath: dirname(__DIR__))
         // `api` se define en AppServiceProvider; las rutas sensibles llevan
         // ademas su propio throttle, mas estricto.
         $middleware->api(prepend: [
-            \Illuminate\Routing\Middleware\ThrottleRequests::class.':api',
+            ThrottleRequests::class.':api',
         ]);
+
+        // El webhook de Stripe no lleva cookie de sesion, asi que hoy no
+        // llega a pasar por CSRF. Se declara igual: si manana alguien amplia
+        // SANCTUM_STATEFUL_DOMAINS, la ruta seguiria funcionando en vez de
+        // empezar a rechazar cobros con un 419 dificil de leer.
+        $middleware->validateCsrfTokens(except: ['api/webhooks/*']);
 
         $middleware->alias([
             'admin' => EnsureIsAdmin::class,
