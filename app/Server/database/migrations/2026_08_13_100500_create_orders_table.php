@@ -43,9 +43,33 @@ return new class extends Migration
             $table->string('shipping_postal_code', 20)->nullable();
             $table->string('shipping_country', 2)->nullable();
 
+            /*
+             * DB-006 — un solo carrito abierto por usuario, garantizado por
+             * la base de datos.
+             *
+             * Mismo truco que el `confirmed_slot` de N16: vale el id del
+             * usuario mientras el pedido es un carrito y NULL en cuanto deja
+             * de serlo, con indice unico encima. Los NULL no colisionan, asi
+             * que un usuario puede tener un carrito y todos los pedidos que
+             * quiera.
+             *
+             * v1 no lo impedia y `getCartOrder` resolvia el empate con un
+             * `->first()`: el carrito que veias dependia del orden de
+             * insercion. `CartService` ya lo evita, pero esto lo hace cierto
+             * aunque dos peticiones simultaneas se crucen.
+             *
+             * Aqui no hace falta distinguir motores: es un `CASE` sin `ELSE`
+             * sobre un entero, sin concatenar nada.
+             */
+            $table->unsignedBigInteger('cart_slot')
+                ->storedAs("CASE WHEN status = 'cart' THEN user_id END")
+                ->nullable();
+
             // DB-004 — v1 borraba el pedido y sus lineas sin traza.
             $table->softDeletes();
             $table->timestamps();
+
+            $table->unique('cart_slot');
 
             // DB-003 — «mis pedidos» y los listados del backoffice.
             $table->index(['user_id', 'status']);

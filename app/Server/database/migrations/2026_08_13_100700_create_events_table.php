@@ -2,15 +2,16 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
  * Solicitudes de Live Art. Reescribe la tabla de v1 (D25).
  *
- * D27 — solo la parte base. El presupuesto, la señal y el `confirmed_slot`
- * de N16 llegan en la Fase 5, que es donde nace ese flujo y donde la
- * colision de fechas se puede probar de verdad; ademas `confirmed_slot` es
- * una columna generada con sintaxis de MariaDB y los tests corren en SQLite.
+ * El presupuesto y la señal siguen siendo de la Fase 5. El `confirmed_slot`
+ * de N16 ya esta aqui: la portabilidad que D27 aplazaba resulto ser una sola
+ * diferencia entre motores —como se concatenan dos cadenas— y no justificaba
+ * dejar la agenda sin proteger.
  */
 return new class extends Migration
 {
@@ -42,13 +43,45 @@ return new class extends Migration
             // moverlo a `confirmed` (SEC-010).
             $table->string('status', 30);
 
+            /*
+             * N16 — no puede haber dos eventos confirmados en la misma fecha
+             * y franja, y lo garantiza la base de datos.
+             *
+             * La columna vale NULL salvo que el evento este confirmado, y los
+             * NULL no colisionan entre si en un indice unico: por eso las
+             * solicitudes pueden solaparse cuanto quieran (N17) y solo lo
+             * confirmado queda restringido.
+             *
+             * Es generada y no mantenida por la aplicacion a proposito. Si
+             * manana alguien anade un camino que confirme un evento sin pasar
+             * por el servicio, el motor lo para igual — que es lo que quiere
+             * decir «la aplicacion no es la unica linea de defensa».
+             */
+            $table->string('confirmed_slot', 40)->storedAs($this->expresionDeFranja())->nullable();
+
             $table->softDeletes();
             $table->timestamps();
+
+            $table->unique('confirmed_slot');
 
             // DB-003 — el backoffice lista por estado y fecha.
             $table->index(['status', 'event_date']);
             $table->index('user_id');
         });
+    }
+
+    /**
+     * Lo unico que cambia entre motores es como se pegan dos cadenas: MariaDB
+     * usa `CONCAT` y SQLite `||`. El resto de la expresion —un `CASE` sin
+     * `ELSE`, que devuelve NULL— la entienden los dos igual.
+     */
+    private function expresionDeFranja(): string
+    {
+        $pegado = DB::getDriverName() === 'sqlite'
+            ? "event_date || '-' || schedule"
+            : 'CONCAT(event_date, \'-\', schedule)';
+
+        return "CASE WHEN status = 'confirmed' THEN {$pegado} END";
     }
 
     public function down(): void

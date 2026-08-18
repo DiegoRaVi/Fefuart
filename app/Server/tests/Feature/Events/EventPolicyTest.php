@@ -96,13 +96,18 @@ it('guarda lo que hace falta para presupuestar', function () {
 });
 
 /**
- * D27 — el presupuesto y la señal son de la Fase 5, y el `confirmed_slot` de
- * N16 va con ellos. Si aparecen antes, es que alguien se ha adelantado sin
- * resolver la portabilidad de la columna generada a SQLite.
+ * El presupuesto y la señal siguen siendo de la Fase 5: sin importe, un
+ * evento en `quoted` es un estado a medias que ademas deja al cliente sin
+ * poder aceptar nada.
+ *
+ * El `confirmed_slot` de N16 si esta ya —ver AgendaTest—: la portabilidad
+ * que D27 aplazaba resulto ser una sola diferencia entre motores, y no
+ * justificaba dejar la agenda sin proteger mientras tanto.
  */
 it('deja el presupuesto para la fase que lo usa', function () {
     expect(Schema::hasColumn('events', 'quoted_amount'))->toBeFalse()
-        ->and(Schema::hasColumn('events', 'confirmed_slot'))->toBeFalse();
+        ->and(Schema::hasColumn('events', 'deposit_amount'))->toBeFalse()
+        ->and(Schema::hasColumn('events', 'confirmed_slot'))->toBeTrue();
 });
 
 /**

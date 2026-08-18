@@ -415,7 +415,7 @@ PATCH /api/events/{id}  {"status":"confirmed"}
 | DB-003 | Medio | ✅ **Corregido `4ac9ae3`, `3e14d0a`, `0915390`.** Índices `products(is_active, category)`, `orders(user_id, status)`, `orders(status, placed_at)` y `events(status, event_date)`, con test que los verifica sobre el esquema real. |
 | DB-004 | Medio | ✅ **Corregido `3e14d0a`, `4ac9ae3`, `0915390`.** softDeletes en `orders`, `products`, `product_variants` y `events`. Un producto retirado desaparece del catálogo público y el pedido que lo compró conserva su nombre en el snapshot; hay test. |
 | DB-005 | Bajo | ✅ **Corregido `3e14d0a`.** `order_date` pasa a `placed_at` (timestamp, nulo mientras es carrito) y la dirección se desglosa en campos. |
-| DB-006 | Bajo | 🟡 **Parcial `d797fcb`.** `CartService` garantiza un solo carrito por usuario en aplicación, con test. La garantía en base de datos necesita el mismo índice sobre columna generada que N16 y va con él en la Fase 5. |
+| DB-006 | Bajo | ✅ **Corregido.** Nada impedía varias órdenes en estado `cart` por usuario, y `getCartOrder` resolvía el empate con un `->first()`: el carrito que veías dependía del orden de inserción. `CartService` ya lo evitaba en aplicación (`d797fcb`); ahora lo garantiza la base de datos con la columna generada `cart_slot` —el id del usuario mientras el pedido es carrito, `NULL` en cuanto deja de serlo— e índice único encima. Los `NULL` no colisionan, así que un usuario puede tener un carrito y todos los pedidos que quiera. |
 | DB-008 | Info | **No hay datos reales.** 2 usuarios (`journey-user@example.com`, `admin@local.test`), 12 pedidos idénticos (45,00 €, `pending`) y 18 productos: todo son fixtures de los E2E de la rama `autotest`. |
 
 ---
