@@ -1,8 +1,8 @@
 # Cómo funciona la pasarela de pagos
 
 > **Documento vivo.** Explica el recorrido completo de un cobro: qué hace la SPA, qué hace Laravel, qué hace Stripe y cómo viajan los datos entre ellos.
-> **Decisiones que lo sustentan:** D3, D7, D29 y D30 en [V2-ROADMAP.md](V2-ROADMAP.md). Reglas de negocio N4, N5, N6, N15, N16 y N21.
-> **Última actualización:** 2026-08-18.
+> **Decisiones que lo sustentan:** D3, D7, D29, D30 y D31 en [V2-ROADMAP.md](V2-ROADMAP.md). Reglas de negocio N4, N5, N6, N15, N16 y N21.
+> **Última actualización:** 2026-08-19.
 
 ---
 
@@ -220,6 +220,8 @@ Entregar (`cumplir()`) es esto, y en este orden:
 3. Marcar el cobro como `succeeded`, anotar el `payment_intent` y la hora.
 4. Mover el pedido a `paid` (`entregar()`).
 
+Y un quinto paso, desde la Fase 6: **avisar**. `PaymentConfirmed` al cliente y `OrderPaid` a la artista salen del paso 3 —**dentro** del `if` que marca el cobro como `succeeded`, no fuera— y ese sitio es toda la garantía. Ese bloque corre una vez por cobro y jamás dos, así que un reenvío de Stripe no produce un segundo correo. Encolarlo un nivel más arriba, en `procesar()` o en `despachar()`, sí lo produciría: por lo que viene ahora mismo, el evento se reentrega con `processed_at` a `null` siempre que la entrega falle. Es **D31**, y la señal de un evento es la excepción: manda solo `EventConfirmed`, con el importe dentro, porque aceptar, pagar y reservar fueron un solo gesto.
+
 Los pasos 3 y 4 **no van en la misma transacción**, y es deliberado (D30). Si al mover el estado saltara un error, meterlos juntos haría que se deshiciera también el «cobrado» — cuando el dinero ya se ha movido de verdad. Es preferible que quede constancia del cobro y que el fallo aparezca escrito en `webhook_events.error`.
 
 En el pedido #2, esto es lo que quedó registrado:
@@ -323,7 +325,7 @@ Si mandas `{"total": "0.01"}` en el cuerpo de `POST /orders/2/pay`, se ignora po
 | **Pago diferido que después se confirma** | Llega `async_payment_succeeded` días después y se entrega entonces. |
 | **El precio cambió desde el backoffice mientras tenía la pestaña abierta** | Al volver a pedir el pago, la sesión antigua se caduca en Stripe y se abre otra con el importe nuevo. No se cobra un precio que ya no existe. |
 | **El navegador vuelve antes que el webhook** | La pantalla de vuelta espera y cambia sola. Si el cliente vuelve a darle a pagar en ese hueco, recibe un `409` con «ya hemos recibido tu pago», no una segunda sesión. |
-| **El webhook llega dos veces** | El índice único sobre `provider_event_id` hace que el segundo se descarte sin tocar nada. |
+| **El webhook llega dos veces** | El índice único sobre `provider_event_id` hace que el segundo se descarte sin tocar nada, y tampoco sale un segundo correo (D31). |
 | **Lo cobrado no coincide con lo guardado** | No se entrega. Se responde `500`, el motivo queda en `webhook_events.error` y Stripe lo reintenta. |
 | **Llega un aviso de una sesión que no conocemos** | Igual: no se entrega, queda el motivo escrito. Pasa si el mismo `stripe listen` sirve a dos máquinas. |
 | **La firma no es válida** | `400` y no se guarda nada. No se distingue entre «firma mala» y «cuerpo ilegible», para no dar pistas. |
@@ -410,7 +412,7 @@ Los tests del webhook calculan la firma **de verdad**, con el mismo algoritmo qu
 
 ## 10. Cómo probarlo en local
 
-Hacen falta cuatro cosas a la vez:
+Hacen falta cinco cosas a la vez:
 
 ```bash
 # 1 · Backend
@@ -419,14 +421,17 @@ cd app/Server && php artisan serve --host=127.0.0.1 --port=8000
 # 2 · SPA (tiene que ser el 5173: lo exige SANCTUM_STATEFUL_DOMAINS)
 cd app/Client/spa && npm run dev
 
-# 3 · El túnel de Stripe, en una ventana que se queda abierta
+# 3 · El worker de la cola, o los avisos se quedan sin salir
+cd app/Server && php artisan queue:work --tries=3
+
+# 4 · El túnel de Stripe, en una ventana que se queda abierta
 stripe login                                                    # solo la primera vez
 stripe listen --forward-to localhost:8000/api/webhooks/stripe
 ```
 
 `stripe listen` imprime un secreto `whsec_…` que hay que poner en `STRIPE_WEBHOOK_SECRET` del `.env`. Sin él, cada aviso se estrella contra un `400`.
 
-La cuarta cosa es pagar: entra con `cliente@fefuart.test` / `password`, encarga unas «Letras infantiles» (es el único producto que no pide foto de referencia) y paga con la tarjeta de prueba **`4242 4242 4242 4242`**, cualquier fecha futura y cualquier CVC.
+La quinta cosa es pagar: entra con `cliente@fefuart.test` / `password`, encarga unas «Letras infantiles» (es el único producto que no pide foto de referencia) y paga con la tarjeta de prueba **`4242 4242 4242 4242`**, cualquier fecha futura y cualquier CVC.
 
 Para ver el rastro por dentro:
 

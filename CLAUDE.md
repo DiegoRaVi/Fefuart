@@ -50,6 +50,10 @@ npm run build
 # Correo local — obligatorio para recuperación de contraseña y verificación de email
 /c/xampp/mailpit/mailpit.exe --listen 127.0.0.1:8025 --smtp 127.0.0.1:1025
 # Bandeja: http://127.0.0.1:8025  ·  API: http://127.0.0.1:8025/api/v1/messages
+
+# Cola — obligatoria desde la Fase 6: sin worker los avisos se quedan en `jobs`
+php artisan queue:work --tries=3          # se queda abierto
+php artisan queue:work --stop-when-empty  # vacía lo pendiente y sale
 ```
 
 ## Trampas del entorno local
@@ -72,6 +76,7 @@ Invariantes que no se negocian, cada una atada a un hallazgo de la auditoría:
 - **Toda ruta sobre un recurso propio pasa por Policy**, nunca por comparación inline (SEC-003/004/008/009).
 - **`role` jamás es asignable en masa** (SEC-001).
 - **Rutas sin prefijo de versión**: `/api/…`, no `/api/v1/…` (D13).
+- **Un aviso se encola dentro del mismo `if` que hace el cambio de estado** (D31), nunca al principio del manejador. Es lo único que impide que un reenvío de Stripe mande un segundo correo: la garantía es «al menos una vez», y por D30 una entrega puede fallar después de guardar el cobro.
 - Autenticación por **Sanctum con cookies HttpOnly**, no JWT (D2). React y Laravel deben ser same-site → proxy de Vite hacia `/api`.
 - **Prohibido `dangerouslySetInnerHTML`** en React (SEC-005).
 

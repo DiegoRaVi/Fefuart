@@ -3,7 +3,7 @@
 > **Documento vivo.** Se actualiza cuando una decisión importante cambia la arquitectura o el plan.
 > **Punto de partida:** [AUDIT.md](AUDIT.md) — auditoría de v1, 2026-08-11.
 > **Cómo funciona el cobro:** [PAGOS.md](PAGOS.md) — el recorrido completo de un pago, paso a paso.
-> **Última actualización:** 2026-08-13.
+> **Última actualización:** 2026-08-19.
 
 ---
 
@@ -50,6 +50,8 @@ Todo el desarrollo se realiza **en local**. El despliegue a staging y producció
 | **D28** | **Dos búsquedas en el backoffice: una caja ancha y un modal por campo** | La caja mira en todo a la vez —número, nombre y email de la cuenta, nombre del envío, teléfono; en eventos también título y lugar— y sirve para el caso de todos los días: alguien escribe y se pega lo que haya dado. Es cómoda pero imprecisa: «600» mezcla teléfonos, números de pedido y nombres con esas cifras. El modal acota a **un solo campo**, y con eso lo que sale es exactamente lo que se pidió. Solo un campo activo a la vez, y no por limitación técnica: dos rellenos obligarían a decidir si se combinan con `Y` o con `O`, y ninguna respuesta es evidente para quien busca con prisa. El campo elegido sí se cruza con estado y fechas. **«Nombre» mira en el de la cuenta y en el del envío**: pueden no coincidir —un regalo, alguien que pide para otra persona— y quien busca no sabe cuál le han dado. Detalles que salieron al implementarlo: los `OR` van agrupados o el filtro de estado deja de aplicarse; un número de menos de cuatro cifras se busca **solo** como número de pedido, porque buscar «1» también por teléfono devolvía casi todo; y los campos inactivos del modal van `readOnly` y no `disabled`, porque un input deshabilitado no recibe clics ni foco y hay lectores de pantalla que se lo saltan. |
 | **D27** | **`events` en la Fase 2 solo con el esquema base** | Se rehace la tabla con los campos que N14 necesita para presupuestar (`guest_count`, `duration_hours`, `event_type`) y se escribe `EventPolicy`. Las columnas de presupuesto y señal, y el `confirmed_slot` de N16, esperan a la Fase 5: es donde nace el flujo y donde la colisión de fechas se puede probar de verdad. Además `confirmed_slot` es una columna generada con sintaxis de MariaDB y los tests corren en SQLite; esa portabilidad se resuelve cuando la columna tenga uso, no antes. **Cumplida a medias, y para bien:** `confirmed_slot` se adelantó a la Fase 2 porque la portabilidad resultó ser una sola diferencia entre motores —cómo se pegan dos cadenas— y no justificaba dejar la agenda sin proteger. Las columnas de presupuesto y señal sí esperaron, y llegaron en la Fase 5 con el flujo que las usa. |
 | **D29** | **Checkout hospedado de Stripe, y el webhook como única fuente de verdad del cobro** | El formulario de tarjeta lo sirve Stripe en su dominio: ningún dato de pago pasa por nuestro origen y las obligaciones de cumplimiento se reducen al mínimo. La consecuencia importante es la otra mitad: **la página de vuelta no vale como prueba de pago** —es una URL que el cliente puede abrir a mano— así que `paid` y `confirmed` solo los alcanza `POST /api/webhooks/stripe` con la firma verificada sobre los bytes crudos. Cinco detalles que cambian el resultado y salieron al implementarlo: (1) se entrega en `checkout.session.completed` **y** en `async_payment_succeeded`, mirando `payment_status`, porque con el primero solo, un pago diferido no se entregaría nunca y uno que acabe fallando se entregaría igual; (2) cada línea va a Stripe como **una unidad con el total ya calculado**, porque N4 dice que la línea no es unitario × cantidad y dejar multiplicar a Stripe cobraría de más; (3) se comprueba que el importe cobrado sea el guardado **antes** de entregar; (4) no se manda `payment_method_types` —omitirlo es lo que deja a Stripe ofrecer los métodos del panel y los que encajen con cada cliente—; (5) la clave de idempotencia es determinista y no un UUID, de modo que Stripe devuelve la misma sesión ante una petición repetida y el índice único de `payments` para al perdedor de dos peticiones simultáneas. |
+| **D31** | **El aviso se encola dentro del mismo `if` que hace el cambio de estado** | Es la regla que sostiene toda la Fase 6, y nace de que la garantía de Stripe sea «al menos una vez». `StripeWebhookService` tiene tres guardas encadenadas y **solo dos sirven de gancho**: `registrar()` corta cuando el evento ya se atendió entero, pero no basta —por D30 una entrega puede fallar *después* de guardar el cobro, y entonces el evento se reentrega con `processed_at` a `null` y `despachar()` corre otra vez de arriba abajo—; las que sí valen son el `if ($payment->status !== Succeeded)` de `cumplir()`, que corre una vez por cobro y jamás dos, y la comprobación de estado del payable en `entregar()`. Encolar un nivel más arriba produce un correo por reintento. **Consecuencias que salieron al implementarlo:** (1) no hace falta `after_commit` en la cola —la excepción de un `save()` que choca contra un índice único sale antes de llegar a ninguna línea de aviso, así que la garantía la da la posición y no un flag—; (2) Laravel encola **un job por canal**, de modo que `mail` y `database` no comparten job y un fallo de SMTP no puede reescribir la fila del centro de avisos; (3) los avisos se disparan desde Services y no desde controllers, lo que obligó a extraer `OrderService::cambiarEstado()` —la transición de pedido estaba en el controller, contra lo que dice §4. |
+| **D32** | **Un hecho, un aviso: la artista también recibe los suyos** | Las cuatro notificaciones que listaba D10 miraban solo al cliente, y así el flujo se atasca en dos sitios: N13 dice que el precio de un evento es siempre a medida, así que una solicitud espera un presupuesto que solo puede emitir Felicitas; y un encargo pagado un domingo no existe hasta que alguien abra el backoffice. Entran `NewLiveArtRequest` y `OrderPaid`, con destinatarios resueltos por rol (`User::admins()`) y no por un id fijo. La otra mitad de la decisión es la contraria: **no se avisa dos veces del mismo hecho**. La señal de un evento manda solo `EventConfirmed` —con el importe dentro, porque aceptar, pagar y reservar fueron un solo gesto—, y el paso a `paid` del webhook no manda además `OrderStatusChanged`. El riesgo aceptado es que en la colisión de N16 el cliente pague y no reciba nada; ese caso ya exige devolución a mano. |
 | **D30** | **El cobro se guarda aunque la entrega falle** | Marcar el pago y entregar lo que desbloquea **no** van en la misma transacción. El caso real es la colisión de franja de N16: dos clientes pagando la misma fecha a la vez. Si fueran una sola transacción, el rollback borraría el «cobrado» cuando el dinero se ha movido de verdad, y la artista se quedaría sin saber a quién devolver. Así el cobro queda guardado, el evento no avanza, y el motivo —con el número de cobro a devolver— queda en `webhook_events.error`. El webhook responde 500 a propósito para que Stripe reintente: responder 2xx dejaría el evento muerto con un error que nadie ha visto. |
 
 **Decisiones de bajo impacto adoptadas sin consulta:** React Router para rutas · React Hook Form + Zod para formularios · Pest para backend · Vitest + Testing Library + Playwright para frontend.
@@ -285,6 +287,7 @@ Todo el desarrollo ocurre en local. Piezas necesarias para levantar el proyecto:
 | MySQL (MariaDB 10.4) | XAMPP Control Panel | BD `fefuart`, usuario `root` sin contraseña |
 | **Mailpit** | `C:\xampp\mailpit\mailpit.exe --listen 127.0.0.1:8025 --smtp 127.0.0.1:1025` | Bandeja en http://127.0.0.1:8025 |
 | SPA React | `cd app/Client/spa && npm run dev` | http://localhost:5173 |
+| **Worker de la cola** | `cd app/Server && php artisan queue:work --tries=3` | sin puerto; hace falta desde la Fase 6 |
 | Apache | XAMPP Control Panel | solo sirve el frontend legacy; **no** sirve el backend (SEC-002) |
 
 **Mailpit** (v1.30.7) captura todo el correo saliente sin enviarlo a ninguna parte: hace falta desde la Fase 1 para probar la recuperación de contraseña y la verificación de email. El binario se descargó de las releases oficiales de `axllent/mailpit` y su SHA-256 se verificó contra el digest publicado por la API de GitHub. Vive fuera del repositorio, en `C:\xampp\mailpit`.
@@ -432,9 +435,33 @@ Es la fase más grande, así que fue por tandas.
 
 *Dependía de: Fase 4.* Era la parte más delicada del proyecto.
 
-### Fase 6 — Notificaciones · P1
-Mailpit en local · notificaciones de Laravel en cola · email + centro de avisos en la app · `QuoteReady`, `PaymentConfirmed`, `OrderStatusChanged`, `EventConfirmed`.
-*Depende de: Fase 5.*
+### Fase 6 — Notificaciones · P1 · ✅ completada (2026-08-19)
+
+| Entregado | Estado |
+|---|---|
+| Tabla `notifications` nativa de Laravel | ✅ `2d4104d` (D10) |
+| `OrderService::cambiarEstado()` — la transición sale del controller | ✅ `6407811` |
+| `QuoteReady`, `PaymentConfirmed`, `OrderStatusChanged`, `EventConfirmed` | ✅ `bbab7cc` (D10) |
+| `NewLiveArtRequest` y `OrderPaid` — los dos avisos hacia la artista | ✅ `fd2ca2b` (D31) |
+| `GET /api/notifications` y `PATCH /api/notifications/{id}/read` | ✅ `698ca83` |
+| Página `/avisos` y enlace con contador en la cabecera | ✅ `b1fb611` |
+| 41 tests nuevos: 33 de backend y 8 de SPA (381 y 147 en total) | ✅ |
+
+**Dónde se dispara cada aviso, y por qué ahí.** Es la decisión de la fase y está en **D31**: cada notificación se encola **dentro del mismo `if` que hace el cambio de estado**. `StripeWebhookService` tiene tres guardas encadenadas y solo dos sirven de gancho — `registrar()` no basta, porque por D30 una entrega puede fallar después de guardar el cobro y entonces el evento se reentrega con `processed_at` a `null` y `despachar()` se ejecuta entero otra vez. Lo único que impide el segundo correo es que el cobro ya conste como `succeeded`.
+
+**La señal de un evento manda un solo aviso.** `EventConfirmed` lleva el importe dentro; no sale además `PaymentConfirmed`. Para el cliente, aceptar el presupuesto, pagar y reservar fueron un solo gesto. Por lo mismo, el paso a `paid` del webhook no manda además `OrderStatusChanged`: un hecho, un aviso. El riesgo asumido es que en la colisión de N16 el cliente pagó y no recibe nada — pero ese caso ya exige intervención manual y devolución.
+
+**Lo que se descubrió al construirlo:**
+
+- **El `after_commit` de la cola no hacía falta y no se puso.** El diseño lo daba por necesario para que un aviso encolado dentro de una transacción no sobreviviera al rollback. Al escribir el test se vio que en el caso real —la colisión de N16— el `UPDATE` revienta contra el índice único **antes** de llegar a ninguna línea de aviso, esté dentro o fuera de la transacción. La garantía la da la posición: el aviso va después del cambio de estado. Un flag de configuración que ningún test puede hacer fallar no entra.
+- **Laravel encola un job por canal, no por notificación.** Un aviso con `mail` + `database` son dos filas en `jobs`. Se midió. Elimina de raíz el riesgo que el diseño anotaba —que un fallo de SMTP al reintentar escribiera una segunda fila en `notifications`—: los canales no comparten job.
+- **Los avisos de evento apuntaban a `/live-art/{id}`, que no es una ruta de la SPA.** No existe detalle por evento: `/live-art` es una sola página con la lista en el ancla `#mias`. Corregido antes de cerrar.
+- **`APP_NAME` seguía siendo `Laravel`**, así que cada correo iba firmado con el nombre de la plantilla. Se notaba poco con un solo correo; con seis, no.
+- **La prueba a mano incluyó entregar el mismo webhook firmado dos veces** contra la base local: dos entregas, un correo al cliente y uno a la artista, cuatro jobs (dos avisos × dos canales) y ningún duplicado.
+
+**Deuda consciente:** no hay «marcar todos como leídos». Con el volumen de este negocio, la lista no crece lo bastante para que haga falta; si deja de ser cierto, es un endpoint más.
+
+*Dependía de: Fase 5.*
 
 ### Fase 7 — Testing, hardening y retirada del legacy · P1
 E2E de los 4 flujos · repaso de seguridad completo sobre v2 · CSP · `composer audit` y `npm audit` · retirada de `app/Client/views` y del frontend legacy · documentación final.
