@@ -32,6 +32,12 @@ export interface Evento {
   deposit_amount: string | null
   quote_expires_at: string | null
   quote_expired: boolean
+  /**
+   * N21 — si la señal esta cobrada, cancelar tiene consecuencias distintas
+   * segun quien cancele. Lo resuelve el servidor para que ninguna pantalla
+   * tenga que deducirlo del estado.
+   */
+  deposit_paid: boolean
   /** Resuelto en servidor: el cliente no deduce permisos del estado. */
   can: { update: boolean; cancel: boolean; accept_quote: boolean; quote: boolean }
   created_at: string | null

@@ -268,6 +268,17 @@ function MisSolicitudes() {
             </div>
 
             {evento.quoted_amount && <Presupuesto evento={evento} />}
+
+            {/* N21 — se dice antes de pulsar, no despues. La señal reserva la
+                fecha y bloquea la agenda: quien se echa atras compensa el
+                hueco. */}
+            {evento.deposit_paid && evento.can.cancel && (
+              <p className="text-sm text-piedra">
+                Si cancelas tu, la señal no se devuelve: la fecha lleva reservada para ti
+                desde que la pagaste. Si tuviera que cancelar Felicitas, te la devolveria
+                entera.
+              </p>
+            )}
           </li>
         ))}
       </ul>

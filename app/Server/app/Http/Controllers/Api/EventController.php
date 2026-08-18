@@ -15,7 +15,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
-use Illuminate\Validation\ValidationException;
 use Stripe\Exception\ApiErrorException;
 
 /**
@@ -115,18 +114,16 @@ class EventController extends Controller
         ]);
     }
 
-    public function cancel(Event $event): EventResource
+    /**
+     * N21 — el cliente cancela, y si ya habia pagado la señal, la pierde: la
+     * fecha estuvo bloqueada por el. Quien decide eso es QuoteService, que es
+     * tambien quien sabe cuando si toca devolver.
+     */
+    public function cancel(Request $request, Event $event, QuoteService $presupuestos): EventResource
     {
         $this->authorize('cancel', $event);
 
-        if (! $event->status->canTransitionTo(EventStatus::Cancelled)) {
-            throw ValidationException::withMessages([
-                'status' => 'Este evento ya no se puede cancelar.',
-            ]);
-        }
-
-        $event->status = EventStatus::Cancelled;
-        $event->save();
+        $presupuestos->cancelar($event, $request->user());
 
         return EventResource::make($event);
     }

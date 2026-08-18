@@ -252,7 +252,13 @@ function Solicitud({ evento }: { evento: Evento }) {
               onClick={() => cambiar.mutate({ id: evento.id, status: destino })}
               disabled={cambiar.isPending}
             >
-              {nombreDelEstado(destino)}
+              {/* N21 — devolver dinero no puede ser un efecto secundario
+                  silencioso: si el boton lo va a hacer, lo dice. */}
+              {destino === 'cancelled' && evento.deposit_paid
+                ? `Cancelar y devolver la señal${
+                    evento.deposit_amount ? ` (${euros(evento.deposit_amount)})` : ''
+                  }`
+                : nombreDelEstado(destino)}
             </Boton>
           ))}
         </div>

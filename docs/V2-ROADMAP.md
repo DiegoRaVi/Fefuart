@@ -58,7 +58,7 @@ Todo el desarrollo se realiza **en local**. El despliegue a staging y producció
 | # | Decisión | Cuándo hay que resolverla |
 |---|---|---|
 | ~~P1~~ | **Resuelta:** el presupuesto caduca, y el plazo es **configurable** (`settings.quote_validity_days`, 14 días por defecto) en vez de estar fijado en código. Se congela al presupuestar: cambiar el ajuste no mueve la caducidad de los ya emitidos. Un presupuesto caducado no se puede aceptar —ni desde la SPA, que ni ofrece el botón, ni desde la API, que responde 422— y la artista puede emitir uno nuevo. Sin esto, un presupuesto de hace ocho meses se podría aceptar hoy a aquel precio. | Fase 5 |
-| P2 | ¿Se devuelve la señal si se cancela un evento ya confirmado? **El mecanismo ya está**: las devoluciones se hacen desde el panel de Stripe y el webhook `charge.refunded` deja el cobro como `refunded`, de modo que la tabla nunca miente. Lo que falta es la **política** —si se devuelve, en qué plazo y con qué condiciones—, que es decisión del negocio y tiene implicaciones de consumo. Ningún endpoint dispara devoluciones automáticas, y eso es a propósito: mover dinero de vuelta no puede ser un efecto secundario de un cambio de estado. | Pendiente de decisión de negocio |
+| ~~P2~~ | **Resuelta → N21:** la señal no se devuelve si cancela el cliente; se devuelve entera si cancela la artista. La devolución la hace el código y no la artista a mano en el panel, porque la regla es determinista y olvidarse de aplicarla deja al cliente sin su dinero. Lo que sí es explícito es el gesto: el botón del backoffice dice «Cancelar y devolver la señal (360,00 €)» y la pantalla del cliente avisa de que la perderá **antes** de que pulse, no después. Ningún endpoint devuelve dinero por su cuenta: se llega ahí como consecuencia declarada de cancelar. | Fase 5 |
 | ~~P3~~ | **Resuelta:** eliminación de cuenta → D21 (desactivación reversible) + D22 (supresión por anonimización). **Se implementa al final de la Fase 4 y antes de la Fase 5.** El motivo es técnico: hoy suprimir una cuenta sería `$user->delete()`, pero en cuanto existan pedidos pagados y eventos confirmados hay que anonimizar en vez de borrar. Escribirlo antes significa escribirlo dos veces. Antes de la Fase 5 sí es exigible: con pagos reales entran datos de terceros y el margen se estrecha. | Fin de Fase 4 |
 | ~~P5~~ | **Resuelta** en `b0c24d9` (Fase 4a). El backend responde en español, nombres de campo incluidos, y los asuntos de las notificaciones también. `APP_LOCALE` se fija además en `phpunit.xml` para que los tests no dependan del `.env` de quien los ejecute. El fallback se queda en inglés a propósito: si algún día falta una clave, es preferible ver el texto original que la clave cruda. | Fase 4 |
 | ~~P4~~ | **Resuelta:** los precios (30/40/20 € por variante, 40 € ramo y letras, 5 € de envío) se siembran tal cual, y el hueco que faltaba —el precio de la copia adicional— lo fija **D26**. Todos son semilla editable desde el backoffice, así que ninguno queda congelado en código. | Fase 2 |
@@ -193,6 +193,7 @@ Extraídas de la sesión de descubrimiento del 2026-08-11/12. **Ninguna de estas
 | **N18** | **El registro es obligatorio** para encargar. No hay compra como invitado. |
 | **N19** | v2 incorpora **recuperación de contraseña por email**, **verificación de email al registrarse** y **edición de perfil con cambio de contraseña** — las tres inexistentes en v1 pese a que sus tablas y columnas ya estaban creadas. |
 | **N20** | Dos roles: `customer` y `admin`. La promoción a `admin` nunca ocurre por petición HTTP. |
+| **N21** | La **señal no se devuelve si cancela el cliente**, y se devuelve entera si cancela la artista. La señal reserva la fecha y bloquea la agenda: quien se echa atrás compensa el hueco; si el hueco lo libera ella, no hay nada que compensar. Resuelve P2. |
 
 ---
 
@@ -412,6 +413,7 @@ Es la fase más grande, así que fue por tandas.
 | `POST /api/admin/events/{id}/quote` y `POST /api/events/{id}/accept-quote` | ✅ `784b4fd` (D6, N13) |
 | `GET`/`PATCH /api/admin/settings` — porcentaje y validez configurables | ✅ `784b4fd` (N15) |
 | Pantallas de pago, vuelta de la pasarela y ajustes en la SPA | ✅ `b0721fb` |
+| Cancelación con devolución de señal según quién cancele | ✅ (N21, resuelve P2) |
 
 **Lo que se llevó por delante mientras se construía:**
 
@@ -421,7 +423,10 @@ Es la fase más grande, así que fue por tandas.
 - Los tests del webhook calculan el **HMAC real** con un secreto conocido, así que ejercitan la verificación de firma de Stripe y no una imitación. Cubren firma inválida, otro secreto, sin cabecera, marca de tiempo vieja y cuerpo reserializado.
 - `Tests\TestCase` instala un doble del cliente HTTP de Stripe en **todos** los tests: ninguna prueba puede salir a internet por descuido, ni siquiera una que no hable de pagos.
 
-**Pendiente:** entrega real de un webhook en local con `stripe listen` (necesita `stripe login`, que es interactivo). Y **P2**, que es decisión de negocio.
+- **P2 resuelta → N21**, con la devolución automatizada. La cancelación y la devolución **no** van en la misma transacción: si Stripe no responde, la cancelación se queda hecha, porque lo contrario dejaría la fecha ocupada por un evento que ya nadie va a celebrar.
+- De paso salió un test inestable que llevaba tiempo apareciendo una vez cada muchas ejecuciones y no era N+1: la sesión vive en base de datos y Laravel la recolecta **por sorteo** (`session.lottery = [2, 100]`), lo que añade un `DELETE` a una de cada cincuenta peticiones. Medido: 3 consultas sin recolección, 4 con ella. El test que cuenta consultas comparaba a veces 3 con 4. Se apaga el sorteo en `Tests\TestCase`, no en el test que lo sufrió, porque el problema es de cualquiera que mida.
+
+**Pendiente:** entrega real de un webhook en local con `stripe listen` (necesita `stripe login`, que es interactivo).
 
 *Dependía de: Fase 4.* Era la parte más delicada del proyecto.
 

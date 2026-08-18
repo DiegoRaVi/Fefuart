@@ -125,6 +125,42 @@ class StripePaymentService
     }
 
     /**
+     * Devuelve un cobro entero.
+     *
+     * No hay ningun endpoint que llame a esto por si solo: se llega aqui
+     * como consecuencia declarada de cancelar (N21), y el boton que lo
+     * dispara dice en su etiqueta que va a devolver el dinero. Mover dinero
+     * de vuelta no puede ser un efecto secundario silencioso.
+     *
+     * La clave de idempotencia es el propio cobro: si la peticion se repite,
+     * Stripe devuelve la devolucion que ya existia en vez de hacer otra.
+     */
+    public function devolver(Payment $payment, string $motivo): Payment
+    {
+        if ($payment->status === PaymentStatus::Refunded) {
+            return $payment;
+        }
+
+        if ($payment->status !== PaymentStatus::Succeeded || $payment->provider_payment_intent_id === null) {
+            throw new RuntimeException("El cobro {$payment->id} no esta cobrado: no hay nada que devolver.");
+        }
+
+        $this->stripe->refunds->create(
+            ['payment_intent' => $payment->provider_payment_intent_id],
+            ['idempotency_key' => "refund:{$payment->idempotency_key}"]
+        );
+
+        // Stripe mandara ademas `charge.refunded`, que es idempotente y no
+        // volvera a tocar esto. Se marca ya para que el backoffice no siga
+        // diciendo «cobrado» mientras el aviso viaja.
+        $payment->status = PaymentStatus::Refunded;
+        $payment->failure_reason = $motivo;
+        $payment->save();
+
+        return $payment;
+    }
+
+    /**
      * Parte comun a todo cobro: reutilizar lo que ya haya, crear la sesion y
      * guardar el rastro.
      *

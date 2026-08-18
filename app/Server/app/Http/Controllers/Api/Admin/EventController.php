@@ -101,9 +101,21 @@ class EventController extends Controller
      * pregunta ha pasado por `admin`. Lo que sigue sin poder saltarse es la
      * maquina de estados.
      */
-    public function updateStatus(UpdateEventStatusRequest $request, Event $event): EventResource
-    {
+    public function updateStatus(
+        UpdateEventStatusRequest $request,
+        Event $event,
+        QuoteService $presupuestos,
+    ): EventResource {
         $destino = EventStatus::from($request->validated()['status']);
+
+        // N21 — cancelar no es solo mover el estado: si hay señal cobrada y
+        // quien cancela es la artista, hay que devolverla. Lo sabe
+        // QuoteService, y pasa por el para que la regla no viva en dos sitios.
+        if ($destino === EventStatus::Cancelled) {
+            $presupuestos->cancelar($event, $request->user());
+
+            return EventResource::make($event->load('user'));
+        }
 
         if (! $event->status->canTransitionTo($destino)) {
             throw ValidationException::withMessages([

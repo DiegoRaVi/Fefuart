@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Enums\EventStatus;
 use App\Models\Event;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -39,6 +40,21 @@ class EventResource extends JsonResource
             'deposit_amount' => $this->deposit_amount,
             'quote_expires_at' => $this->quote_expires_at?->toAtomString(),
             'quote_expired' => $this->presupuestoCaducado(),
+
+            /*
+             * N21 — si la señal esta cobrada, cancelar tiene consecuencias
+             * distintas segun quien cancele, y las pantallas tienen que
+             * poder decirlo antes de que nadie pulse.
+             *
+             * Se deduce del estado y no de una consulta a `payments`: a
+             * `confirmed` solo se llega con la señal cobrada, asi que
+             * preguntarlo por fila seria el N+1 de PERF-001 otra vez.
+             */
+            'deposit_paid' => in_array(
+                $this->status,
+                [EventStatus::Confirmed, EventStatus::Completed],
+                strict: true
+            ),
             // Que puede hacer quien esta mirando, resuelto en servidor: el
             // cliente no tiene que deducirlo del estado por su cuenta.
             'can' => [

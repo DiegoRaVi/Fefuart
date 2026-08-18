@@ -35,6 +35,7 @@ function unEvento(overrides: Partial<Evento> = {}): Evento {
     deposit_amount: null,
     quote_expires_at: null,
     quote_expired: false,
+    deposit_paid: false,
     can: { update: true, cancel: true, accept_quote: false, quote: false },
     created_at: '2026-08-13T10:00:00+00:00',
     ...overrides,
@@ -300,4 +301,34 @@ describe('el presupuesto', () => {
 
     expect(screen.queryByRole('button', { name: /aceptar y pagar/i })).not.toBeInTheDocument()
   })
+})
+
+/**
+ * N21 — que la señal no se devuelve si cancela el cliente se dice **antes**
+ * de pulsar, no despues. La fecha lleva reservada para el desde que la pago.
+ */
+it('avisa de que la señal no se devuelve antes de cancelar', async () => {
+  servirEventos([
+    unEvento({
+      status: 'confirmed',
+      quoted_amount: '1200.00',
+      deposit_amount: '360.00',
+      deposit_paid: true,
+      can: { update: false, cancel: true, accept_quote: false, quote: false },
+    }),
+  ])
+
+  renderConProviders(<LiveArt />)
+
+  expect(await screen.findByText(/la señal no se devuelve/i)).toBeInTheDocument()
+})
+
+it('no lo avisa si todavia no hay señal pagada', async () => {
+  servirEventos([unEvento({ status: 'requested' })])
+
+  renderConProviders(<LiveArt />)
+
+  await screen.findByRole('button', { name: /cancelar/i })
+
+  expect(screen.queryByText(/la señal no se devuelve/i)).not.toBeInTheDocument()
 })

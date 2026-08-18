@@ -3,7 +3,11 @@
 namespace App\Services;
 
 use App\Enums\EventStatus;
+use App\Enums\PaymentKind;
+use App\Enums\PaymentStatus;
 use App\Models\Event;
+use App\Models\Payment;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use RuntimeException;
@@ -25,6 +29,7 @@ class QuoteService
     public function __construct(
         private readonly PricingService $pricing,
         private readonly SettingsService $ajustes,
+        private readonly StripePaymentService $pagos,
     ) {}
 
     /**
@@ -118,6 +123,54 @@ class QuoteService
                 'event_date' => 'Esa fecha y franja ya estan reservadas para otro evento.',
             ]);
         }
+    }
+
+    /**
+     * N21 — cancelar un evento, con lo que eso hace con la señal.
+     *
+     * La señal reserva la fecha y bloquea la agenda: si quien se echa atras
+     * es el cliente, compensa el hueco y no se devuelve. Si quien cancela es
+     * la artista, se devuelve entera, porque el hueco lo libera ella.
+     *
+     * La devolucion se hace aqui y no a mano en el panel a proposito: la
+     * regla es deterministica y olvidarse de aplicarla deja al cliente sin su
+     * dinero. Lo que si es explicito es el boton, que dice en su etiqueta que
+     * va a devolver la señal.
+     */
+    public function cancelar(Event $event, User $quien): Event
+    {
+        if (! $event->status->canTransitionTo(EventStatus::Cancelled)) {
+            throw ValidationException::withMessages([
+                'status' => 'Este evento ya no se puede cancelar.',
+            ]);
+        }
+
+        $senal = $this->senalCobradaDe($event);
+
+        DB::transaction(function () use ($event) {
+            $event->status = EventStatus::Cancelled;
+            $event->save();
+        });
+
+        // Fuera de la transaccion: si la devolucion falla, la cancelacion se
+        // queda hecha. Lo contrario —deshacer la cancelacion porque Stripe no
+        // responde— dejaria la fecha ocupada por un evento que ya nadie va a
+        // celebrar.
+        if ($senal !== null && $quien->isAdmin()) {
+            $this->pagos->devolver($senal, 'Cancelado por la artista.');
+        }
+
+        return $event;
+    }
+
+    /** La señal cobrada de un evento, si la hay. */
+    public function senalCobradaDe(Event $event): ?Payment
+    {
+        return $event->payments()
+            ->where('kind', PaymentKind::Deposit)
+            ->where('status', PaymentStatus::Succeeded)
+            ->latest('id')
+            ->first();
     }
 
     /**
