@@ -31,7 +31,11 @@ function unEvento(overrides: Partial<Evento> = {}): Evento {
     duration_hours: 4,
     event_type: 'boda',
     status: 'requested',
-    can: { update: true, cancel: true },
+    quoted_amount: null,
+    deposit_amount: null,
+    quote_expires_at: null,
+    quote_expired: false,
+    can: { update: true, cancel: true, accept_quote: false, quote: false },
     created_at: '2026-08-13T10:00:00+00:00',
     ...overrides,
   }
@@ -196,8 +200,8 @@ describe('las solicitudes propias', () => {
    */
   it('ofrece cancelar solo cuando el servidor lo permite', async () => {
     servirEventos([
-      unEvento({ id: 1, title: 'Cancelable', can: { update: true, cancel: true } }),
-      unEvento({ id: 2, title: 'Ya no', can: { update: false, cancel: false } }),
+      unEvento({ id: 1, title: 'Cancelable', can: { update: true, cancel: true, accept_quote: false, quote: false } }),
+      unEvento({ id: 2, title: 'Ya no', can: { update: false, cancel: false, accept_quote: false, quote: false } }),
     ])
 
     renderConProviders(<LiveArt />)
@@ -205,5 +209,95 @@ describe('las solicitudes propias', () => {
     await screen.findByText('Cancelable')
 
     expect(screen.getAllByRole('button', { name: 'Cancelar' })).toHaveLength(1)
+  })
+})
+
+/**
+ * D6, N15 — aceptar el presupuesto es reservar, y reservar es pagar.
+ *
+ * El importe se pinta pero no se manda: el servidor cobra la señal que
+ * guardo al presupuestar (SEC-006).
+ */
+describe('el presupuesto', () => {
+  const irA = vi.fn()
+
+  beforeEach(() => {
+    irA.mockClear()
+    Object.defineProperty(window, 'location', {
+      configurable: true,
+      value: { ...window.location, assign: irA },
+    })
+  })
+
+  function presupuestado(overrides: Partial<Evento> = {}) {
+    return unEvento({
+      status: 'quoted',
+      quoted_amount: '1200.00',
+      deposit_amount: '360.00',
+      quote_expires_at: '2027-01-01T10:00:00+00:00',
+      quote_expired: false,
+      can: { update: false, cancel: true, accept_quote: true, quote: false },
+      ...overrides,
+    })
+  }
+
+  it('ensena el importe y la señal', async () => {
+    servirEventos([presupuestado()])
+
+    renderConProviders(<LiveArt />)
+
+    expect(await screen.findByText(/1\.?200,00/)).toBeInTheDocument()
+    expect(screen.getByText(/señal para reservar la fecha/i)).toBeInTheDocument()
+    // La señal se repite en el boton a proposito: es lo que se va a cobrar.
+    expect(
+      screen.getByRole('button', { name: /aceptar y pagar la señal de 360,00/i }),
+    ).toBeInTheDocument()
+  })
+
+  it('acepta sin mandar ningun importe', async () => {
+    servirEventos([presupuestado()])
+    post.mockResolvedValue({
+      data: { url: 'https://checkout.stripe.com/c/pay/cs_test_senal', payment_id: 4 },
+    } as never)
+
+    renderConProviders(<LiveArt />)
+
+    await userEvent.click(await screen.findByRole('button', { name: /aceptar y pagar/i }))
+
+    await waitFor(() => expect(post).toHaveBeenCalled())
+
+    expect(post.mock.calls[0][0]).toBe('/events/1/accept-quote')
+    expect(post.mock.calls[0][1]).toBeUndefined()
+    await waitFor(() =>
+      expect(irA).toHaveBeenCalledWith('https://checkout.stripe.com/c/pay/cs_test_senal'),
+    )
+  })
+
+  /** P1 — un presupuesto de hace meses no se acepta hoy a aquel precio. */
+  it('no deja aceptar uno caducado', async () => {
+    servirEventos([
+      presupuestado({
+        quote_expired: true,
+        can: { update: false, cancel: true, accept_quote: true, quote: false },
+      }),
+    ])
+
+    renderConProviders(<LiveArt />)
+
+    expect(await screen.findByText(/ha caducado/i)).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /aceptar y pagar/i })).not.toBeInTheDocument()
+  })
+
+  /** Quien puede aceptar lo dice el servidor, no el estado leido aqui. */
+  it('no ofrece aceptar si el servidor no lo permite', async () => {
+    servirEventos([
+      presupuestado({ can: { update: false, cancel: true, accept_quote: false, quote: false } }),
+    ])
+
+    renderConProviders(<LiveArt />)
+
+    await screen.findByText(/1\.?200,00/)
+
+    expect(screen.queryByRole('button', { name: /aceptar y pagar/i })).not.toBeInTheDocument()
   })
 })

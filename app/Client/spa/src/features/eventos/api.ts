@@ -24,8 +24,16 @@ export interface Evento {
   duration_hours: number | null
   event_type: string | null
   status: EventStatus
+  /**
+   * D6, N15 — nulos mientras la artista no haya presupuestado. El importe
+   * llega para pintarlo; aceptar no lo manda de vuelta (SEC-006).
+   */
+  quoted_amount: string | null
+  deposit_amount: string | null
+  quote_expires_at: string | null
+  quote_expired: boolean
   /** Resuelto en servidor: el cliente no deduce permisos del estado. */
-  can: { update: boolean; cancel: boolean }
+  can: { update: boolean; cancel: boolean; accept_quote: boolean; quote: boolean }
   created_at: string | null
   /** SEC-009 — solo llega si quien pregunta es la administradora. */
   customer?: { id: number; name: string; email: string }
@@ -45,10 +53,21 @@ export interface NuevaSolicitud {
 
 export const CLAVE_EVENTOS = ['events'] as const
 
+export const clavesDeEventos = {
+  lista: [...CLAVE_EVENTOS, 'list'] as const,
+  detalle: (id: number) => [...CLAVE_EVENTOS, 'detail', id] as const,
+}
+
 export async function obtenerEventos(): Promise<Paginated<Evento>> {
   const { data } = await api.get<Paginated<Evento>>('/events')
 
   return data
+}
+
+export async function obtenerEvento(id: number): Promise<Evento> {
+  const { data } = await api.get<Envelope<Evento>>(`/events/${id}`)
+
+  return data.data
 }
 
 /**
@@ -94,7 +113,7 @@ export function useCancelarEvento() {
 const ESTADOS: Record<EventStatus, string> = {
   requested: 'Pendiente de revisar',
   quoted: 'Presupuesto enviado',
-  accepted: 'Presupuesto aceptado',
+  accepted: 'Pendiente de la señal',
   confirmed: 'Confirmado',
   completed: 'Celebrado',
   rejected: 'No disponible',

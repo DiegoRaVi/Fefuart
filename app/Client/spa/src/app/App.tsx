@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router'
 import { Login } from '@/features/auth/pages/Login'
 import { LayoutDeBackoffice } from '@/features/backoffice/LayoutDeBackoffice'
 import { CatalogoDeAdmin } from '@/features/backoffice/pages/CatalogoDeAdmin'
+import { AjustesDeAdmin } from '@/features/backoffice/pages/AjustesDeAdmin'
 import { EventosDeAdmin } from '@/features/backoffice/pages/EventosDeAdmin'
 import { PedidoDeAdmin } from '@/features/backoffice/pages/PedidoDeAdmin'
 import { PedidosDeAdmin } from '@/features/backoffice/pages/PedidosDeAdmin'
@@ -18,6 +19,7 @@ import { LiveArt } from '@/features/eventos/pages/LiveArt'
 import { Portada } from '@/features/inicio/Portada'
 import { DetalleDePedido } from '@/features/orders/pages/DetalleDePedido'
 import { MisPedidos } from '@/features/orders/pages/MisPedidos'
+import { VueltaDelPago } from '@/features/pagos/pages/VueltaDelPago'
 import { Perfil } from '@/features/perfil/pages/Perfil'
 
 import { LayoutPrincipal } from './layouts/LayoutPrincipal'
@@ -63,9 +65,14 @@ export function App() {
                 <Route path="carrito/confirmar" element={<Checkout />} />
                 <Route path="pedidos" element={<MisPedidos />} />
                 <Route path="pedidos/:id" element={<DetalleDePedido />} />
+
+                {/* La vuelta de Stripe. No da nada por pagado: pregunta al
+                    servidor hasta que el webhook haya movido el estado. */}
+                <Route path="pedidos/:id/pago" element={<VueltaDelPago tipo="pedido" />} />
                 {/* N18 — pedir presupuesto tambien exige cuenta: la artista
                     tiene que poder responder a alguien. */}
                 <Route path="live-art" element={<LiveArt />} />
+                <Route path="live-art/:id/pago" element={<VueltaDelPago tipo="evento" />} />
               </Route>
 
               {/* N20 — el backoffice es de la administradora. El rol sale de
@@ -78,6 +85,9 @@ export function App() {
                   <Route path="pedidos/:id" element={<PedidoDeAdmin />} />
                   <Route path="eventos" element={<EventosDeAdmin />} />
                   <Route path="catalogo" element={<CatalogoDeAdmin />} />
+                  {/* N15 — el porcentaje de la señal y la validez del
+                      presupuesto, sin tocar codigo. */}
+                  <Route path="ajustes" element={<AjustesDeAdmin />} />
                 </Route>
               </Route>
             </Route>

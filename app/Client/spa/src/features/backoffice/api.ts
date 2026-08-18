@@ -20,6 +20,7 @@ export const clavesDeBackoffice = {
   pedido: (id: string) => ['admin', 'orders', id] as const,
   eventos: (f: FiltrosDePedidos) => ['admin', 'events', f] as const,
   catalogo: () => ['admin', 'products'] as const,
+  ajustes: () => ['admin', 'settings'] as const,
 }
 
 /** Quita los filtros vacios para que no viajen como `?q=` ni ensucien la cache. */
@@ -99,6 +100,78 @@ export function useCambiarEstadoDeEvento() {
       return data.data
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin', 'events'] }),
+  })
+}
+
+/**
+ * D6, N13 — emitir el presupuesto. No pasa por `/status` porque no es
+ * cambiar un estado: es fijar un importe, calcular la señal y arrancar un
+ * plazo.
+ *
+ * La señal **no** se manda. La calcula el servidor con el porcentaje
+ * configurado, igual que ningun precio del catalogo llega del cliente
+ * (SEC-006). Que aqui quien escribe sea la artista no cambia la regla.
+ */
+export function usePresupuestarEvento() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      quoted_amount,
+      validez_dias,
+    }: {
+      id: number
+      quoted_amount: string
+      validez_dias?: number
+    }) => {
+      const { data } = await api.post<Envelope<Evento>>(`/admin/events/${id}/quote`, {
+        quoted_amount,
+        ...(validez_dias ? { validez_dias } : {}),
+      })
+
+      return data.data
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin', 'events'] }),
+  })
+}
+
+/** N15 — los ajustes del negocio, con sus limites tal y como los declara el servidor. */
+export interface Ajuste {
+  valor: number
+  min: number
+  max: number
+  etiqueta: string
+}
+
+export type Ajustes = Record<string, Ajuste>
+
+export function useAjustes() {
+  return useQuery({
+    queryKey: clavesDeBackoffice.ajustes(),
+    queryFn: async () => {
+      const { data } = await api.get<Envelope<Ajustes>>('/admin/settings')
+
+      return data.data
+    },
+  })
+}
+
+export function useGuardarAjustes() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (valores: Record<string, number>) => {
+      const { data } = await api.patch<Envelope<Ajustes>>('/admin/settings', valores)
+
+      return data.data
+    },
+    onSuccess: (ajustes) => {
+      queryClient.setQueryData(clavesDeBackoffice.ajustes(), ajustes)
+      // Un porcentaje nuevo no reescribe los presupuestos ya emitidos, pero
+      // si cambia el de los siguientes.
+      queryClient.invalidateQueries({ queryKey: ['admin', 'events'] })
+    },
   })
 }
 

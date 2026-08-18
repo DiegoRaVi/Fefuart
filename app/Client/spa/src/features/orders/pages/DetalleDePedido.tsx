@@ -1,6 +1,7 @@
 import { Link, useParams } from 'react-router'
 
 import type { OrderItem, ShippingAddress } from '@/features/cart/api'
+import { usePagarPedido } from '@/features/pagos/api'
 import { ApiError } from '@/shared/api/errors'
 import { euros } from '@/shared/lib/dinero'
 import { Aviso } from '@/shared/ui/Aviso'
@@ -16,6 +17,7 @@ export function DetalleDePedido() {
   const { id = '' } = useParams()
   const { data: pedido, isPending, isError, error } = usePedido(id)
   const cancelar = useCancelarPedido(id)
+  const pagar = usePagarPedido(id)
 
   if (isPending) {
     return <Cargando texto="Cargando el pedido..." />
@@ -104,6 +106,27 @@ export function DetalleDePedido() {
 
       {pedido.shipping_address.line1 && (
         <Direccion direccion={pedido.shipping_address} />
+      )}
+
+      {pedido.status === 'pending_payment' && (
+        <section aria-labelledby="pago" className="space-y-2 border-t border-piedra/20 pt-4">
+          <h2 id="pago" className="text-seccion text-verde">
+            Pagar
+          </h2>
+
+          {pagar.isError && <Aviso tono="error">{pagar.error.message}</Aviso>}
+
+          <Boton type="button" onClick={() => pagar.mutate()} disabled={pagar.isPending}>
+            {pagar.isPending ? 'Abriendo la pasarela...' : `Pagar ${euros(pedido.total)}`}
+          </Boton>
+
+          {/* D7 — Checkout hospedado: el formulario de tarjeta lo sirve
+              Stripe en su dominio y ningun dato de pago pasa por el nuestro. */}
+          <p className="text-sm text-piedra">
+            El pago lo gestiona Stripe en su propia pagina. Aqui no se guarda ningun dato
+            de tu tarjeta.
+          </p>
+        </section>
       )}
 
       {sePuedeCancelar && (

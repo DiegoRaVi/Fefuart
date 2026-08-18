@@ -3,12 +3,20 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
+import { useAceptarPresupuesto } from '@/features/pagos/api'
 import { aplicarErroresDeApi } from '@/shared/api/formulario'
+import { euros } from '@/shared/lib/dinero'
 import { Aviso } from '@/shared/ui/Aviso'
 import { Boton } from '@/shared/ui/Boton'
 import { Campo } from '@/shared/ui/Campo'
 
-import { nombreDelEstado, useCancelarEvento, useEventos, usePedirEvento } from '../api'
+import {
+  type Evento,
+  nombreDelEstado,
+  useCancelarEvento,
+  useEventos,
+  usePedirEvento,
+} from '../api'
 
 /**
  * N13 — el precio siempre es a medida, asi que en esta pantalla no hay
@@ -223,45 +231,115 @@ function MisSolicitudes() {
 
       <ul className="space-y-3">
         {data.data.map((evento) => (
-          <li
-            key={evento.id}
-            className="flex flex-wrap items-baseline justify-between gap-3 rounded-fefu bg-rosa-suave p-4"
-          >
-            <div>
-              <h3 className="text-apartado text-verde">{evento.title}</h3>
-              <p className="text-sm text-piedra">
-                {new Date(evento.event_date).toLocaleDateString('es-ES', {
-                  day: 'numeric',
-                  month: 'long',
-                  year: 'numeric',
-                })}
-                {' · '}
-                {evento.schedule === 'morning' ? 'Manana' : 'Tarde'}
-                {' · '}
-                {evento.location}
-              </p>
+          <li key={evento.id} className="space-y-3 rounded-fefu bg-rosa-suave p-4">
+            <div className="flex flex-wrap items-baseline justify-between gap-3">
+              <div>
+                <h3 className="text-apartado text-verde">{evento.title}</h3>
+                <p className="text-sm text-piedra">
+                  {new Date(evento.event_date).toLocaleDateString('es-ES', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
+                  })}
+                  {' · '}
+                  {evento.schedule === 'morning' ? 'Manana' : 'Tarde'}
+                  {' · '}
+                  {evento.location}
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <span className="rounded-fefu bg-rosa px-3 py-1 text-sm text-verde">
+                  {nombreDelEstado(evento.status)}
+                </span>
+
+                {/* Lo dice el servidor, no lo deduce esta pantalla del estado. */}
+                {evento.can.cancel && (
+                  <Boton
+                    type="button"
+                    variante="secundario"
+                    onClick={() => cancelar.mutate(evento.id)}
+                    disabled={cancelar.isPending}
+                  >
+                    Cancelar
+                  </Boton>
+                )}
+              </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              <span className="rounded-fefu bg-rosa px-3 py-1 text-sm text-verde">
-                {nombreDelEstado(evento.status)}
-              </span>
-
-              {/* Lo dice el servidor, no lo deduce esta pantalla del estado. */}
-              {evento.can.cancel && (
-                <Boton
-                  type="button"
-                  variante="secundario"
-                  onClick={() => cancelar.mutate(evento.id)}
-                  disabled={cancelar.isPending}
-                >
-                  Cancelar
-                </Boton>
-              )}
-            </div>
+            {evento.quoted_amount && <Presupuesto evento={evento} />}
           </li>
         ))}
       </ul>
     </section>
+  )
+}
+
+/**
+ * D6, N15 — el presupuesto de la artista y la señal que reserva la fecha.
+ *
+ * Aceptar y pagar son un solo boton porque para el cliente son un solo
+ * gesto: aceptar es reservar, y reservar es pagar. El importe se pinta, no
+ * se manda: el servidor cobra el que guardo al presupuestar (SEC-006).
+ */
+function Presupuesto({ evento }: { evento: Evento }) {
+  const aceptar = useAceptarPresupuesto()
+
+  const caduca = evento.quote_expires_at
+    ? new Date(evento.quote_expires_at).toLocaleDateString('es-ES', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      })
+    : null
+
+  return (
+    <div className="space-y-2 border-t border-piedra/20 pt-3">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <span className="text-base text-piedra">Presupuesto</span>
+        <span className="text-apartado text-verde">{euros(evento.quoted_amount ?? '0')}</span>
+      </div>
+
+      {evento.deposit_amount && (
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <span className="text-sm text-piedra">Señal para reservar la fecha</span>
+          <span className="text-base text-verde">{euros(evento.deposit_amount)}</span>
+        </div>
+      )}
+
+      {/* P1 — un presupuesto no vale para siempre, y el plazo se dice antes
+          de que se acabe, no cuando ya ha caducado. */}
+      {caduca && !evento.quote_expired && (
+        <p className="text-sm text-piedra">Valido hasta el {caduca}.</p>
+      )}
+
+      {evento.quote_expired && (
+        <Aviso tono="informacion">
+          Este presupuesto ha caducado. Escribenos y te preparamos uno nuevo.
+        </Aviso>
+      )}
+
+      {aceptar.isError && <Aviso tono="error">{aceptar.error.message}</Aviso>}
+
+      {/* Quien puede aceptar lo dice el servidor. Un evento ya confirmado o
+          de otra persona no llega aqui con el permiso puesto. */}
+      {evento.can.accept_quote && !evento.quote_expired && (
+        <Boton
+          type="button"
+          onClick={() => aceptar.mutate(evento.id)}
+          disabled={aceptar.isPending}
+        >
+          {aceptar.isPending
+            ? 'Abriendo la pasarela...'
+            : `Aceptar y pagar la señal de ${euros(evento.deposit_amount ?? '0')}`}
+        </Boton>
+      )}
+
+      {evento.status === 'accepted' && (
+        <p className="text-sm text-piedra">
+          La fecha se reserva en cuanto la señal se confirme.
+        </p>
+      )}
+    </div>
   )
 }

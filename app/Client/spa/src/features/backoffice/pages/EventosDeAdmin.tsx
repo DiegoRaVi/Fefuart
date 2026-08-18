@@ -6,8 +6,10 @@ import { useDebounce } from '@/shared/hooks/useDebounce'
 import { Aviso } from '@/shared/ui/Aviso'
 import { Boton } from '@/shared/ui/Boton'
 import { Cargando } from '@/shared/ui/Cargando'
+import { Modal } from '@/shared/ui/Modal'
+import { euros } from '@/shared/lib/dinero'
 
-import { useCambiarEstadoDeEvento, useEventosDeAdmin } from '../api'
+import { useCambiarEstadoDeEvento, useEventosDeAdmin, usePresupuestarEvento } from '../api'
 import type { CampoDeBusqueda } from '../components/BusquedaPrecisa'
 import { Filtros } from '../components/Filtros'
 import { Paginacion } from '../components/Paginacion'
@@ -15,7 +17,7 @@ import { Paginacion } from '../components/Paginacion'
 const ESTADOS: Record<string, string> = {
   requested: 'Pendiente de revisar',
   quoted: 'Presupuesto enviado',
-  accepted: 'Presupuesto aceptado',
+  accepted: 'Pendiente de la señal',
   confirmed: 'Confirmado',
   completed: 'Celebrado',
   rejected: 'No disponible',
@@ -37,9 +39,10 @@ const CAMPOS: CampoDeBusqueda[] = [
 ]
 
 /**
- * D27 — presupuestar y confirmar necesitan importe y señal, que son columnas
- * de la Fase 5. Desde aqui solo se puede rechazar, cancelar y dar por
- * celebrado; el backend rechaza lo demas con 422.
+ * Las transiciones que no necesitan datos de mas. Presupuestar tiene su
+ * propio boton porque exige un importe, y confirmar no esta: lo hace el
+ * webhook cuando la señal se cobra (N15). El backend rechaza con 422
+ * cualquier otra cosa que llegue por `/status`.
  */
 const SIGUIENTES: Record<string, EventStatus[]> = {
   requested: ['rejected', 'cancelled'],
@@ -150,6 +153,7 @@ export function EventosDeAdmin() {
 
 function Solicitud({ evento }: { evento: Evento }) {
   const cambiar = useCambiarEstadoDeEvento()
+  const [presupuestando, setPresupuestando] = useState(false)
   const siguientes = SIGUIENTES[evento.status] ?? []
 
   return (
@@ -206,10 +210,40 @@ function Solicitud({ evento }: { evento: Evento }) {
         {evento.phone && ` · ${evento.phone}`}
       </p>
 
+      {/* D6, N15 — el presupuesto emitido y la señal calculada. */}
+      {evento.quoted_amount && (
+        <dl className="flex flex-wrap gap-x-6 gap-y-1 border-t border-piedra/20 pt-3 text-base">
+          <div className="flex gap-1">
+            <dt className="text-piedra">Presupuesto:</dt>
+            <dd className="text-verde">{euros(evento.quoted_amount)}</dd>
+          </div>
+          {evento.deposit_amount && (
+            <div className="flex gap-1">
+              <dt className="text-piedra">Señal:</dt>
+              <dd className="text-verde">{euros(evento.deposit_amount)}</dd>
+            </div>
+          )}
+          {evento.quote_expires_at && (
+            <div className="flex gap-1">
+              <dt className="text-piedra">{evento.quote_expired ? 'Caduco el:' : 'Vale hasta:'}</dt>
+              <dd>{new Date(evento.quote_expires_at).toLocaleDateString('es-ES')}</dd>
+            </div>
+          )}
+        </dl>
+      )}
+
       {cambiar.isError && <Aviso tono="error">{cambiar.error.message}</Aviso>}
 
-      {siguientes.length > 0 && (
+      {(siguientes.length > 0 || evento.can.quote) && (
         <div className="flex flex-wrap gap-2">
+          {/* Quien puede presupuestar lo dice el servidor; el estado en el
+              que tiene sentido, la maquina de estados. */}
+          {evento.can.quote && evento.status === 'requested' && (
+            <Boton type="button" onClick={() => setPresupuestando(true)}>
+              Presupuestar
+            </Boton>
+          )}
+
           {siguientes.map((destino) => (
             <Boton
               key={destino}
@@ -224,13 +258,96 @@ function Solicitud({ evento }: { evento: Evento }) {
         </div>
       )}
 
-      {/* D27 — presupuestar y cobrar la señal llegan en la Fase 5. */}
-      {evento.status === 'requested' && (
+      {evento.status === 'accepted' && (
         <p className="text-sm text-piedra">
-          El presupuesto y la señal llegan con los pagos. De momento, respondele
-          por correo.
+          Aceptado. La fecha se reserva sola en cuanto la señal se cobre.
         </p>
       )}
+
+      <FormularioDePresupuesto
+        evento={evento}
+        abierto={presupuestando}
+        onCerrar={() => setPresupuestando(false)}
+      />
     </article>
+  )
+}
+
+/**
+ * D6, N13 — el presupuesto que emite la artista.
+ *
+ * Solo se escribe el importe total. La señal no es un campo: la calcula el
+ * servidor con el porcentaje de `Ajustes`, igual que ningun precio del
+ * catalogo llega del cliente (SEC-006).
+ */
+function FormularioDePresupuesto({
+  evento,
+  abierto,
+  onCerrar,
+}: {
+  evento: Evento
+  abierto: boolean
+  onCerrar: () => void
+}) {
+  const presupuestar = usePresupuestarEvento()
+  const [importe, setImporte] = useState('')
+
+  return (
+    <Modal titulo={`Presupuestar «${evento.title}»`} abierto={abierto} onCerrar={onCerrar}>
+      <form
+        className="space-y-4"
+        onSubmit={(e) => {
+          e.preventDefault()
+
+          presupuestar.mutate(
+            { id: evento.id, quoted_amount: importe },
+            {
+              onSuccess: () => {
+                setImporte('')
+                onCerrar()
+              },
+            },
+          )
+        }}
+      >
+        <div className="space-y-1">
+          <label className="block text-base text-piedra" htmlFor={`importe-${evento.id}`}>
+            Importe total, IVA incluido
+          </label>
+
+          <div className="flex items-center gap-2">
+            <input
+              id={`importe-${evento.id}`}
+              type="number"
+              inputMode="decimal"
+              step="0.01"
+              min="1"
+              max="99999.99"
+              required
+              value={importe}
+              onChange={(e) => setImporte(e.target.value)}
+              className="w-40 rounded-fefu border border-piedra/40 px-3 py-2 text-piedra focus:border-verde focus:outline-none"
+            />
+            <span className="text-base text-piedra">EUR</span>
+          </div>
+
+          <p className="text-sm text-piedra">
+            La señal se calcula sola con el porcentaje de Ajustes y se guarda con el
+            presupuesto: cambiarlo despues no toca los ya enviados.
+          </p>
+        </div>
+
+        {presupuestar.isError && <Aviso tono="error">{presupuestar.error.message}</Aviso>}
+
+        <div className="flex gap-2">
+          <Boton type="submit" disabled={presupuestar.isPending || importe === ''}>
+            {presupuestar.isPending ? 'Enviando...' : 'Enviar el presupuesto'}
+          </Boton>
+          <Boton type="button" variante="secundario" onClick={onCerrar}>
+            Cancelar
+          </Boton>
+        </div>
+      </form>
+    </Modal>
   )
 }
