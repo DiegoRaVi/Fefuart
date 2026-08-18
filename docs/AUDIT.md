@@ -11,7 +11,7 @@
 
 | Área | Estado en la auditoría | Hoy (2026-08-13, Fase 5 en curso) |
 |---|---|---|
-| Seguridad | 🔴 Crítico — 5 hallazgos críticos. El rol y el precio los decide el cliente. | 🟢 **Los 14 cerrados.** Queda pendiente la CSP, que va con el despliegue. |
+| Seguridad | 🔴 Crítico — 5 hallazgos críticos. El rol y el precio los decide el cliente. | 🟢 **Los 14 cerrados**, y SEC-006 extendido a la pasarela en la Fase 5. Queda pendiente la CSP, que va con el despliegue. |
 | Backend | 🟠 Deuda alta — toda la lógica en controllers. | ✅ Form Requests, Resources, Policies y Services en uso. Del código de v1 no queda nada. |
 | Frontend | 🟠 Deuda alta — lógica inline en 13 HTML, XSS por `innerHTML`. | ✅ SPA de React: catálogo, encargo con foto, carrito, checkout, pedidos, Live Art y backoffice. El legacy se retira en la Fase 7. |
 | Base de datos | 🟠 Modelo incompleto — no existe catálogo. | ✅ **Los ocho cerrados**, DB-006 incluido. Faltan `payments` y `webhook_events`, que son de la Fase 5. |
@@ -222,7 +222,7 @@ Se prueban las dos mitades, porque «por construcción» son dos cosas distintas
 
 El segundo eslabón lo cortó antes D2: con la sesión en una cookie HttpOnly no hay token que robar desde JavaScript, y hay test de que tras un login correcto no queda nada en `localStorage` ni en `sessionStorage`.
 
-**Pendiente:** la CSP, que va con el despliegue (Fase 7/8).
+**Pendiente:** la CSP, que va con el despliegue (Fase 7/8). La integración de pagos de la Fase 5 no la complica: con Checkout **hospedado** el navegador se va al dominio de Stripe y la SPA no carga `Stripe.js`, así que no hace falta abrir `script-src` ni `frame-src` a `https://*.stripe.com`. Es un motivo más para no cambiar a Elements sin necesidad.
 
 ---
 
@@ -242,6 +242,8 @@ El segundo eslabón lo cortó antes D2: con la sesión en una cookie HttpOnly no
 La regresión manda `price`, `unit_price`, `line_total`, `total` y `shipping_total` envenenados y comprueba que el pedido sale al precio del catálogo. Verificado además a mano contra `php artisan serve`: el cliente envía `price=0.01` y `total=0.00`, el servidor cobra 55,00 €.
 
 El cálculo va en céntimos enteros. Con floats, `0.1 + 0.2` no es `0.3`, y en un pedido de varias líneas ese error acaba descuadrando el cobro.
+
+**Extendido en la Fase 5** (commits `f023e44`, `784b4fd`), que es donde este hallazgo deja de ser teórico porque ya hay dinero de por medio. `POST /api/orders/{id}/pay` **no acepta cuerpo**: el importe que se le pide a Stripe sale del pedido, y hay regresión que manda `total`, `amount` y `currency` envenenados y comprueba que la sesión se abre por 45,00 € en euros. Lo mismo en el presupuesto de un evento: del cuerpo llega el importe total y la señal la calcula `PricingService` con el porcentaje configurado, ni siquiera cuando quien escribe es la administradora. Y el círculo se cierra en el webhook, que compara lo cobrado con lo guardado **antes** de entregar nada: que Stripe diga «pagaron» no basta, tienen que haber pagado lo que costaba.
 
 ---
 
