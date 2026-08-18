@@ -8,6 +8,8 @@ use App\Enums\PaymentStatus;
 use App\Models\Event;
 use App\Models\Payment;
 use App\Models\User;
+use App\Notifications\EventConfirmed;
+use App\Notifications\QuoteReady;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use RuntimeException;
@@ -60,6 +62,10 @@ class QuoteService
         $event->quote_expires_at = now()->addDays($dias);
         $event->status = EventStatus::Quoted;
         $event->save();
+
+        // D10 — despues del `save()` y no antes: el aviso solo sale si el
+        // presupuesto llego a emitirse.
+        $event->user->notify(new QuoteReady($event));
 
         return $event;
     }
@@ -194,5 +200,23 @@ class QuoteService
             $event->status = EventStatus::Confirmed;
             $event->save();
         });
+
+        /*
+         * D10 — el aviso va **despues** del cambio de estado, nunca antes.
+         *
+         * El caso que lo obliga es la colision de franja de N16: dos
+         * clientes pagando la misma fecha a la vez. El segundo `UPDATE` se
+         * estrella contra el indice unico sobre `confirmed_slot`, la
+         * excepcion sale de la transaccion y esta linea no llega a
+         * ejecutarse. El cliente ha pagado y no tiene la fecha, asi que lo
+         * ultimo que puede recibir es un «tu fecha queda reservada».
+         *
+         * Que ademas este fuera de la transaccion no cambia nada en ese
+         * caso concreto —el `save()` revienta antes que cualquier aviso
+         * puesto detras de el—, pero es donde tiene que estar: un aviso
+         * cuenta un hecho ya confirmado, y dentro de una transaccion todavia
+         * no lo es.
+         */
+        $event->user->notify(new EventConfirmed($event));
     }
 }

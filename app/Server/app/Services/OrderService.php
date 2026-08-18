@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\OrderStatus;
 use App\Models\Order;
+use App\Notifications\OrderStatusChanged;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -39,6 +40,10 @@ class OrderService
 
         $order->status = $destino;
         $order->save();
+
+        // D10 — dentro del metodo que hace el cambio y despues del `save()`:
+        // el aviso cuenta un hecho consumado, no una intencion.
+        $order->user->notify(new OrderStatusChanged($order));
 
         return $order;
     }

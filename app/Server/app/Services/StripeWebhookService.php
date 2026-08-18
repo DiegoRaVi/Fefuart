@@ -8,6 +8,7 @@ use App\Models\Event;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\WebhookEvent;
+use App\Notifications\PaymentConfirmed;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
@@ -160,6 +161,8 @@ class StripeWebhookService
             $payment->paid_at = now();
             $payment->failure_reason = null;
             $payment->save();
+
+            $this->avisarDelCobro($payment);
         }
 
         /*
@@ -173,6 +176,27 @@ class StripeWebhookService
          * estaba y el motivo aparece en `webhook_events.error`.
          */
         $this->entregar($payment);
+    }
+
+    /**
+     * D10 — el resguardo del cobro, dentro del `if` que lo guarda.
+     *
+     * **El sitio es la garantia.** Ese bloque corre una vez por cobro y
+     * jamas dos, asi que un reenvio de Stripe —o una reentrega despues de
+     * que la entrega fallara, que es el caso de D30— no produce un segundo
+     * correo. Encolarlo un nivel mas arriba, en `procesar()` o en
+     * `despachar()`, si lo produciria.
+     *
+     * Solo para pedidos: la señal de un evento la cuenta `EventConfirmed`,
+     * porque aceptar, pagar y reservar son un solo gesto para el cliente.
+     */
+    private function avisarDelCobro(Payment $payment): void
+    {
+        $payable = $payment->payable;
+
+        if ($payable instanceof Order) {
+            $payable->user->notify(new PaymentConfirmed($payment));
+        }
     }
 
     /**
