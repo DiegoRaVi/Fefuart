@@ -11,6 +11,8 @@ Fefuart es la web del negocio de Felicitas Varela, artista de LiveArt para bodas
 - **`docs/AUDIT.md`** — 14 hallazgos de seguridad (SEC-001…014), 8 errores funcionales (BUG-001…008) y la deuda técnica, con el estado de cada uno.
 - **`docs/V2-ROADMAP.md`** — **la fuente de verdad**: 28 decisiones arquitectónicas (D1–D28), 20 reglas de negocio (N1–N20), el esquema de base de datos objetivo, el diseño de la API y las 8 fases con su estado.
 
+- **`docs/PAGOS.md`** — el recorrido completo de un cobro: SPA, Laravel, Stripe, qué datos viajan y qué pasa en cada caso. Léelo antes de tocar nada de pagos, señales o devoluciones.
+
 Léelos antes de proponer arquitectura o de tocar precios, pedidos o eventos. Muchas decisiones que parecen abiertas ya están cerradas ahí.
 
 ## Estructura
@@ -19,7 +21,7 @@ Léelos antes de proponer arquitectura o de tocar precios, pedidos o eventos. Mu
 app/Server/       Laravel 12 — API.
 app/Client/spa/   SPA de React + TypeScript + Vite. Aquí se trabaja.
 app/Client/views/ Frontend legacy (13 HTML con JS inline). Solo referencia (D15).
-docs/             AUDIT.md + V2-ROADMAP.md. Documentos vivos.
+docs/             AUDIT.md + V2-ROADMAP.md + PAGOS.md. Documentos vivos.
 ```
 
 ## Comandos

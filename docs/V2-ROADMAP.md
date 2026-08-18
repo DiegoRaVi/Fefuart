@@ -2,6 +2,7 @@
 
 > **Documento vivo.** Se actualiza cuando una decisión importante cambia la arquitectura o el plan.
 > **Punto de partida:** [AUDIT.md](AUDIT.md) — auditoría de v1, 2026-08-11.
+> **Cómo funciona el cobro:** [PAGOS.md](PAGOS.md) — el recorrido completo de un pago, paso a paso.
 > **Última actualización:** 2026-08-13.
 
 ---
@@ -414,6 +415,7 @@ Es la fase más grande, así que fue por tandas.
 | `GET`/`PATCH /api/admin/settings` — porcentaje y validez configurables | ✅ `784b4fd` (N15) |
 | Pantallas de pago, vuelta de la pasarela y ajustes en la SPA | ✅ `b0721fb` |
 | Cancelación con devolución de señal según quién cancele | ✅ (N21, resuelve P2) |
+| [PAGOS.md](PAGOS.md) — el recorrido explicado de punta a punta | ✅ |
 
 **Lo que se llevó por delante mientras se construía:**
 
