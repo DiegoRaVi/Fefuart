@@ -4,6 +4,7 @@ const SECCIONES = [
   { to: '/backoffice/pedidos', texto: 'Pedidos' },
   { to: '/backoffice/eventos', texto: 'Eventos' },
   { to: '/backoffice/catalogo', texto: 'Catalogo' },
+  { to: '/backoffice/galeria', texto: 'Galeria' },
   { to: '/backoffice/ajustes', texto: 'Ajustes' },
 ]
 

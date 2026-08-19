@@ -4,6 +4,7 @@ import { Login } from '@/features/auth/pages/Login'
 import { Avisos } from '@/features/avisos/pages/Avisos'
 import { LayoutDeBackoffice } from '@/features/backoffice/LayoutDeBackoffice'
 import { CatalogoDeAdmin } from '@/features/backoffice/pages/CatalogoDeAdmin'
+import { GaleriaDeAdmin } from '@/features/backoffice/pages/GaleriaDeAdmin'
 import { AjustesDeAdmin } from '@/features/backoffice/pages/AjustesDeAdmin'
 import { EventosDeAdmin } from '@/features/backoffice/pages/EventosDeAdmin'
 import { PedidoDeAdmin } from '@/features/backoffice/pages/PedidoDeAdmin'
@@ -17,7 +18,9 @@ import { RecuperarContrasena } from '@/features/auth/pages/RecuperarContrasena'
 import { Registro } from '@/features/auth/pages/Registro'
 import { RestablecerContrasena } from '@/features/auth/pages/RestablecerContrasena'
 import { LiveArt } from '@/features/eventos/pages/LiveArt'
+import { Galeria } from '@/features/galeria/pages/Galeria'
 import { Portada } from '@/features/inicio/Portada'
+import { SobreMi } from '@/features/inicio/SobreMi'
 import { DetalleDePedido } from '@/features/orders/pages/DetalleDePedido'
 import { MisPedidos } from '@/features/orders/pages/MisPedidos'
 import { VueltaDelPago } from '@/features/pagos/pages/VueltaDelPago'
@@ -44,6 +47,11 @@ export function App() {
 
               {/* Publico: mirar no exige cuenta, encargar si (N18). */}
               <Route path="encargos" element={<Catalogo />} />
+
+              {/* D33 — el escaparate y quien esta detras. Publicos los dos:
+                  es lo que ve quien todavia no es cliente. */}
+              <Route path="galeria" element={<Galeria />} />
+              <Route path="sobre-mi" element={<SobreMi />} />
               <Route path="encargos/:slug" element={<FichaProducto />} />
 
               <Route element={<RutaDeInvitado />}>
@@ -90,6 +98,7 @@ export function App() {
                   <Route path="pedidos/:id" element={<PedidoDeAdmin />} />
                   <Route path="eventos" element={<EventosDeAdmin />} />
                   <Route path="catalogo" element={<CatalogoDeAdmin />} />
+                  <Route path="galeria" element={<GaleriaDeAdmin />} />
                   {/* N15 — el porcentaje de la señal y la validez del
                       presupuesto, sin tocar codigo. */}
                   <Route path="ajustes" element={<AjustesDeAdmin />} />

@@ -12,8 +12,9 @@ import { useCarrito } from '@/features/cart/api'
  * 1,75:1 — ver el comentario del tema y `contraste.test.ts`.
  *
  * Cada enlace se anadio con la pantalla que abre, nunca antes: un enlace a
- * una ruta que no existe es peor que no tenerlo. Galeria y About siguen sin
- * estar por eso — el legacy las tenia, la SPA todavia no.
+ * una ruta que no existe es peor que no tenerlo. Galeria volvio con D33; el
+ * enlace a «Sobre mi» vive en el pie, que es donde se busca a quien hay
+ * detras.
  */
 export function Cabecera() {
   const { autenticado, esAdmin, usuario } = useSesion()
@@ -55,6 +56,15 @@ export function Cabecera() {
             }
           >
             Live Art
+          </NavLink>
+
+          <NavLink
+            to="/galeria"
+            className={({ isActive }) =>
+              `rounded-fefu px-3 py-1 hover:bg-rosa-hondo ${isActive ? 'bg-rosa-hondo' : ''}`
+            }
+          >
+            Galeria
           </NavLink>
 
           {esAdmin && (
