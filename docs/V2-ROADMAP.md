@@ -472,7 +472,7 @@ Con eso salió de los controllers **la última transición escrita a mano**: `Qu
 
 *Dependía de: Fase 5.*
 
-### Fase 7 — Testing, hardening y retirada del legacy · P1 · 🟡 en curso
+### Fase 7 — Testing, hardening y retirada del legacy · P1 · ✅ completada (2026-08-19)
 
 | Entregado | Estado |
 |---|---|
@@ -482,6 +482,8 @@ Con eso salió de los controllers **la última transición escrita a mano**: `Qu
 | Retirada del frontend legacy | ✅ `c59d024` (D15) |
 | `composer audit` y `npm audit` | ✅ los dos limpios |
 | Cinco fallos reales encontrados por los E2E, con su regresión | ✅ |
+| Repaso de seguridad sobre el código nuevo | ✅ sin hallazgos |
+| 400 tests de backend · 147 de SPA · 14 recorridos E2E | ✅ |
 
 **Los E2E no son una red de seguridad: son un hallador de fallos.** Encontraron cinco cosas rotas que seis fases de tests unitarios no vieron, y todas por el mismo motivo — nadie había recorrido el camino entero:
 
@@ -501,7 +503,12 @@ Con eso salió de los controllers **la última transición escrita a mano**: `Qu
 
 **Sobre la CSP.** Va en un `meta` del `index.html` y no en el `.htaccess` de la SPA, porque ese fichero dice `Require all denied`: Apache no sirve nada de ahí. `script-src 'self'` sin `unsafe-inline` ni `unsafe-eval` — con Checkout hospedado la SPA no carga `Stripe.js`. La única concesión es `style-src 'unsafe-inline'`, que la pide Tailwind 4. **`frame-ancestors` no entra**: en un `meta` se ignora, así que lo sirve el VirtualHost de la Fase 8.
 
-**Pendiente en esta fase:** repaso de seguridad completo sobre v2 y documentación final.
+**Repaso de seguridad: sin hallazgos** en el código nuevo. Lo dudoso se verificó contra el framework en vez de suponerlo — la inyección de HTML en los correos de aviso, que es la superficie que abre la Fase 6, la corta Laravel con `'html_input' => 'escape'` y `'allow_unsafe_links' => false` en su renderizador de Markdown. Los endpoints de avisos resuelven por la relación del usuario y responden 404 ante un id ajeno; el `enlace` que viaja en cada aviso lo genera el servidor desde plantillas fijas, así que no es un campo libre que pueda convertirse en redirect abierto.
+
+**Dos cosas que quedan dichas y no son fallos, sino decisiones:**
+
+- **`.env.e2e` va versionado y lleva un `APP_KEY`.** Es deliberado: los recorridos son offline y no hay ninguna clave real dentro. Pero esa clave está en el histórico del repositorio y **no debe reutilizarse en ningún otro entorno**. Si algún día ese fichero necesitara una credencial de verdad, deja de poder estar versionado.
+- **`style-src 'unsafe-inline'`** es la única concesión de la CSP, y la pide Tailwind 4 al inyectar sus estilos en tiempo de ejecución. Son estilos y no ejecución de código; es lo que habría que quitar si algún día se precompilan.
 
 *Depende de: Fase 6.*
 

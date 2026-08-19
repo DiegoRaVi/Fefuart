@@ -20,7 +20,7 @@ Léelos antes de proponer arquitectura o de tocar precios, pedidos o eventos. Mu
 ```
 app/Server/       Laravel 12 — API.
 app/Client/spa/   SPA de React + TypeScript + Vite. Aquí se trabaja.
-app/Client/views/ Frontend legacy (13 HTML con JS inline). Solo referencia (D15).
+app/Client/img/   Obra de Felicitas (207 MB). La Galeria de la SPA todavia no existe.
 docs/             AUDIT.md + V2-ROADMAP.md + PAGOS.md. Documentos vivos.
 ```
 
@@ -38,7 +38,8 @@ composer audit                                # el lock se dejó limpio el 2026-
 
 # SPA (siempre desde app/Client/spa)
 npm run dev          # Vite en :5173 — strictPort, ver la trampa de abajo
-npm test             # Vitest
+npm test             # Vitest (unitarios y de componente)
+npm run test:e2e     # Playwright: levanta backend, SPA y Mailpit solo
 npm run lint         # ESLint; react/no-danger cierra SEC-005
 npm run typecheck    # tsc -b --noEmit
 npm run build
@@ -62,7 +63,9 @@ php artisan queue:work --stop-when-empty  # vacía lo pendiente y sale
 
 **El backend nunca se prueba por Apache.** Va por `php artisan serve` en `127.0.0.1:8000`. Apache solo sirve `app/Client`.
 
-**El frontend legacy dejará de funcionar en la Fase 1** y es intencionado (D15): la migración a Sanctum y el renombrado de rutas lo rompen entero. No intentes mantenerlo vivo — mantener la API v1 en paralelo obligaría a conservar sus cinco vulnerabilidades críticas. Se conserva como referencia de flujos y diseño hasta la Fase 7.
+**El frontend legacy ya no existe.** Se retiró en la Fase 7 (D15), como estaba previsto: dejó de funcionar en la Fase 1 al sustituir JWT por Sanctum, y mantener la API de v1 en paralelo habría obligado a conservar sus cinco vulnerabilidades críticas. Si necesitas ver cómo era un flujo, está en el histórico de git. Lo que **sí** se conservó es `app/Client/img/`: son las fotos reales de la artista, y la Galería de la SPA todavía no está construida.
+
+**Los E2E corren contra su propia base.** `npm run test:e2e` arranca Laravel con `APP_ENV=e2e`, que carga `.env.e2e` y apunta a `fefuart_e2e`, y la resiembra con `migrate:fresh`. Esa variable es lo único que separa las dos bases: si la pierdes, vacías `fefuart`. Ningún recorrido llama a la API de Stripe — el webhook se firma en el propio test con el secreto de `.env.e2e`.
 
 **La SPA tiene que arrancar en el puerto 5173.** `SANCTUM_STATEFUL_DOMAINS` declara `localhost:5173`, y solo desde un origen declarado arranca la sesión. Por eso `vite.config.ts` lleva `strictPort: true`: si Vite cayera a 5174, el login dejaría de funcionar con un error que no dice por qué. Por lo mismo, para probar la API a mano hay que ir por `http://localhost:8000` con `Referer: http://localhost:5173/` — con `127.0.0.1` la cookie no viaja, porque `SESSION_DOMAIN` es `localhost`.
 
@@ -103,3 +106,5 @@ Se trabaja en **`develop`**. `master` es la v1 congelada como referencia. Ramas 
 **Cada hallazgo de la auditoría se cierra con un test que lo reproduce.** Es lo que evita repetir la auditoría dentro de un año: al arreglar SEC-001, escribe el test que envía `"role":"admin"` en el registro y comprueba que se ignora. Al añadir una Policy, escribe el IDOR que bloquea.
 
 Cobertura alta en Services, Policies y endpoints; no se persigue un porcentaje global.
+
+**Los E2E prueban lo que los unitarios no pueden.** No son una segunda capa de lo mismo: cubren el camino entero, que es donde vive lo que nadie ve montando una mitad por separado. En la Fase 7 destaparon cinco fallos reales, dos de ellos vivos desde la Fase 1 —el registro no enviaba el correo de verificación y su enlace daba 500 al abrirlo desde el buzón—. Cuando arregles algo que encuentre un E2E, la regresión va **también** en Pest o Vitest: el recorrido dice que está roto, el test unitario dice por qué.
