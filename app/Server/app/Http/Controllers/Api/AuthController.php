@@ -29,6 +29,21 @@ class AuthController extends Controller
         Auth::login($user);
         $request->session()->regenerate();
 
+        /*
+         * N19 — el correo de verificacion sale del alta, no de que alguien
+         * descubra el boton de reenviar.
+         *
+         * Faltaba desde la Fase 1 y lo encontro el E2E: la bateria cubria el
+         * reenvio manual y el cambio de correo desde el perfil, asi que
+         * `sendEmailVerificationNotification()` estaba probado en los dos
+         * sitios donde no hacia falta y en ninguno donde si.
+         *
+         * Se llama directo y no por el evento `Registered`: es como lo hacen
+         * ProfileController y EmailVerificationController, y no depende de
+         * que el listener este descubierto.
+         */
+        $user->sendEmailVerificationNotification();
+
         return UserResource::make($user)
             ->response()
             ->setStatusCode(Response::HTTP_CREATED);

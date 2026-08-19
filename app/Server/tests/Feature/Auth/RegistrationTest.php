@@ -2,7 +2,9 @@
 
 use App\Enums\UserRole;
 use App\Models\User;
+use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 
 uses(RefreshDatabase::class);
 
@@ -91,4 +93,42 @@ it('no expone la contrasena en la respuesta', function () {
     expect($response->json('data'))
         ->not->toHaveKey('password')
         ->not->toHaveKey('remember_token');
+});
+
+/**
+ * N19 — verificacion de email **al registrarse**.
+ *
+ * Lo encontro el E2E de la Fase 7, no un test de estos: la bateria cubria el
+ * reenvio manual (`verification.send`) y el cambio de correo desde el
+ * perfil, pero nadie habia comprobado el alta. El resultado era que quien se
+ * registraba veia «tu correo todavia no esta verificado» sin haber recibido
+ * nada que pinchar, y tenia que descubrir por su cuenta el boton de
+ * reenviar.
+ */
+it('manda el correo de verificacion al registrarse', function () {
+    Notification::fake();
+
+    $this->postJson(route('auth.register'), [
+        'name' => 'Marta Ruiz',
+        'email' => 'marta@fefuart.test',
+        'password' => 'unaclavelarga',
+        'password_confirmation' => 'unaclavelarga',
+    ])->assertCreated();
+
+    Notification::assertSentTo(
+        User::where('email', 'marta@fefuart.test')->sole(),
+        VerifyEmail::class,
+    );
+});
+
+/** Una cuenta recien creada no esta verificada: el enlace es lo que verifica. */
+it('deja la cuenta sin verificar hasta que se pincha el enlace', function () {
+    $this->postJson(route('auth.register'), [
+        'name' => 'Marta Ruiz',
+        'email' => 'marta@fefuart.test',
+        'password' => 'unaclavelarga',
+        'password_confirmation' => 'unaclavelarga',
+    ])->assertCreated();
+
+    expect(User::where('email', 'marta@fefuart.test')->sole()->email_verified_at)->toBeNull();
 });
