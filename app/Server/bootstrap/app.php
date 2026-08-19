@@ -39,6 +39,21 @@ return Application::configure(basePath: dirname(__DIR__))
         // empezar a rechazar cobros con un 419 dificil de leer.
         $middleware->validateCsrfTokens(except: ['api/webhooks/*']);
 
+        /*
+         * Un invitado recibe 401, tambien cuando el navegador pide HTML.
+         *
+         * `shouldRenderJsonWhen` de abajo no basta: `Authenticate` construye
+         * la excepcion llamando a `route('login')` **antes** de que ese
+         * renderizador entre en juego, y aqui no hay ninguna ruta `login`
+         * —esto es una API—, asi que reventaba con un 500 y una traza de
+         * rutas en vez de responder 401.
+         *
+         * Se veia poco porque la SPA manda siempre `Accept: application/json`.
+         * Empieza a importar con la descarga de la entrega digital (D20), que
+         * es la primera ruta pensada para que el navegador la abra directa.
+         */
+        $middleware->redirectGuestsTo(fn () => null);
+
         $middleware->alias([
             'admin' => EnsureIsAdmin::class,
         ]);

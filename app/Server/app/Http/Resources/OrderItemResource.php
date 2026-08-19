@@ -32,6 +32,17 @@ class OrderItemResource extends JsonResource
             'additional_copy_price' => $this->additional_copy_price,
             'line_total' => $this->line_total,
             'reference_media' => MediaAssetResource::make($this->whenLoaded('referenceMedia')),
+
+            /*
+             * N11 — si esta linea ya se puede descargar.
+             *
+             * Un booleano y **no** el media: la ruta del fichero vive en el
+             * disco privado y no tiene por que viajar a ningun navegador, ni
+             * siquiera al del dueño. Para descargarlo esta el endpoint, que
+             * comprueba el permiso; publicar aqui la ruta seria dar la mitad
+             * del camino a quien no debe recorrerlo.
+             */
+            'delivered' => $this->delivered_media_id !== null,
         ];
     }
 }

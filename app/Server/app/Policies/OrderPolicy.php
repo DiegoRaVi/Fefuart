@@ -54,6 +54,23 @@ class OrderPolicy
      * N12 — el cliente cancela solo antes de pagar. Una vez pagado se acuerda
      * con la artista y lo aplica ella desde el backoffice.
      */
+    /**
+     * N11 — descargar la entrega digital de una linea del pedido.
+     *
+     * **Va contra el pedido y no contra la propiedad del fichero**, y eso es
+     * lo importante. Lo intuitivo seria preguntarle a `MediaAssetPolicy`,
+     * como con las fotos de referencia; y seria incorrecto, porque el fichero
+     * lo sube la artista y por tanto es suyo. Preguntar «¿es tuyo el media?»
+     * le negaria la descarga al unico que tiene derecho a ella.
+     *
+     * Quien puede descargar es el duenno del pedido. Y la artista, para
+     * comprobar lo que subio.
+     */
+    public function download(User $user, Order $order): bool
+    {
+        return $this->view($user, $order);
+    }
+
     public function cancel(User $user, Order $order): bool
     {
         if ($user->isAdmin()) {

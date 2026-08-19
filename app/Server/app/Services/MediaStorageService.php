@@ -60,6 +60,52 @@ class MediaStorageService
         return $media;
     }
 
+    /**
+     * D20, N11 — la obra terminada que sube la artista.
+     *
+     * **No se re-encodifica, y esa es toda la diferencia con SEC-014.** Alli
+     * el peligro es una foto que sube un desconocido y la defensa es tirar
+     * todo lo que no sean pixeles. Aqui quien sube es la artista y el fichero
+     * es el que el cliente va a imprimir: pasarlo por una recompresion a
+     * 2400 px lo destruiria, y ademas dejaria fuera el PDF, que es un formato
+     * de entrega legitimo.
+     *
+     * Lo que protege es otra cosa, y son tres capas: la lista blanca por
+     * **contenido real** que aplica el Form Request, el disco privado —fuera
+     * del alcance de Apache— y que la descarga se sirva siempre como adjunto.
+     * Un fichero raro no llega, y si llegara, el navegador no lo ejecutaria.
+     */
+    public function storeDelivery(UploadedFile $file, User $artist): MediaAsset
+    {
+        $extension = match ($file->getMimeType()) {
+            'image/jpeg' => 'jpg',
+            'image/png' => 'png',
+            'application/pdf' => 'pdf',
+            default => throw new RuntimeException('Tipo de entrega no admitido.'),
+        };
+
+        // Nombre aleatorio, como las referencias: el original puede traer
+        // cualquier cosa y ademas dice mas de la cuenta sobre el encargo.
+        $path = 'entregas/'.Str::random(40).'.'.$extension;
+        Storage::disk('local')->putFileAs('', $file, $path);
+
+        $media = new MediaAsset([
+            'path' => $path,
+            'original_name' => $file->getClientOriginalName(),
+            'mime_type' => (string) $file->getMimeType(),
+            'size_bytes' => (int) Storage::disk('local')->size($path),
+            'visibility' => 'private',
+        ]);
+
+        // El duenno del fichero es quien lo sube, o sea la artista. Quien
+        // puede descargarlo es otra pregunta, y la responde OrderPolicy
+        // contra el pedido — no la propiedad del media.
+        $media->user_id = $artist->id;
+        $media->save();
+
+        return $media;
+    }
+
     public function delete(MediaAsset $media): void
     {
         Storage::disk($media->visibility === 'private' ? 'local' : 'public')->delete($media->path);

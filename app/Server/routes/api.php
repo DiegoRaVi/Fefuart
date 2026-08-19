@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\Admin\SettingsController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\CatalogController;
+use App\Http\Controllers\Api\DeliveryController;
 use App\Http\Controllers\Api\EmailVerificationController;
 use App\Http\Controllers\Api\EventController;
 use App\Http\Controllers\Api\MediaController;
@@ -119,6 +120,12 @@ Route::middleware('auth:sanctum')->prefix('orders')->group(function () {
     // vacio: ni importe ni moneda ni metodo llegan del cliente (SEC-006).
     // Que el pedido quede pagado no lo decide esta ruta, sino el webhook.
     Route::post('{order}/pay', [PaymentController::class, 'store'])->name('orders.pay');
+
+    // N11 — la entrega digital se descarga desde el detalle del pedido, con
+    // el acceso verificado por Policy. Contra el **pedido**, no contra la
+    // propiedad del fichero: el fichero lo subio la artista y es suyo.
+    Route::get('{order}/items/{item}/download', [DeliveryController::class, 'download'])
+        ->name('orders.delivery.download');
 });
 
 // D3, D7 — la unica ruta de la API sin sesion. No la protege `auth:sanctum`
@@ -154,6 +161,11 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->name('admin.')->g
     Route::get('orders/{order}', [AdminOrderController::class, 'show'])->name('orders.show');
     Route::post('orders/{order}/status', [AdminOrderController::class, 'updateStatus'])
         ->name('orders.status');
+
+    // D20, N11 — la artista sube la obra terminada de una linea digital. La
+    // descarga NO esta aqui: es del cliente, y va por OrderPolicy.
+    Route::post('orders/{order}/items/{item}/delivery', [DeliveryController::class, 'store'])
+        ->name('orders.delivery.store');
 
     // Eventos: rechazar, cancelar y completar por `/status`; presupuestar
     // por su propia ruta, porque no es cambiar un estado sino fijar un
