@@ -2,6 +2,55 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
+
+    <!--
+      SEC — Content Security Policy. Cierra el ultimo hallazgo abierto de la
+      auditoria.
+
+      Va en un `meta` y no en el .htaccess de al lado por un motivo concreto:
+      ese fichero dice `Require all denied`, asi que Apache no sirve nada de
+      aqui y una cabecera puesta ahi no llegaria a ningun navegador. En
+      desarrollo la SPA la sirve Vite; en produccion, el VirtualHost de la
+      Fase 8. Lo unico que viaja con las dos es el propio `index.html`.
+
+      Por que cada directiva:
+
+      · `default-src 'self'`      todo lo demas, del mismo origen y nada mas.
+      · `script-src 'self'`       **sin `unsafe-inline` ni `unsafe-eval`**.
+                                  Con Checkout hospedado (D29) el navegador se
+                                  va al dominio de Stripe y la SPA no carga
+                                  `Stripe.js`, asi que no hay que abrir nada a
+                                  *.stripe.com. Es un motivo mas para no
+                                  cambiar a Elements sin necesidad.
+      · `style-src` con inline    Tailwind 4 inyecta sus estilos en tiempo de
+                                  ejecucion. Es la unica concesion, y es de
+                                  estilos: no permite ejecutar codigo.
+      · `img-src` con data:       las vistas previas de la foto de referencia
+                                  se leen como data URI antes de subirlas.
+      · `connect-src 'self'`      la API va por el proxy, mismo origen (D2).
+      · `object-src 'none'`       no hay plugins que valgan.
+      · `base-uri`, `form-action` impiden reescribir el destino de un envio o
+                                  la base de las rutas relativas desde una
+                                  inyeccion.
+
+      `frame-ancestors` NO esta aqui **porque en un `meta` se ignora**: solo
+      vale como cabecera de verdad, y la sirve el VirtualHost de la Fase 8.
+      Hasta entonces no hay proteccion contra clickjacking en produccion,
+      porque produccion todavia no existe.
+    -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self';
+               script-src 'self';
+               style-src 'self' 'unsafe-inline';
+               img-src 'self' data: blob:;
+               font-src 'self';
+               connect-src 'self';
+               object-src 'none';
+               base-uri 'self';
+               form-action 'self'"
+    />
+
     <link rel="icon" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Fefuart</title>

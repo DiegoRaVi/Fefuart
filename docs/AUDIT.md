@@ -11,7 +11,7 @@
 
 | Área | Estado en la auditoría | Hoy (2026-08-13, Fase 5 en curso) |
 |---|---|---|
-| Seguridad | 🔴 Crítico — 5 hallazgos críticos. El rol y el precio los decide el cliente. | 🟢 **Los 14 cerrados**, y SEC-006 extendido a la pasarela en la Fase 5. Queda pendiente la CSP, que va con el despliegue. |
+| Seguridad | 🔴 Crítico — 5 hallazgos críticos. El rol y el precio los decide el cliente. | 🟢 **Los 14 cerrados**, SEC-006 extendido a la pasarela en la Fase 5 y la CSP servida desde la Fase 7. Solo queda `frame-ancestors`, que en un `meta` se ignora y tiene que servir el VirtualHost de la Fase 8. |
 | Backend | 🟠 Deuda alta — toda la lógica en controllers. | ✅ Form Requests, Resources, Policies y Services en uso. Del código de v1 no queda nada. |
 | Frontend | 🟠 Deuda alta — lógica inline en 13 HTML, XSS por `innerHTML`. | ✅ SPA de React: catálogo, encargo con foto, carrito, checkout, pedidos, Live Art y backoffice. El legacy se retira en la Fase 7. |
 | Base de datos | 🟠 Modelo incompleto — no existe catálogo. | ✅ **Los ocho cerrados**, DB-006 incluido. Faltan `payments` y `webhook_events`, que son de la Fase 5. |
@@ -222,7 +222,13 @@ Se prueban las dos mitades, porque «por construcción» son dos cosas distintas
 
 El segundo eslabón lo cortó antes D2: con la sesión en una cookie HttpOnly no hay token que robar desde JavaScript, y hay test de que tras un login correcto no queda nada en `localStorage` ni en `sessionStorage`.
 
-**Pendiente:** la CSP, que va con el despliegue (Fase 7/8). La integración de pagos de la Fase 5 no la complica: con Checkout **hospedado** el navegador se va al dominio de Stripe y la SPA no carga `Stripe.js`, así que no hace falta abrir `script-src` ni `frame-src` a `https://*.stripe.com`. Es un motivo más para no cambiar a Elements sin necesidad.
+**La CSP entró en la Fase 7** y con ella se cierra el último hallazgo abierto. Va en un `meta` del `index.html` y no en el `.htaccess` de la SPA, y el motivo es que ese fichero dice `Require all denied`: Apache no sirve nada de ahí, así que una cabecera puesta allí no llegaría a ningún navegador. En desarrollo la SPA la sirve Vite y en producción la servirá el VirtualHost de la Fase 8; lo único que viaja con las dos es el propio `index.html`, y se ha comprobado que la política sigue en el `dist/` compilado.
+
+`script-src 'self'` **sin `unsafe-inline` ni `unsafe-eval`**. La integración de pagos no lo complica: con Checkout **hospedado** el navegador se va al dominio de Stripe y la SPA no carga `Stripe.js`, así que no hace falta abrir nada a `https://*.stripe.com`. Es un motivo más para no cambiar a Elements sin necesidad. La única concesión es `style-src 'unsafe-inline'`, que la pide Tailwind 4 al inyectar sus estilos en tiempo de ejecución: son estilos, no ejecución de código.
+
+**Comprobada en un navegador de verdad**, no por lectura. `e2e/csp.spec.ts` recorre las pantallas públicas y las de sesión recogiendo las violaciones que reporta Chromium y falla si hay alguna; y verifica además que la política está puesta, porque sin eso el mismo test pasaría igual de bien con la CSP borrada. Se confirmó a mano que se aplica: un `<script>` inline inyectado desde la propia página **no se ejecuta** y el navegador lo reporta.
+
+**Lo que queda para la Fase 8:** `frame-ancestors`. En un `meta` se ignora —solo vale como cabecera real—, así que la protección contra clickjacking la tiene que servir el VirtualHost. Hasta entonces no hay hueco real, porque producción todavía no existe.
 
 ---
 
