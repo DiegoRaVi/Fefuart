@@ -16,7 +16,7 @@
 | Frontend | 🟠 Deuda alta — lógica inline en 13 HTML, XSS por `innerHTML`. | ✅ SPA de React: catálogo, encargo con foto, carrito, checkout, pedidos, Live Art, backoffice y centro de avisos. **El legacy se retiró en la Fase 7**; quedan sus imágenes, que no son código. |
 | Base de datos | 🟠 Modelo incompleto — no existe catálogo. | ✅ **Los ocho cerrados**, DB-006 incluido. `payments` y `webhook_events` llegaron con la Fase 5, y `notifications` con la 6. |
 | Rendimiento | 🟡 Aceptable hoy | ✅ Los cuatro cerrados: índices, eager loading con test de que no crece con las filas, paginación y un carrito que se recalcula de una vez. |
-| Testing | 🔴 Inexistente — 2 tests de plantilla, 0 % real. | 🟢 **561 tests**: 400 de backend, 147 de SPA y 14 recorridos E2E, con regresión explícita de cada hallazgo cerrado. Los E2E destaparon cinco fallos que los unitarios no veían. |
+| Testing | 🔴 Inexistente — 2 tests de plantilla, 0 % real. | 🟢 **576 tests**: 413 de backend, 147 de SPA y 16 recorridos E2E, con regresión explícita de cada hallazgo cerrado. Los E2E destaparon cinco fallos que los unitarios no veían. |
 | Entorno local | ✅ Corregido | ✅ Segunda tanda de SEC-002 al montar la SPA. El VirtualHost definitivo sigue siendo de la Fase 8. |
 | Git | 🟡 Ordenado | 🟡 `develop` con 63 commits sin subir; `autotest` intacta bajo su tag. |
 
@@ -451,7 +451,7 @@ No hay tests de frontend ni E2E. Nada cubre autenticación, autorización, cálc
 
 **Estado al cerrar la Fase 2:** 151 tests. Los dos de plantilla se retiraron en `7d9e795`. Cada hallazgo cerrado tiene su regresión, y varias están escritas para que reintroducir el fallo rompa la suite aunque nadie recuerde por qué: el test de SEC-009 recorre la tabla de rutas buscando un endpoint que devuelva otro usuario, y el de SEC-003 busca un `PATCH` sobre un pedido.
 
-**Estado al cerrar la Fase 7:** 400 tests de backend, 147 de SPA y 14 recorridos E2E. Con eso desaparece el hueco que señalaba esta sección — y desaparece habiendo servido para algo: los E2E encontraron cinco fallos reales que seis fases de tests unitarios no vieron, dos de ellos vivos desde la Fase 1. Están listados en la Fase 7 del [roadmap](V2-ROADMAP.md), y el patrón que comparten es que ninguno se ve montando una mitad del sistema por separado: hay que recorrer el camino entero.
+**Estado al cerrar la Fase 7:** 413 tests de backend, 147 de SPA y 16 recorridos E2E. Con eso desaparece el hueco que señalaba esta sección — y desaparece habiendo servido para algo: los E2E encontraron cinco fallos reales que seis fases de tests unitarios no vieron, dos de ellos vivos desde la Fase 1. Están listados en la Fase 7 del [roadmap](V2-ROADMAP.md), y el patrón que comparten es que ninguno se ve montando una mitad del sistema por separado: hay que recorrer el camino entero.
 
 ---
 

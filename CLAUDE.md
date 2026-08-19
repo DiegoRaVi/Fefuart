@@ -82,6 +82,7 @@ Invariantes que no se negocian, cada una atada a un hallazgo de la auditoría:
 - **Un aviso se encola dentro del mismo `if` que hace el cambio de estado** (D31), nunca al principio del manejador. Es lo único que impide que un reenvío de Stripe mande un segundo correo: la garantía es «al menos una vez», y por D30 una entrega puede fallar después de guardar el cobro.
 - Autenticación por **Sanctum con cookies HttpOnly**, no JWT (D2). React y Laravel deben ser same-site → proxy de Vite hacia `/api`.
 - **Prohibido `dangerouslySetInnerHTML`** en React (SEC-005).
+- **La entrega digital no se re-encodifica** (D20, N11), al revés que la foto de referencia. Allí sube un desconocido y la defensa es tirar todo lo que no sean píxeles; aquí sube la artista y el fichero es el que el cliente imprime. Lo protegen tres capas distintas: lista blanca por contenido real, disco privado y descarga siempre como adjunto. Y su Policy va contra el **pedido**, nunca contra la propiedad del fichero — que es de ella.
 
 Modelo de datos: el catálogo (`products` + `product_variants`, con el precio) está separado del encargo concreto (`order_items`, con la descripción y la foto de referencia). Cada dibujo es único; lo que deja de serlo es el precio. `quantity` son copias de la misma lámina, no encargos distintos, y no multiplica el precio completo (N3, N4). El envío se cobra una vez por pedido, no por línea (N5).
 

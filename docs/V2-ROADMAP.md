@@ -512,6 +512,31 @@ Con eso salió de los controllers **la última transición escrita a mano**: `Qu
 
 *Depende de: Fase 6.*
 
+### Entrega digital · ✅ completada (2026-08-19)
+
+No es una fase: es la pieza que **D20 y N11 daban por hecha** y que ninguna fase llegó a construir. Se destapó al repasar qué quedaba tras la Fase 7, y era el único hueco con consecuencia real — la variante «Digital» se vende a 20 € con entrega digital, así que **se podía cobrar por algo que el sistema no sabía dar**.
+
+| Entregado | Estado |
+|---|---|
+| `POST /api/admin/orders/{order}/items/{item}/delivery` — sube la artista | ✅ `112770e` |
+| `GET /api/orders/{order}/items/{item}/download` — descarga el cliente | ✅ `112770e` |
+| `DigitalDeliveryReady` — el décimo aviso | ✅ `112770e` |
+| Subida en el backoffice y descarga en «mis pedidos» | ✅ `a22c996` |
+| 13 tests de backend y 2 recorridos E2E | ✅ `e46a002` |
+
+**El archivo no se re-encodifica, y es lo contrario de lo que hace SEC-014.** Allí el peligro es una foto que sube un desconocido, y la defensa es tirar todo lo que no sean píxeles. Aquí sube la artista y el fichero es el que el cliente va a imprimir: pasarlo por una recompresión a 2400 px lo destruiría, y además dejaría fuera el PDF. Lo que protege son otras tres capas: **lista blanca por contenido real** (`finfo`, no la extensión), **disco privado** fuera del alcance de Apache, y **descarga siempre como adjunto** — nunca en línea, para que un fichero raro no se ejecute en nuestro origen aunque hubiera colado.
+
+**La Policy va contra el pedido, no contra la propiedad del fichero.** Lo intuitivo sería preguntarle a `MediaAssetPolicy`, como con las fotos de referencia, y sería incorrecto: el fichero lo subió la artista y por tanto es suyo, así que esa pregunta le negaría la descarga al único que tiene derecho a ella.
+
+**Subir no mueve el estado.** Un pedido de tres láminas necesita tres subidas, y completarlo en la primera sería mentir; a `completed` lo pasa ella.
+
+**Dos cosas que salieron al construirlo:**
+
+- Un invitado que pedía una ruta de API **sin `Accept: application/json`** recibía un **500** en vez de un 401: `Authenticate` construye la excepción llamando a `route('login')`, y aquí no hay ninguna ruta `login`. Se veía poco porque la SPA siempre manda JSON, y empieza a importar con esta descarga, que es la primera ruta pensada para abrirse en el navegador. Corregido con `redirectGuestsTo(fn () => null)`.
+- **Una URL de descarga pegada en la barra responde 401, no el fichero.** Una navegación de primer nivel no manda `Referer`, así que Sanctum no la trata como de sesión. Falla cerrado, que es lo que importa, y desde el enlace de la SPA funciona porque ahí sí hay `Referer`. Queda escrito en el E2E para que nadie lo lea como un fallo.
+
+**Deuda consciente:** el límite son **40 MB**, que es lo que hoy permite `upload_max_filesize`. Para una lámina a 300 ppp se queda cerca; subirlo es tocar `php.ini`, y eso ya no es código.
+
 ### Fase 8 — Despliegue · pospuesta
 Staging, producción, CI/CD, infraestructura, backups, monitorización, dominio, HTTPS, variables de entorno y rollback.
 **Fuera del alcance actual.** Incluye pasar el DocumentRoot a `app/Server/public` por VirtualHost, `APP_DEBUG=false` y la revisión de CORS y cookies para dominio real.
