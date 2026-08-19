@@ -11,9 +11,9 @@ import { useCarrito } from '@/features/cart/api'
  * El texto va en verde y no en blanco. v1 usaba blanco sobre el rosa, que da
  * 1,75:1 — ver el comentario del tema y `contraste.test.ts`.
  *
- * Servicios, Galeria, About y el carrito llegan en la Fase 4, con las
- * pantallas que abren. Un enlace a una ruta que no existe es peor que no
- * tenerlo.
+ * Cada enlace se anadio con la pantalla que abre, nunca antes: un enlace a
+ * una ruta que no existe es peor que no tenerlo. Galeria y About siguen sin
+ * estar por eso — el legacy las tenia, la SPA todavia no.
  */
 export function Cabecera() {
   const { autenticado, esAdmin, usuario } = useSesion()

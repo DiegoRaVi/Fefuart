@@ -202,16 +202,17 @@ export function Checkout() {
         )}
 
         {/*
-          Todavia no hay pasarela: el pedido queda pendiente de pago y la
-          artista se pone en contacto. El cobro llega en la Fase 5.
+          Confirmar no cobra: deja el pedido en `pending_payment` con los
+          importes congelados. El pago es el paso siguiente y ocurre en el
+          dominio de Stripe (D29), desde el detalle del pedido.
         */}
         <Boton type="submit" disabled={isSubmitting} className="w-full">
           {isSubmitting ? 'Confirmando...' : 'Confirmar el encargo'}
         </Boton>
 
         <p className="text-sm text-piedra">
-          Al confirmar, el encargo queda registrado y nos ponemos en contacto
-          contigo para el pago.
+          Al confirmar veras el resumen del pedido y desde ahi podras pagarlo
+          con tarjeta. No se te cobra nada todavia.
         </p>
       </form>
     </div>
