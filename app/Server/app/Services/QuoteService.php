@@ -8,9 +8,13 @@ use App\Enums\PaymentStatus;
 use App\Models\Event;
 use App\Models\Payment;
 use App\Models\User;
+use App\Notifications\EventCancelled;
 use App\Notifications\EventConfirmed;
 use App\Notifications\QuoteReady;
+use App\Notifications\QuoteRejected;
+use App\Notifications\SlotFreed;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\ValidationException;
 use RuntimeException;
 
@@ -152,6 +156,7 @@ class QuoteService
         }
 
         $senal = $this->senalCobradaDe($event);
+        $seDevuelve = $senal !== null && $quien->isAdmin();
 
         DB::transaction(function () use ($event) {
             $event->status = EventStatus::Cancelled;
@@ -162,8 +167,59 @@ class QuoteService
         // queda hecha. Lo contrario —deshacer la cancelacion porque Stripe no
         // responde— dejaria la fecha ocupada por un evento que ya nadie va a
         // celebrar.
-        if ($senal !== null && $quien->isAdmin()) {
+        if ($seDevuelve) {
             $this->pagos->devolver($senal, 'Cancelado por la artista.');
+        }
+
+        /*
+         * D10 — el cliente se entera de que su evento ya no existe y, sobre
+         * todo, de que pasa con su dinero. N21 devuelve la señal por codigo,
+         * asi que sin este correo el importe le aparece en la tarjeta sin
+         * ninguna explicacion.
+         *
+         * Va despues de la devolucion para poder decir si se ha hecho o no.
+         */
+        $event->user->notify(new EventCancelled($event, $seDevuelve ? (string) $senal->amount : null));
+
+        /*
+         * D32 — y si quien cancela es el cliente, la fecha vuelve a la
+         * agenda. Eso cambia el trabajo de la artista: por N16 un evento
+         * confirmado bloquea la franja, y hasta que no se entere no puede
+         * ofrecersela a nadie. Cuando cancela ella no hace falta: acaba de
+         * hacerlo.
+         */
+        if (! $quien->isAdmin()) {
+            Notification::send(User::admins()->get(), new SlotFreed($event));
+        }
+
+        return $event;
+    }
+
+    /**
+     * Las transiciones de evento que no son ni presupuestar ni cancelar:
+     * rechazar y completar.
+     *
+     * Vive aqui y no en el controller por lo que dice §4 del roadmap, y por
+     * lo mismo que obligo a extraer `OrderService`: avanzar un evento tambien
+     * avisa, y eso no puede quedarse en un controller.
+     *
+     * @throws ValidationException el enum no permite ese salto
+     */
+    public function cambiarEstado(Event $event, EventStatus $destino): Event
+    {
+        if (! $event->status->canTransitionTo($destino)) {
+            throw ValidationException::withMessages([
+                'status' => "Un evento en «{$event->status->value}» no puede pasar a «{$destino->value}».",
+            ]);
+        }
+
+        $event->status = $destino;
+        $event->save();
+
+        // Rechazar si avisa; completar no. El cliente estuvo en su propio
+        // evento y no necesita un correo que se lo cuente.
+        if ($destino === EventStatus::Rejected) {
+            $event->user->notify(new QuoteRejected($event));
         }
 
         return $event;

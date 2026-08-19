@@ -28,9 +28,14 @@ class OrderService
      * `PATCH /orders/{id}` y el servidor lo aceptaba sin mirar de donde
      * venia el pedido.
      *
+     * `avisar` existe por un solo caso: cuando quien cancela es el propio
+     * cliente. Mandarle entonces un correo seria contarle lo que acaba de
+     * pulsar. Es un parametro y no un metodo aparte porque la transicion es
+     * exactamente la misma; lo unico que cambia es a quien le importa.
+     *
      * @throws ValidationException el enum no permite ese salto
      */
-    public function cambiarEstado(Order $order, OrderStatus $destino): Order
+    public function cambiarEstado(Order $order, OrderStatus $destino, bool $avisar = true): Order
     {
         if (! $order->status->canTransitionTo($destino)) {
             throw ValidationException::withMessages([
@@ -43,7 +48,9 @@ class OrderService
 
         // D10 — dentro del metodo que hace el cambio y despues del `save()`:
         // el aviso cuenta un hecho consumado, no una intencion.
-        $order->user->notify(new OrderStatusChanged($order));
+        if ($avisar) {
+            $order->user->notify(new OrderStatusChanged($order));
+        }
 
         return $order;
     }

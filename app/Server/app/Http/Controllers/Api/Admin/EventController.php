@@ -12,7 +12,6 @@ use App\Http\Resources\EventResource;
 use App\Models\Event;
 use App\Services\QuoteService;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Validation\ValidationException;
 
 /**
  * El backoffice de eventos.
@@ -117,14 +116,10 @@ class EventController extends Controller
             return EventResource::make($event->load('user'));
         }
 
-        if (! $event->status->canTransitionTo($destino)) {
-            throw ValidationException::withMessages([
-                'status' => "Un evento en «{$event->status->value}» no puede pasar a «{$destino->value}».",
-            ]);
-        }
-
-        $event->status = $destino;
-        $event->save();
+        // Rechazar y completar tampoco se resuelven aqui: la maquina de
+        // estados se comprueba en Services (§4), y rechazar ademas avisa al
+        // cliente de que no va a recibir presupuesto.
+        $presupuestos->cambiarEstado($event, $destino);
 
         return EventResource::make($event->load('user'));
     }

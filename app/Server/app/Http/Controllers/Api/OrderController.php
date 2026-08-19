@@ -6,9 +6,9 @@ use App\Enums\OrderStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\OrderResource;
 use App\Models\Order;
+use App\Services\OrderService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Validation\ValidationException;
 
 /**
  * Los pedidos del cliente.
@@ -53,18 +53,13 @@ class OrderController extends Controller
      * artista desde el backoffice. Quien puede, lo decide la Policy; desde
      * donde se puede, el enum.
      */
-    public function cancel(Order $order): OrderResource
+    public function cancel(Order $order, OrderService $pedidos): OrderResource
     {
         $this->authorize('cancel', $order);
 
-        if (! $order->status->canTransitionTo(OrderStatus::Cancelled)) {
-            throw ValidationException::withMessages([
-                'status' => 'Este pedido ya no se puede cancelar.',
-            ]);
-        }
-
-        $order->status = OrderStatus::Cancelled;
-        $order->save();
+        // La transicion la valida OrderService, no este metodo (§4). Sin
+        // aviso: el correo le contaria al cliente lo que acaba de pulsar.
+        $pedidos->cambiarEstado($order, OrderStatus::Cancelled, avisar: false);
 
         return OrderResource::make($order->load(['items.referenceMedia', 'shippingMethod']));
     }
