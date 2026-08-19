@@ -60,6 +60,55 @@ class MediaStorageService
         return $media;
     }
 
+    /** Lado mayor de la vista grande de la galeria. */
+    private const GALLERY_SIDE = 1600;
+
+    /** Lado mayor de la miniatura de la rejilla. */
+    private const THUMBNAIL_SIDE = 600;
+
+    /**
+     * D33 — una pieza de la galeria, en sus dos tamanos.
+     *
+     * **Aqui re-encodificar si es lo correcto**, al reves que en la entrega
+     * digital: esto son imagenes para mirar en pantalla, no para imprimir.
+     * Las fotos de Felicitas son de movil —3024x4032, y alguna de 65 MB—, asi
+     * que servirlas tal cual no es una opcion.
+     *
+     * Se generan dos derivadas y no una porque la rejilla y el visor tienen
+     * necesidades distintas: sin miniatura, una cuadricula de treinta piezas
+     * descarga las treinta a tamano completo.
+     *
+     * @return array{media: MediaAsset, thumbnail: MediaAsset}
+     */
+    public function storeGalleryImage(UploadedFile $file, User $owner): array
+    {
+        return [
+            'media' => $this->guardarDerivada($file, $owner, self::GALLERY_SIDE, 'galeria'),
+            'thumbnail' => $this->guardarDerivada($file, $owner, self::THUMBNAIL_SIDE, 'galeria/mini'),
+        ];
+    }
+
+    private function guardarDerivada(UploadedFile $file, User $owner, int $lado, string $carpeta): MediaAsset
+    {
+        $binario = $this->reencode($file, $lado);
+
+        $path = $carpeta.'/'.Str::random(40).'.jpg';
+        Storage::disk('public')->put($path, $binario);
+
+        $media = new MediaAsset([
+            'path' => $path,
+            'original_name' => $file->getClientOriginalName(),
+            'mime_type' => 'image/jpeg',
+            'size_bytes' => strlen($binario),
+            'visibility' => 'public',
+        ]);
+
+        $media->user_id = $owner->id;
+        $media->save();
+
+        return $media;
+    }
+
     /**
      * D20, N11 — la obra terminada que sube la artista.
      *
@@ -117,7 +166,7 @@ class MediaStorageService
      * Devuelve los bytes de un JPEG nuevo con solo los pixeles de la imagen
      * original, escalado si hacia falta.
      */
-    private function reencode(UploadedFile $file): string
+    private function reencode(UploadedFile $file, ?int $lado = null): string
     {
         $origen = @imagecreatefromstring((string) file_get_contents($file->getRealPath()));
 
@@ -128,7 +177,7 @@ class MediaStorageService
             throw new RuntimeException('El fichero no es una imagen que se pueda decodificar.');
         }
 
-        $destino = $this->resizeToMaxSide($origen);
+        $destino = $this->resizeToMaxSide($origen, $lado ?? self::MAX_SIDE);
 
         ob_start();
         imagejpeg($destino, null, self::JPEG_QUALITY);
@@ -147,19 +196,19 @@ class MediaStorageService
      * @param  \GdImage  $origen
      * @return \GdImage
      */
-    private function resizeToMaxSide($origen)
+    private function resizeToMaxSide($origen, int $maximo)
     {
         $ancho = imagesx($origen);
         $alto = imagesy($origen);
         $lado = max($ancho, $alto);
 
-        if ($lado <= self::MAX_SIDE) {
+        if ($lado <= $maximo) {
             // Aun sin escalar hay que re-encodificar: el objetivo no es el
             // tamano, es tirar todo lo que no sean pixeles.
             return $origen;
         }
 
-        $escala = self::MAX_SIDE / $lado;
+        $escala = $maximo / $lado;
         $nuevoAncho = (int) round($ancho * $escala);
         $nuevoAlto = (int) round($alto * $escala);
 

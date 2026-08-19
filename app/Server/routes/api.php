@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\Admin\EventController as AdminEventController;
+use App\Http\Controllers\Api\Admin\GalleryController as AdminGalleryController;
 use App\Http\Controllers\Api\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Api\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Api\Admin\ProductVariantController as AdminVariantController;
@@ -11,6 +12,7 @@ use App\Http\Controllers\Api\CatalogController;
 use App\Http\Controllers\Api\DeliveryController;
 use App\Http\Controllers\Api\EmailVerificationController;
 use App\Http\Controllers\Api\EventController;
+use App\Http\Controllers\Api\GalleryController;
 use App\Http\Controllers\Api\MediaController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\OrderController;
@@ -87,6 +89,11 @@ Route::prefix('catalog')->group(function () {
     Route::get('products', [CatalogController::class, 'index'])->name('catalog.products.index');
     Route::get('products/{product}', [CatalogController::class, 'show'])->name('catalog.products.show');
 });
+
+// D33 — el escaparate. **Publico y sin sesion**: es lo que ve quien todavia
+// no es cliente, y para un negocio que vende dibujos es lo que mas encargos
+// trae. Exigir cuenta para mirar seria pedir el DNI en la puerta.
+Route::get('gallery', [GalleryController::class, 'index'])->name('gallery.index');
 
 // N9: la foto de partida se sube antes que el encargo y devuelve un id.
 // El borrado pasa por MediaAssetPolicy (SEC-004).
@@ -177,6 +184,17 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->name('admin.')->g
         ->name('events.quote');
     Route::post('events/{event}/status', [AdminEventController::class, 'updateStatus'])
         ->name('events.status');
+
+    // D33 — la galeria la gestiona ella, igual que el catalogo (D5). Aqui
+    // si sale lo no publicado: es la vista de quien la mantiene.
+    Route::get('gallery', [AdminGalleryController::class, 'index'])->name('gallery.index');
+    Route::post('gallery', [AdminGalleryController::class, 'store'])->name('gallery.store');
+    Route::post('gallery/reorder', [AdminGalleryController::class, 'reorder'])
+        ->name('gallery.reorder');
+    Route::patch('gallery/{gallery}', [AdminGalleryController::class, 'update'])
+        ->name('gallery.update');
+    Route::delete('gallery/{gallery}', [AdminGalleryController::class, 'destroy'])
+        ->name('gallery.destroy');
 
     // N15 — el porcentaje de la señal y la validez del presupuesto, sin
     // tocar codigo. Que claves existen lo decide SettingsService.
