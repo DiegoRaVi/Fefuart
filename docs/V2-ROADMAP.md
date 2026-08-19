@@ -472,8 +472,37 @@ Con eso salió de los controllers **la última transición escrita a mano**: `Qu
 
 *Dependía de: Fase 5.*
 
-### Fase 7 — Testing, hardening y retirada del legacy · P1
-E2E de los 4 flujos · repaso de seguridad completo sobre v2 · CSP · `composer audit` y `npm audit` · retirada de `app/Client/views` y del frontend legacy · documentación final.
+### Fase 7 — Testing, hardening y retirada del legacy · P1 · 🟡 en curso
+
+| Entregado | Estado |
+|---|---|
+| Entorno de E2E con Playwright, base `fefuart_e2e` aparte | ✅ `af13b5e` |
+| E2E de los 4 flujos — 14 recorridos, todos offline | ✅ `b478412`, `883baa2`, `ef08234` |
+| **CSP** en la SPA, comprobada en un navegador | ✅ `69221aa` — cierra el último hallazgo abierto |
+| Retirada del frontend legacy | ✅ `c59d024` (D15) |
+| `composer audit` y `npm audit` | ✅ los dos limpios |
+| Cinco fallos reales encontrados por los E2E, con su regresión | ✅ |
+
+**Los E2E no son una red de seguridad: son un hallador de fallos.** Encontraron cinco cosas rotas que seis fases de tests unitarios no vieron, y todas por el mismo motivo — nadie había recorrido el camino entero:
+
+| Fallo | Vivo desde |
+|---|---|
+| Cerrar sesión dejaba la cabecera con la sesión anterior. `queryClient.clear()` deja huérfano el observador vivo del `AuthProvider`: el servidor sí cerraba la sesión, mentía la pantalla | Fase 3 |
+| **El registro nunca enviaba el correo de verificación.** N19 lo exige; solo se mandaba al reenviarlo a mano o al cambiar de correo | Fase 1 |
+| **El enlace de verificación daba 500 al abrirlo desde el correo.** La ruta se declaró sin `auth` a propósito, pero el controlador pedía un `EmailVerificationRequest`, que exige sesión. No tenía ni un test | Fase 1 |
+| El checkout seguía prometiendo que «nos ponemos en contacto contigo para el pago» | Fase 5 |
+| El correo escribía `1.200,00 €` y la pantalla `1200,00 €`. La pantalla tenía razón: en castellano cuatro cifras no llevan separador | Fase 6 |
+
+**Decisiones de los E2E:**
+
+- **No se pulsa «Pagar» en ningún recorrido.** Hacerlo haría que el servidor llamase a la API de Stripe, y una batería que depende de la red falla por motivos que no son el código. Se llega hasta el pedido en `pending_payment` con su botón, que es donde acaba lo que es nuestro. La vuelta de la pasarela sí se prueba entera: se entrega un webhook **firmado en el propio test** con el secreto de `.env.e2e`, y se comprueba que la pantalla cambia sola. También se demuestra D29 por el lado contrario — entrar a mano en la URL de vuelta con una sesión inventada no da nada por pagado.
+- **Base `fefuart_e2e` aparte**, resembrada antes de cada tanda. `APP_ENV=e2e` es lo único que la separa de `fefuart`: sin esa variable, `migrate:fresh` vaciaría la base de desarrollo.
+- **`.env.e2e` va versionado** porque no lleva ninguna clave real. Si algún día hiciera falta una, deja de poder estarlo.
+
+**Sobre la CSP.** Va en un `meta` del `index.html` y no en el `.htaccess` de la SPA, porque ese fichero dice `Require all denied`: Apache no sirve nada de ahí. `script-src 'self'` sin `unsafe-inline` ni `unsafe-eval` — con Checkout hospedado la SPA no carga `Stripe.js`. La única concesión es `style-src 'unsafe-inline'`, que la pide Tailwind 4. **`frame-ancestors` no entra**: en un `meta` se ignora, así que lo sirve el VirtualHost de la Fase 8.
+
+**Pendiente en esta fase:** repaso de seguridad completo sobre v2 y documentación final.
+
 *Depende de: Fase 6.*
 
 ### Fase 8 — Despliegue · pospuesta
