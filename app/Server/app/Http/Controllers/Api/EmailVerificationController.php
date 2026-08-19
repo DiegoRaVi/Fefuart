@@ -3,11 +3,12 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Auth\Events\Verified;
-use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 /**
  * N19: la columna `email_verified_at` existia en v1 desde la primera
@@ -20,11 +21,31 @@ class EmailVerificationController extends Controller
     /**
      * Destino del enlace firmado que llega por correo. Verifica y devuelve al
      * usuario a la SPA, que es donde continua el flujo.
+     *
+     * **El usuario sale de la ruta, no de la sesion.** Aqui habia un
+     * `EmailVerificationRequest`, y era un fallo: su `authorize()` hace
+     * `$this->user()->getKey()`, asi que exige sesion iniciada. Pero esta
+     * ruta se declaro **sin `auth`** justamente porque quien pincha lo hace
+     * desde su gestor de correo, que puede abrir el enlace en otro navegador
+     * o sin cookie. Las dos cosas juntas daban un 500 en el caso normal.
+     *
+     * Lo que autoriza es la **firma** de la URL, que valida el middleware
+     * `signed` antes de llegar aqui: la firma cubre `id` y `hash` y caduca,
+     * asi que no se puede fabricar ni reutilizar indefinidamente. El `hash`
+     * se comprueba ademas contra el correo actual, para que un enlace emitido
+     * antes de un cambio de direccion deje de valer.
      */
-    public function verify(EmailVerificationRequest $request): RedirectResponse
+    public function verify(Request $request, string $id, string $hash): RedirectResponse
     {
-        if (! $request->user()->hasVerifiedEmail() && $request->user()->markEmailAsVerified()) {
-            event(new Verified($request->user()));
+        $user = User::findOrFail($id);
+
+        abort_unless(
+            hash_equals(sha1($user->getEmailForVerification()), $hash),
+            Response::HTTP_FORBIDDEN,
+        );
+
+        if (! $user->hasVerifiedEmail() && $user->markEmailAsVerified()) {
+            event(new Verified($user));
         }
 
         return redirect()->away(
