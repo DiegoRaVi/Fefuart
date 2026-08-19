@@ -130,14 +130,26 @@ abstract class Aviso extends Notification implements ShouldQueue
      * Sin pasar por coma flotante en ningun momento, igual que el resto del
      * sistema: no porque un correo vaya a descuadrar por medio centimo, sino
      * para que nadie lea esto y lo copie donde si importa.
+     *
+     * **Los millares no se separan hasta las cinco cifras.** «1200,00 €», no
+     * «1.200,00 €»: es la regla del castellano, y es la que aplica ICU con
+     * `es-ES`, que es lo que usa la SPA en `shared/lib/dinero.ts`. Se
+     * descubrio comparando el correo con la pantalla en un E2E, que escribian
+     * el mismo presupuesto de dos formas distintas.
+     *
+     * Se hace a mano porque esta instalacion de PHP no trae `intl`, asi que
+     * `NumberFormatter` no existe.
      */
     protected function euros(string $importe): string
     {
         $centimos = $this->centimos($importe);
+        $enteros = intdiv($centimos, 100);
 
-        return number_format(intdiv($centimos, 100), 0, ',', '.')
-            .','.sprintf('%02d', $centimos % 100)
-            .' €';
+        $parteEntera = $enteros >= 10000
+            ? number_format($enteros, 0, ',', '.')
+            : (string) $enteros;
+
+        return $parteEntera.','.sprintf('%02d', $centimos % 100).' €';
     }
 
     private function nombreDe(object $notifiable): string

@@ -117,3 +117,35 @@ describe('el estado del pedido', function () {
         );
     });
 });
+
+/**
+ * El importe se escribe como en castellano, y eso incluye **no** separar los
+ * millares en numeros de cuatro cifras: se escribe «1200,00 €», no
+ * «1.200,00 €». Es la regla que aplica ICU con `es-ES`, que es la que usa la
+ * SPA (`shared/lib/dinero.ts`).
+ *
+ * Lo encontro el E2E: el correo decia 1.200,00 € y la pantalla 1200,00 €
+ * para el mismo presupuesto.
+ */
+it('escribe los importes como la pantalla', function () {
+    $this->actingAs($this->admin)
+        ->postJson("/api/admin/events/{$this->evento->id}/quote", ['quoted_amount' => '1200.00'])
+        ->assertOk();
+
+    Notification::assertSentTo($this->cliente, QuoteReady::class, function (QuoteReady $aviso) {
+        $cuerpo = $aviso->toArray($this->cliente)['cuerpo'];
+
+        return str_contains($cuerpo, '1200,00 €') && ! str_contains($cuerpo, '1.200,00');
+    });
+});
+
+/** A partir de cinco cifras si se separa: «12.345,00 €». */
+it('separa los millares a partir de cinco cifras', function () {
+    $this->actingAs($this->admin)
+        ->postJson("/api/admin/events/{$this->evento->id}/quote", ['quoted_amount' => '12345.00'])
+        ->assertOk();
+
+    Notification::assertSentTo($this->cliente, QuoteReady::class, function (QuoteReady $aviso) {
+        return str_contains($aviso->toArray($this->cliente)['cuerpo'], '12.345,00 €');
+    });
+});
