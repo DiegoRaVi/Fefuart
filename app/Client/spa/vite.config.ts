@@ -48,5 +48,11 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
     css: true,
+
+    // Los recorridos de Playwright viven en `e2e/` y tambien acaban en
+    // `.spec.ts`, que es un patron que Vitest recoge por defecto. Sin esta
+    // linea intenta ejecutarlos en jsdom y revienta: `@playwright/test` no
+    // es un runner que pueda correr dentro de otro.
+    exclude: ['**/node_modules/**', '**/dist/**', 'e2e/**'],
   },
 })
