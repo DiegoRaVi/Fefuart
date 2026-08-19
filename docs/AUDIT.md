@@ -16,7 +16,7 @@
 | Frontend | 🟠 Deuda alta — lógica inline en 13 HTML, XSS por `innerHTML`. | ✅ SPA de React: catálogo, encargo con foto, carrito, checkout, pedidos, Live Art, backoffice y centro de avisos. **El legacy se retiró en la Fase 7**; quedan sus imágenes, que no son código. |
 | Base de datos | 🟠 Modelo incompleto — no existe catálogo. | ✅ **Los ocho cerrados**, DB-006 incluido. `payments` y `webhook_events` llegaron con la Fase 5, y `notifications` con la 6. |
 | Rendimiento | 🟡 Aceptable hoy | ✅ Los cuatro cerrados: índices, eager loading con test de que no crece con las filas, paginación y un carrito que se recalcula de una vez. |
-| Testing | 🔴 Inexistente — 2 tests de plantilla, 0 % real. | 🟢 **576 tests**: 413 de backend, 147 de SPA y 16 recorridos E2E, con regresión explícita de cada hallazgo cerrado. Los E2E destaparon cinco fallos que los unitarios no veían. |
+| Testing | 🔴 Inexistente — 2 tests de plantilla, 0 % real. | 🟢 **595 tests**: 426 de backend, 151 de SPA y 18 recorridos E2E, con regresión explícita de cada hallazgo cerrado. Los E2E destaparon cinco fallos que los unitarios no veían. |
 | Entorno local | ✅ Corregido | ✅ Segunda tanda de SEC-002 al montar la SPA. El VirtualHost definitivo sigue siendo de la Fase 8. |
 | Git | 🟡 Ordenado | 🟡 `develop` con 63 commits sin subir; `autotest` intacta bajo su tag. |
 
