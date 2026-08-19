@@ -17,6 +17,14 @@ export interface OrderItem {
   additional_copy_price: string
   line_total: string
   reference_media?: MediaAsset
+  /**
+   * N11 — si la obra terminada ya se puede descargar.
+   *
+   * Un booleano y no el fichero: la ruta vive en el disco privado del
+   * servidor y no viaja hasta aqui. Para bajarla esta el endpoint, que
+   * comprueba el permiso.
+   */
+  delivered: boolean
 }
 
 export interface ShippingAddress {

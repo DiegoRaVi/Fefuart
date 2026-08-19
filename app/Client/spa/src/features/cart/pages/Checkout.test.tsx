@@ -32,6 +32,7 @@ function unaLinea(overrides: Partial<OrderItem> = {}): OrderItem {
     unit_price: '40.00',
     additional_copy_price: '10.00',
     line_total: '40.00',
+    delivered: false,
     ...overrides,
   }
 }

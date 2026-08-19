@@ -9,6 +9,7 @@ import { Boton } from '@/shared/ui/Boton'
 import { Cargando } from '@/shared/ui/Cargando'
 
 import { nombreDelEstado, useCancelarPedido, usePedido } from '../api'
+import { urlDeDescarga } from '../entregas'
 
 /** N12 — el cliente cancela solo antes de pagar. */
 const CANCELABLES = ['cart', 'pending_payment']
@@ -78,7 +79,7 @@ export function DetalleDePedido() {
         <ul className="space-y-3">
           {pedido.items.map((linea) => (
             <li key={linea.id}>
-              <Linea linea={linea} />
+              <Linea pedidoId={Number(id)} linea={linea} />
             </li>
           ))}
         </ul>
@@ -153,7 +154,7 @@ export function DetalleDePedido() {
   )
 }
 
-function Linea({ linea }: { linea: OrderItem }) {
+function Linea({ pedidoId, linea }: { pedidoId: number; linea: OrderItem }) {
   return (
     <article className="flex flex-wrap gap-4 rounded-fefu bg-rosa-suave p-4">
       {linea.reference_media?.url && (
@@ -176,6 +177,27 @@ function Linea({ linea }: { linea: OrderItem }) {
 
         {linea.customer_notes && (
           <p className="text-base text-piedra italic">«{linea.customer_notes}»</p>
+        )}
+
+        {/*
+          N11 — la entrega digital se descarga desde aqui, y el permiso lo
+          comprueba el servidor contra el pedido. Es un enlace normal y no una
+          llamada de axios: lo que baja es un fichero, no JSON, y el navegador
+          sabe hacerlo solo. La cookie de sesion viaja igual.
+        */}
+        {linea.delivered && (
+          <a
+            href={urlDeDescarga(pedidoId, linea.id)}
+            className="mt-2 inline-block rounded-fefu bg-piedra px-4 py-2 text-white transition-colors duration-300 hover:bg-verde"
+          >
+            Descargar mi encargo
+          </a>
+        )}
+
+        {linea.delivery_type === 'digital' && !linea.delivered && (
+          <p className="mt-2 text-sm text-piedra">
+            Felicitas todavia esta con el. Te avisamos en cuanto puedas descargarlo.
+          </p>
         )}
       </div>
 

@@ -2,6 +2,7 @@ import { Link, useParams } from 'react-router'
 
 import type { OrderItem } from '@/features/cart/api'
 import { nombreDelEstado } from '@/features/orders/api'
+import { urlDeDescarga, useSubirEntrega } from '@/features/orders/entregas'
 import { euros } from '@/shared/lib/dinero'
 import { Aviso } from '@/shared/ui/Aviso'
 import { Boton } from '@/shared/ui/Boton'
@@ -83,7 +84,7 @@ export function PedidoDeAdmin() {
         <ul className="space-y-3">
           {pedido.items.map((linea) => (
             <li key={linea.id}>
-              <Linea linea={linea} />
+              <Linea pedidoId={Number(id)} linea={linea} />
             </li>
           ))}
         </ul>
@@ -159,7 +160,7 @@ export function PedidoDeAdmin() {
   )
 }
 
-function Linea({ linea }: { linea: OrderItem }) {
+function Linea({ pedidoId, linea }: { pedidoId: number; linea: OrderItem }) {
   return (
     <article className="flex flex-wrap gap-4 rounded-fefu bg-rosa-suave p-4">
       {/* N9 — la foto de partida es lo que la artista necesita para dibujar. */}
@@ -189,9 +190,68 @@ function Linea({ linea }: { linea: OrderItem }) {
         {linea.customer_notes && (
           <p className="text-base italic text-piedra">«{linea.customer_notes}»</p>
         )}
+
+        {/* N11 — solo las lineas digitales se entregan por descarga. */}
+        {linea.delivery_type === 'digital' && <SubirEntrega pedidoId={pedidoId} linea={linea} />}
       </div>
 
       <p className="text-apartado text-verde">{euros(linea.line_total)}</p>
     </article>
+  )
+}
+
+/**
+ * D20, N11 — la artista sube la obra terminada de una linea digital.
+ *
+ * El fichero se guarda **tal cual**: es el que el cliente va a imprimir, y
+ * recomprimirlo lo estropearia. Lo que el servidor comprueba es que sea de
+ * verdad un JPEG, un PNG o un PDF, mirando su contenido.
+ */
+function SubirEntrega({ pedidoId, linea }: { pedidoId: number; linea: OrderItem }) {
+  const subir = useSubirEntrega(pedidoId, linea.id)
+  const idCampo = `entrega-${linea.id}`
+
+  return (
+    <div className="mt-3 space-y-1 rounded-fefu bg-rosa-suave/60 p-3">
+      <label htmlFor={idCampo} className="block text-sm font-bold text-verde">
+        {linea.delivered ? 'Sustituir la entrega' : 'Subir la entrega'}
+      </label>
+
+      {linea.delivered && (
+        <p className="text-sm text-piedra">
+          Ya entregada.{' '}
+          <a
+            className="underline underline-offset-4"
+            href={urlDeDescarga(pedidoId, linea.id)}
+          >
+            Descargar para comprobarla
+          </a>
+        </p>
+      )}
+
+      <input
+        id={idCampo}
+        type="file"
+        accept="image/jpeg,image/png,application/pdf"
+        disabled={subir.isPending}
+        onChange={(e) => {
+          const archivo = e.target.files?.[0]
+
+          if (archivo) {
+            subir.mutate(archivo)
+          }
+
+          // Se limpia para poder volver a elegir el mismo fichero si la
+          // subida fallo: sin esto, `change` no se dispara la segunda vez.
+          e.target.value = ''
+        }}
+        className="block w-full text-sm text-piedra"
+      />
+
+      <p className="text-sm text-piedra">JPG, PNG o PDF, hasta 40 MB.</p>
+
+      {subir.isPending && <p className="text-sm text-piedra">Subiendo...</p>}
+      {subir.isError && <Aviso tono="error">{subir.error.message}</Aviso>}
+    </div>
   )
 }
