@@ -42,11 +42,32 @@ export function useCerrarSesion() {
   return useMutation({
     mutationFn: cerrarSesion,
     onSuccess: async () => {
-      // La cache entera, no solo la sesion: puede haber pedidos, carrito y
-      // datos personales de quien acaba de salir. Dejarlos ahi significa que
-      // el siguiente en entrar en el mismo navegador los ve.
-      queryClient.clear()
+      /*
+       * La sesion primero, y con `setQueryData`: es lo que ve el observador
+       * vivo del AuthProvider, y por tanto lo que apaga la cabecera en el
+       * acto.
+       *
+       * **Aqui habia `queryClient.clear()`, y era un fallo real.** `clear()`
+       * borra del cache la entrada a la que ese observador esta enganchado y
+       * lo deja huerfano: nadie vuelve a notificarle nada, asi que seguia
+       * pintando al usuario anterior —con su nombre y sus enlaces privados—
+       * hasta que alguien recargaba la pagina entera. El servidor si cerraba
+       * la sesion; lo que mentia era la pantalla.
+       */
       queryClient.setQueryData(CLAVE_SESION, null)
+
+      /*
+       * Y despues el resto de la cache, que sigue habiendo que tirar: puede
+       * haber pedidos, carrito y datos personales de quien acaba de salir, y
+       * dejarlos ahi significa que el siguiente en entrar en el mismo
+       * navegador los ve.
+       *
+       * `resetQueries` y no `clear`: devuelve cada consulta a su estado
+       * inicial **notificando a quien la estuviera mirando**, que es
+       * justamente lo que `clear` no hace.
+       */
+      await queryClient.resetQueries()
+
       navigate('/', { replace: true })
     },
   })
