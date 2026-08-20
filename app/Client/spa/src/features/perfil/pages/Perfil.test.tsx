@@ -17,6 +17,11 @@ vi.mock('@/features/auth/api', () => ({
 vi.mock('@/features/perfil/api', () => ({
   actualizarPerfil: vi.fn(),
   cambiarContrasena: vi.fn(),
+  // D21 y D22 — las usa `CerrarLaCuenta`, que la pagina monta al final. Sin
+  // declararlas aqui el modulo simulado se queda sin ellas y revienta el
+  // arbol entero.
+  desactivarCuenta: vi.fn(),
+  suprimirCuenta: vi.fn(),
 }))
 
 const sesion = vi.mocked(obtenerSesion)

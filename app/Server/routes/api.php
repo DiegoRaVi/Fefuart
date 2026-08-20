@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Api\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Api\Admin\ProductVariantController as AdminVariantController;
 use App\Http\Controllers\Api\Admin\SettingsController;
+use App\Http\Controllers\Api\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\CatalogController;
@@ -196,6 +197,10 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->name('admin.')->g
     Route::delete('gallery/{gallery}', [AdminGalleryController::class, 'destroy'])
         ->name('gallery.destroy');
 
+    // D22 — las peticiones del art. 17 llegan por correo la mitad de las
+    // veces, y alguien tiene que poder atenderlas.
+    Route::delete('users/{user}', [AdminUserController::class, 'destroy'])->name('users.destroy');
+
     // N15 — el porcentaje de la señal y la validez del presupuesto, sin
     // tocar codigo. Que claves existen lo decide SettingsService.
     Route::get('settings', [SettingsController::class, 'show'])->name('settings.show');
@@ -234,4 +239,11 @@ Route::middleware('auth:sanctum')->prefix('profile')->group(function () {
     Route::get('/', [ProfileController::class, 'show'])->name('profile.show');
     Route::patch('/', [ProfileController::class, 'update'])->name('profile.update');
     Route::put('password', [ProfileController::class, 'updatePassword'])->name('profile.password');
+
+    // D21 — aparcar la cuenta. Reversible: los datos quedan intactos.
+    Route::post('deactivate', [ProfileController::class, 'deactivate'])->name('profile.deactivate');
+
+    // D22 — el derecho de supresion del art. 17, por anonimizacion. Exige la
+    // contrasena: es irreversible y se lleva las fotos que subio.
+    Route::delete('/', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });

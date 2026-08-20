@@ -50,6 +50,26 @@ class LoginRequest extends FormRequest
             ]);
         }
 
+        /*
+         * D21 — una cuenta desactivada no entra.
+         *
+         * Se comprueba **despues** de validar la contrasena y no antes: si se
+         * mirase primero, responder «esta cuenta esta desactivada» a
+         * cualquiera que escriba un email seria decirle que esa cuenta
+         * existe. Es la misma razon por la que el mensaje de credenciales
+         * invalidas es unico.
+         *
+         * Cubre tambien a las cuentas suprimidas (D22), que quedan
+         * desactivadas: alli ya no hay nadie detras.
+         */
+        if (Auth::user()->deactivated_at !== null) {
+            Auth::guard('web')->logout();
+
+            throw ValidationException::withMessages([
+                'email' => 'Esta cuenta esta desactivada. Escribenos si quieres recuperarla.',
+            ]);
+        }
+
         RateLimiter::clear($this->throttleKey());
     }
 

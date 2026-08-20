@@ -8,6 +8,7 @@ import { z } from 'zod'
 import { reenviarVerificacion } from '@/features/auth/api'
 import { CLAVE_SESION, useSesion } from '@/features/auth/sesion'
 import { aplicarErroresDeApi } from '@/shared/api/formulario'
+import { CerrarLaCuenta } from '../CerrarLaCuenta'
 import { Aviso } from '@/shared/ui/Aviso'
 import { Boton } from '@/shared/ui/Boton'
 import { Campo } from '@/shared/ui/Campo'
@@ -56,6 +57,10 @@ export function Perfil() {
 
       <DatosDeLaCuenta />
       <ContrasenaDeLaCuenta />
+
+      {/* D21 y D22 — aparcar o suprimir. Al final de la pagina, que es donde
+          se busca, y con la diferencia entre las dos por escrito. */}
+      <CerrarLaCuenta />
     </div>
   )
 }

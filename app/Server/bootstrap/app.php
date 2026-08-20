@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureIsActive;
 use App\Http\Middleware\EnsureIsAdmin;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -31,6 +32,14 @@ return Application::configure(basePath: dirname(__DIR__))
         // ademas su propio throttle, mas estricto.
         $middleware->api(prepend: [
             ThrottleRequests::class.':api',
+        ]);
+
+        // D21 — despues de autenticar: si la cuenta esta desactivada, la
+        // sesion deja de valer aunque la cookie siga viva. Va en el grupo y
+        // no ruta a ruta porque olvidarlo en una sola dejaria una puerta
+        // abierta dificil de ver.
+        $middleware->api(append: [
+            EnsureIsActive::class,
         ]);
 
         // El webhook de Stripe no lleva cookie de sesion, asi que hoy no

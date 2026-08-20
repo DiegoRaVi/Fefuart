@@ -39,6 +39,21 @@ return new class extends Migration
             $table->string('password');
             $table->rememberToken();
 
+            /*
+             * D21 — desactivacion **reversible**. `NULL` = cuenta activa.
+             *
+             * Timestamp y no booleano: cuesta lo mismo (`IS NULL` responde lo
+             * mismo) y ademas dice cuando ocurrio, que es lo que hace falta
+             * cuando alguien pregunta por que no puede entrar.
+             *
+             * **No cubre el RGPD.** Un borrado logico conserva el dato
+             * personal y lo mantiene tratable, asi que el derecho de supresion
+             * del art. 17 exige ademas la anonimizacion de D22. La columna se
+             * usa en los dos casos: una cuenta suprimida queda tambien
+             * desactivada, porque ya no hay nadie detras.
+             */
+            $table->timestamp('deactivated_at')->nullable();
+
             // NOT NULL y **sin DEFAULT** (D23): un insert incompleto tiene que
             // fallar en vez de conceder un rol por omision. En v1 esto era un
             // varchar cuyo valor por defecto lo ponia el controller, y de ahi

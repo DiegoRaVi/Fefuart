@@ -3,11 +3,14 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Profile\DeleteAccountRequest;
 use App\Http\Requests\Profile\UpdatePasswordRequest;
 use App\Http\Requests\Profile\UpdateProfileRequest;
 use App\Http\Resources\UserResource;
+use App\Services\AccountDeletionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 
 /**
@@ -58,5 +61,40 @@ class ProfileController extends Controller
         Auth::guard('web')->logoutOtherDevices($request->validated('password'));
 
         return response()->json(['message' => 'Contrasena actualizada.']);
+    }
+
+    /**
+     * D21 — aparcar la cuenta. Reversible: los datos quedan intactos y quien
+     * la desactiva puede pedir que se reactive.
+     */
+    public function deactivate(Request $request, AccountDeletionService $cuentas): Response
+    {
+        $cuentas->desactivar($request->user());
+
+        // La sesion se cierra aqui mismo: dejarla viva significaria que la
+        // cuenta sigue operando hasta que caduque la cookie.
+        Auth::guard('web')->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return response()->noContent();
+    }
+
+    /**
+     * D22 — el derecho de supresion del art. 17, por anonimizacion.
+     *
+     * Con la contrasena por delante: es irreversible y se lleva por delante
+     * las fotos que subio, asi que no puede dispararse desde una sesion que
+     * alguien se dejo abierta.
+     */
+    public function destroy(DeleteAccountRequest $request, AccountDeletionService $cuentas): Response
+    {
+        $cuentas->suprimir($request->user());
+
+        Auth::guard('web')->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return response()->noContent();
     }
 }
