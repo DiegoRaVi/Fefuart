@@ -8,6 +8,7 @@ import { Aviso } from '@/shared/ui/Aviso'
 import { Cargando } from '@/shared/ui/Cargando'
 
 import { usePedidosDeAdmin } from '../api'
+import { Resumen } from '../components/Resumen'
 import type { CampoDeBusqueda } from '../components/BusquedaPrecisa'
 import { Filtros } from '../components/Filtros'
 import { Paginacion } from '../components/Paginacion'
@@ -76,6 +77,11 @@ export function PedidosDeAdmin() {
   return (
     <div className="space-y-6">
       <h1 className="text-titulo text-verde">Pedidos</h1>
+
+      {/* El resumen vive aqui y no en una pantalla propia: pedidos es la
+          primera pantalla del backoffice, asi que es lo que se ve al entrar
+          sin tener que ir a buscarlo. */}
+      <Resumen />
 
       <Filtros
         q={q}

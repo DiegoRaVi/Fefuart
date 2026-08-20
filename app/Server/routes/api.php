@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\Admin\EventController as AdminEventController;
 use App\Http\Controllers\Api\Admin\GalleryController as AdminGalleryController;
+use App\Http\Controllers\Api\Admin\MetricsController;
 use App\Http\Controllers\Api\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Api\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Api\Admin\ProductVariantController as AdminVariantController;
@@ -196,6 +197,11 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->name('admin.')->g
         ->name('gallery.update');
     Route::delete('gallery/{gallery}', [AdminGalleryController::class, 'destroy'])
         ->name('gallery.destroy');
+
+    // Cuatro numeros, y solo cuatro. Estuvo aparcado desde la Fase 4 porque
+    // sin saber que mira Felicitas es facil construir el panel equivocado;
+    // esto es lo minimo que casi seguro sirve, y sigue pendiente preguntarle.
+    Route::get('metrics', MetricsController::class)->name('metrics');
 
     // D22 — las peticiones del art. 17 llegan por correo la mitad de las
     // veces, y alguien tiene que poder atenderlas.

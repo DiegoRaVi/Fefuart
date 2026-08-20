@@ -216,3 +216,28 @@ export function useCambiarVariante() {
     },
   })
 }
+
+/**
+ * Los cuatro numeros del panel. Dos de dinero y dos de trabajo.
+ *
+ * No es el panel definitivo y conviene que se sepa: se construyo sin haberle
+ * preguntado a Felicitas que mira cuando abre el backoffice un lunes, que es
+ * justo lo que deberia decidirlo.
+ */
+export interface Metricas {
+  pedidos_del_mes: number
+  ingresos_del_mes: string
+  eventos_por_presupuestar: number
+  entregas_pendientes: number
+}
+
+export function useMetricas() {
+  return useQuery({
+    queryKey: ['admin', 'metrics'],
+    queryFn: async () => {
+      const { data } = await api.get<Envelope<Metricas>>('/admin/metrics')
+
+      return data.data
+    },
+  })
+}
