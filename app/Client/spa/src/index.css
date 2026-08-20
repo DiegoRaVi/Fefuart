@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import './fuentes.css';
 
 /**
  * D9 — la identidad visual de v1, extraida de sus 2.038 lineas de CSS antes
@@ -29,14 +30,42 @@
 
   /* --- Tipografia --------------------------------------------------- */
 
-  /* La misma pila de v1, sin Google Fonts: la serif es la identidad. */
-  --font-serif:
-    Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+  /*
+   * Dos familias con papeles distintos, servidas desde `public/fuentes/`
+   * (ver el porque en `fuentes.css`).
+   *
+   * v1 usaba una sola pila serif del sistema para todo. El problema no era
+   * el estilo sino que titulo y parrafo se distinguian solo por el tamano,
+   * y a 1.5rem de diferencia eso no basta: la pagina se leia plana. La
+   * serif se queda donde manda —los titulos, que es donde vive el tono del
+   * negocio— y el texto corrido pasa a una sans, que es lo que se lee
+   * comodo en parrafos, formularios y tablas del backoffice.
+   */
 
-  /* v1: h1 2rem, h2 1.8rem, h3 1.5rem. Se conservan. */
-  --text-titulo: 2rem;
-  --text-seccion: 1.8rem;
-  --text-apartado: 1.5rem;
+  /* Cormorant Garamond. Es la voz de la marca: contraste alto y trazo fino,
+     lo mismo que el rotulador sobre papel. Solo para titulos y citas, y a
+     tamano grande: por debajo de 1.5rem sus remates se pierden. */
+  --font-display: 'Cormorant Garamond', Cambria, Cochin, Georgia, serif;
+
+  /* Karla. Sans humanista, de formas abiertas; no compite con la serif. */
+  --font-sans: Karla, 'Segoe UI', system-ui, sans-serif;
+
+  /* Se conserva por compatibilidad: quedan usos de `font-serif` sueltos. */
+  --font-serif: var(--font-display);
+
+  /*
+   * La escala. v1 tenia tres tamanos (2 / 1.8 / 1.5rem) tan juntos que el
+   * salto entre un h1 y un h3 era del 33 %: no se veia la jerarquia. Esta
+   * abre el rango por arriba —el titulo de una portada tiene que poder ser
+   * grande— y deja los pasos en una razon cercana a 1.25.
+   */
+  --text-portada: clamp(2.5rem, 6vw, 4.5rem);
+  --text-titulo: clamp(2rem, 4vw, 2.75rem);
+  --text-seccion: 1.75rem;
+  --text-apartado: 1.25rem;
+
+  /* Antetitulo: la linea corta en versalitas que va sobre un titulo. */
+  --text-antetitulo: 0.8125rem;
 
   /* --- Formas ------------------------------------------------------- */
 
@@ -66,18 +95,34 @@
 
 @layer base {
   html {
-    font-family: var(--font-serif);
+    font-family: var(--font-sans);
   }
 
   body {
     background-color: var(--color-white);
     color: var(--color-piedra);
     /* v1 usaba 1.4rem de cuerpo, que en movil obliga a reflujo constante.
-       Se baja a 1.125rem, que conserva la sensacion generosa del original
-       sin ese coste. Es el unico numero de la tipografia que cambia, y se
-       cambia aqui. */
-    font-size: 1.125rem;
-    line-height: 1.6;
+       Se baja a 1.0625rem: Karla tiene la x mas alta que una serif del
+       sistema, asi que al mismo tamano se lee mayor. */
+    font-size: 1.0625rem;
+    line-height: 1.65;
+  }
+
+  /*
+   * Los titulos van en la serif, y ademas apretados: Cormorant es estrecha
+   * y con el interlineado por defecto un titular de dos lineas se separa
+   * tanto que deja de leerse como una unidad. `text-wrap: balance` reparte
+   * las lineas para que ninguna quede colgando con una palabra suelta.
+   */
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+    color: var(--color-verde);
   }
 
   h1 {
@@ -90,6 +135,11 @@
 
   h3 {
     font-size: var(--text-apartado);
+    /* El h3 vive dentro del cuerpo del texto, no sobre el. Vuelve a la
+       sans: a 1.25rem la serif ya no aporta y solo desentona. */
+    font-family: var(--font-sans);
+    font-weight: 700;
+    letter-spacing: 0;
   }
 
   /* Foco visible siempre: v1 no lo tocaba y el estilo por defecto se perdia
@@ -98,4 +148,25 @@
     outline: 2px solid var(--color-verde);
     outline-offset: 2px;
   }
+}
+
+/**
+ * Dos utilidades que se repiten lo bastante como para no copiarlas.
+ */
+@utility antetitulo {
+  font-size: var(--text-antetitulo);
+  font-weight: 700;
+  /* El unico sitio donde se usa el espaciado amplio: en versalitas es lo que
+     separa una etiqueta de una palabra que se quedo en mayusculas. */
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+@utility titular-portada {
+  font-family: var(--font-display);
+  font-size: var(--text-portada);
+  font-weight: 400;
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
 }
