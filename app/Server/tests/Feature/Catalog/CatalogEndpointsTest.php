@@ -117,11 +117,11 @@ it('siembra los cuatro precios reales del negocio', function () {
     expect($data->pluck('slug')->all())
         ->toBe(['dibujo-por-encargo', 'letras-infantiles', 'ramos-dibujados'])
         ->and($precios)->toBe([
-            'dibujo-por-encargo/Diseno de moda: 30.00',
+            'dibujo-por-encargo/Diseño de moda: 30.00',
             'dibujo-por-encargo/Acuarela: 40.00',
             'dibujo-por-encargo/Digital: 20.00',
-            'letras-infantiles/Lamina ilustrada: 40.00',
-            'ramos-dibujados/Lamina del ramo: 40.00',
+            'letras-infantiles/Lámina ilustrada: 40.00',
+            'ramos-dibujados/Lámina del ramo: 40.00',
         ]);
 });
 
@@ -156,7 +156,7 @@ it('siembra la entrega digital solo en el estilo digital', function () {
         ])->all();
 
     expect($variantes)->toBe([
-        'Diseno de moda' => ['physical'],
+        'Diseño de moda' => ['physical'],
         'Acuarela' => ['physical'],
         'Digital' => ['digital', 'physical'],
     ]);
