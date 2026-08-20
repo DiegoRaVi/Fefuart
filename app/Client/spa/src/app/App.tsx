@@ -26,7 +26,7 @@ import { MisPedidos } from '@/features/orders/pages/MisPedidos'
 import { VueltaDelPago } from '@/features/pagos/pages/VueltaDelPago'
 import { Perfil } from '@/features/perfil/pages/Perfil'
 
-import { LayoutPrincipal } from './layouts/LayoutPrincipal'
+import { Centrado, LayoutPrincipal } from './layouts/LayoutPrincipal'
 import { AuthProvider } from './providers/AuthProvider'
 import { QueryProvider } from './providers/QueryProvider'
 import { RutaDeAdmin, RutaDeInvitado, RutaProtegida } from './routes/RutaProtegida'
@@ -43,65 +43,73 @@ export function App() {
         <BrowserRouter>
           <Routes>
             <Route element={<LayoutPrincipal />}>
+              {/* Las dos pantallas que venden van a sangre: sus bandas de
+                  color llegan de borde a borde, asi que se quedan fuera de
+                  `Centrado` y se ponen ellas su propio ancho. */}
               <Route index element={<Portada />} />
 
-              {/* Publico: mirar no exige cuenta, encargar si (N18). */}
-              <Route path="encargos" element={<Catalogo />} />
-
-              {/* D33 — el escaparate y quien esta detras. Publicos los dos:
-                  es lo que ve quien todavia no es cliente. */}
-              <Route path="galeria" element={<Galeria />} />
-              <Route path="sobre-mi" element={<SobreMi />} />
-              <Route path="encargos/:slug" element={<FichaProducto />} />
-
-              <Route element={<RutaDeInvitado />}>
-                <Route path="login" element={<Login />} />
-                <Route path="registro" element={<Registro />} />
-                <Route path="recuperar-contrasena" element={<RecuperarContrasena />} />
-                {/* Destino del enlace del correo, que construye el backend en
-                    AppServiceProvider::configurePasswordResetUrl. */}
-                <Route path="restablecer-contrasena" element={<RestablecerContrasena />} />
-              </Route>
-
+              {/* N18 — pedir presupuesto tambien exige cuenta: la artista
+                  tiene que poder responder a alguien. */}
               <Route element={<RutaProtegida />}>
-                {/* Tambien el destino del enlace de verificacion de email,
-                    que redirige aqui con ?verificado=1. */}
-                <Route path="perfil" element={<Perfil />} />
-
-                {/* D10 — el centro de avisos. Es de quien inicia sesion, asi
-                    que va tras la ruta protegida como el resto. */}
-                <Route path="avisos" element={<Avisos />} />
-
-                {/* N18 — encargar exige cuenta; mirar el catalogo no. */}
-                <Route path="encargos/:slug/encargar" element={<FormularioDeEncargo />} />
-                <Route path="carrito" element={<Carrito />} />
-                <Route path="carrito/confirmar" element={<Checkout />} />
-                <Route path="pedidos" element={<MisPedidos />} />
-                <Route path="pedidos/:id" element={<DetalleDePedido />} />
-
-                {/* La vuelta de Stripe. No da nada por pagado: pregunta al
-                    servidor hasta que el webhook haya movido el estado. */}
-                <Route path="pedidos/:id/pago" element={<VueltaDelPago tipo="pedido" />} />
-                {/* N18 — pedir presupuesto tambien exige cuenta: la artista
-                    tiene que poder responder a alguien. */}
                 <Route path="live-art" element={<LiveArt />} />
-                <Route path="live-art/:id/pago" element={<VueltaDelPago tipo="evento" />} />
               </Route>
 
-              {/* N20 — el backoffice es de la administradora. El rol sale de
-                  `GET /api/auth/me`, y cada endpoint lo vuelve a comprobar
-                  con el middleware `admin`. */}
-              <Route element={<RutaDeAdmin />}>
-                <Route path="backoffice" element={<LayoutDeBackoffice />}>
-                  <Route index element={<Navigate to="/backoffice/pedidos" replace />} />
-                  <Route path="pedidos" element={<PedidosDeAdmin />} />
-                  <Route path="pedidos/:id" element={<PedidoDeAdmin />} />
-                  <Route path="eventos" element={<EventosDeAdmin />} />
-                  <Route path="catalogo" element={<CatalogoDeAdmin />} />
-                  <Route path="galeria" element={<GaleriaDeAdmin />} />
-                  {/* N15 — el porcentaje de la señal y la validez del
-                      presupuesto, sin tocar codigo. */}
-                  <Route path="ajustes" element={<AjustesDeAdmin />} />
+              <Route element={<Centrado />}>
+                {/* Publico: mirar no exige cuenta, encargar si (N18). */}
+                <Route path="encargos" element={<Catalogo />} />
+
+                {/* D33 — el escaparate y quien esta detras. Publicos los dos:
+                    es lo que ve quien todavia no es cliente. */}
+                <Route path="galeria" element={<Galeria />} />
+                <Route path="sobre-mi" element={<SobreMi />} />
+                <Route path="encargos/:slug" element={<FichaProducto />} />
+
+                <Route element={<RutaDeInvitado />}>
+                  <Route path="login" element={<Login />} />
+                  <Route path="registro" element={<Registro />} />
+                  <Route path="recuperar-contrasena" element={<RecuperarContrasena />} />
+                  {/* Destino del enlace del correo, que construye el backend en
+                      AppServiceProvider::configurePasswordResetUrl. */}
+                  <Route path="restablecer-contrasena" element={<RestablecerContrasena />} />
+                </Route>
+
+                <Route element={<RutaProtegida />}>
+                  {/* Tambien el destino del enlace de verificacion de email,
+                      que redirige aqui con ?verificado=1. */}
+                  <Route path="perfil" element={<Perfil />} />
+
+                  {/* D10 — el centro de avisos. Es de quien inicia sesion, asi
+                      que va tras la ruta protegida como el resto. */}
+                  <Route path="avisos" element={<Avisos />} />
+
+                  {/* N18 — encargar exige cuenta; mirar el catalogo no. */}
+                  <Route path="encargos/:slug/encargar" element={<FormularioDeEncargo />} />
+                  <Route path="carrito" element={<Carrito />} />
+                  <Route path="carrito/confirmar" element={<Checkout />} />
+                  <Route path="pedidos" element={<MisPedidos />} />
+                  <Route path="pedidos/:id" element={<DetalleDePedido />} />
+
+                  {/* La vuelta de Stripe. No da nada por pagado: pregunta al
+                      servidor hasta que el webhook haya movido el estado. */}
+                  <Route path="pedidos/:id/pago" element={<VueltaDelPago tipo="pedido" />} />
+                  <Route path="live-art/:id/pago" element={<VueltaDelPago tipo="evento" />} />
+                </Route>
+
+                {/* N20 — el backoffice es de la administradora. El rol sale de
+                    `GET /api/auth/me`, y cada endpoint lo vuelve a comprobar
+                    con el middleware `admin`. */}
+                <Route element={<RutaDeAdmin />}>
+                  <Route path="backoffice" element={<LayoutDeBackoffice />}>
+                    <Route index element={<Navigate to="/backoffice/pedidos" replace />} />
+                    <Route path="pedidos" element={<PedidosDeAdmin />} />
+                    <Route path="pedidos/:id" element={<PedidoDeAdmin />} />
+                    <Route path="eventos" element={<EventosDeAdmin />} />
+                    <Route path="catalogo" element={<CatalogoDeAdmin />} />
+                    <Route path="galeria" element={<GaleriaDeAdmin />} />
+                    {/* N15 — el porcentaje de la señal y la validez del
+                        presupuesto, sin tocar codigo. */}
+                    <Route path="ajustes" element={<AjustesDeAdmin />} />
+                  </Route>
                 </Route>
               </Route>
             </Route>
