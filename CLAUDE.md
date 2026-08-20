@@ -9,7 +9,7 @@ Fefuart es la web del negocio de Felicitas Varela, artista de LiveArt para bodas
 **El repositorio está en transición.** La v1 (`master`) fue auditada el 2026-08-11 y se está reconstruyendo como v2 sobre `develop`. Antes de tocar nada:
 
 - **`docs/AUDIT.md`** — 14 hallazgos de seguridad (SEC-001…014), 8 errores funcionales (BUG-001…008) y la deuda técnica, con el estado de cada uno.
-- **`docs/V2-ROADMAP.md`** — **la fuente de verdad**: 28 decisiones arquitectónicas (D1–D28), 20 reglas de negocio (N1–N20), el esquema de base de datos objetivo, el diseño de la API y las 8 fases con su estado.
+- **`docs/V2-ROADMAP.md`** — **la fuente de verdad**: 34 decisiones arquitectónicas (D1–D34), 21 reglas de negocio (N1–N21), el esquema de base de datos objetivo, el diseño de la API y las 8 fases con su estado.
 
 - **`docs/PAGOS.md`** — el recorrido completo de un cobro: SPA, Laravel, Stripe, qué datos viajan y qué pasa en cada caso. Léelo antes de tocar nada de pagos, señales o devoluciones.
 
