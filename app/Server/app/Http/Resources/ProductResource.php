@@ -25,6 +25,12 @@ class ProductResource extends JsonResource
             'name' => $this->name,
             'description' => $this->description,
             'category' => $this->category,
+
+            // La foto del articulo. `null` cuando todavia no se ha subido:
+            // la tienda sigue funcionando sin ella.
+            'image' => $this->image === null
+                ? null
+                : MediaAssetResource::make($this->image),
             // N9 — el formulario de encargo necesita saberlo para exigir la
             // foto antes de enviar; el servidor lo vuelve a comprobar.
             'requires_reference_image' => $this->requires_reference_image,

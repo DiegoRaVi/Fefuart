@@ -39,6 +39,14 @@ export function FichaProducto() {
           Volver al catalogo
         </Link>
 
+        {producto.image?.url && (
+          <img
+            src={producto.image.url}
+            alt={producto.name}
+            className="aspect-[3/2] w-full rounded-fefu object-cover"
+          />
+        )}
+
         <h1 className="text-titulo text-verde">{producto.name}</h1>
 
         {producto.description && <p>{producto.description}</p>}

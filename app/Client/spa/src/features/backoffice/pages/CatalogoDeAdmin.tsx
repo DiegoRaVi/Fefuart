@@ -6,7 +6,7 @@ import { Aviso } from '@/shared/ui/Aviso'
 import { Boton } from '@/shared/ui/Boton'
 import { Cargando } from '@/shared/ui/Cargando'
 
-import { useCambiarVariante, useCatalogoDeAdmin } from '../api'
+import { useCambiarVariante, useCatalogoDeAdmin, useSubirFotoDeProducto } from '../api'
 import { Paginacion } from '../components/Paginacion'
 
 /**
@@ -67,6 +67,8 @@ function Producto({ producto }: { producto: Product }) {
         </span>
       </div>
 
+      <FotoDelProducto producto={producto} />
+
       <ul className="space-y-2">
         {producto.variants.map((variante) => (
           <li key={variante.id}>
@@ -75,6 +77,65 @@ function Producto({ producto }: { producto: Product }) {
         ))}
       </ul>
     </article>
+  )
+}
+
+/**
+ * La foto que ve el cliente en el catalogo y en la ficha.
+ *
+ * Entra tras la auditoria de UX del 2026-08-20: la tienda vendia dibujos sin
+ * enseñar ninguno y el precio aparecia antes que el producto.
+ */
+function FotoDelProducto({ producto }: { producto: Product }) {
+  const subir = useSubirFotoDeProducto(producto.id)
+  const idCampo = `foto-${producto.id}`
+
+  return (
+    <div className="flex flex-wrap items-start gap-4 rounded-fefu bg-white/60 p-3">
+      {producto.image?.url ? (
+        <img
+          src={producto.image.url}
+          alt=""
+          className="h-24 w-32 rounded-fefu object-cover"
+        />
+      ) : (
+        <p className="flex h-24 w-32 items-center justify-center rounded-fefu border border-dashed border-piedra/40 text-center text-sm text-piedra">
+          Sin foto
+        </p>
+      )}
+
+      <div className="min-w-48 flex-1 space-y-1">
+        <label htmlFor={idCampo} className="block text-sm font-bold text-verde">
+          {producto.image ? 'Cambiar la foto' : 'Subir una foto'}
+        </label>
+
+        <input
+          id={idCampo}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          disabled={subir.isPending}
+          onChange={(e) => {
+            const archivo = e.target.files?.[0]
+
+            if (archivo) {
+              subir.mutate(archivo)
+            }
+
+            // Se limpia para poder reintentar con el mismo fichero: sin esto,
+            // `change` no se dispara la segunda vez.
+            e.target.value = ''
+          }}
+          className="block w-full text-sm text-piedra"
+        />
+
+        <p className="text-sm text-piedra">
+          Es lo primero que ve quien entra en la tienda. Se guarda a 1600 px.
+        </p>
+
+        {subir.isPending && <p className="text-sm text-piedra">Subiendo...</p>}
+        {subir.isError && <Aviso tono="error">{subir.error.message}</Aviso>}
+      </div>
+    </div>
   )
 }
 

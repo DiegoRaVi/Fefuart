@@ -40,8 +40,23 @@ export function Catalogo() {
             <li key={producto.id}>
               <Link
                 to={`/encargos/${producto.slug}`}
-                className="flex h-full flex-col gap-3 rounded-fefu bg-rosa-suave p-6 transition-shadow duration-300 hover:shadow-[0_2px_8px_rgba(0,0,0,0.15)]"
+                className="group flex h-full flex-col overflow-hidden rounded-fefu bg-rosa-suave transition-shadow duration-300 hover:shadow-[0_2px_8px_rgba(0,0,0,0.15)]"
               >
+                {/*
+                  El producto antes que el precio. La tienda vendia dibujos
+                  sin enseñar ninguno, asi que se juzgaba el coste sin nada
+                  con lo que compararlo (auditoria de UX, 2026-08-20).
+                */}
+                {producto.image?.url && (
+                  <img
+                    src={producto.image.url}
+                    alt=""
+                    loading="lazy"
+                    className="aspect-[4/3] w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                )}
+
+                <div className="flex flex-1 flex-col gap-3 p-6">
                 <h2 className="text-apartado text-verde">{producto.name}</h2>
 
                 {producto.description && (
@@ -54,6 +69,7 @@ export function Catalogo() {
                   Listo en unos {producto.delivery_days} dias
                   {producto.requires_reference_image && ' · a partir de tu foto'}
                 </p>
+                </div>
               </Link>
             </li>
           ))}

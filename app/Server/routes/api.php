@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\Admin\GalleryController as AdminGalleryController;
 use App\Http\Controllers\Api\Admin\MetricsController;
 use App\Http\Controllers\Api\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Api\Admin\ProductController as AdminProductController;
+use App\Http\Controllers\Api\Admin\ProductImageController;
 use App\Http\Controllers\Api\Admin\ProductVariantController as AdminVariantController;
 use App\Http\Controllers\Api\Admin\SettingsController;
 use App\Http\Controllers\Api\Admin\UserController as AdminUserController;
@@ -156,6 +157,12 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->name('admin.')->g
     Route::get('products/{product:id}', [AdminProductController::class, 'show'])->name('products.show');
     Route::patch('products/{product:id}', [AdminProductController::class, 'update'])->name('products.update');
     Route::delete('products/{product:id}', [AdminProductController::class, 'destroy'])->name('products.destroy');
+
+    // La foto del articulo. Endpoint propio porque viaja como `multipart` y
+    // el resto del producto como JSON: mezclarlos obligaria a reenviar la
+    // imagen entera cada vez que se corrige un nombre.
+    Route::post('products/{product:id}/image', [ProductImageController::class, 'store'])
+        ->name('products.image.store');
 
     Route::post('products/{product:id}/variants', [AdminVariantController::class, 'store'])
         ->name('products.variants.store');

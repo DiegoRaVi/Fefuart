@@ -241,3 +241,32 @@ export function useMetricas() {
     },
   })
 }
+
+/**
+ * La foto del articulo en el catalogo.
+ *
+ * Endpoint propio porque viaja como `multipart`: mezclarla con el resto del
+ * producto obligaria a reenviar la imagen cada vez que se corrige un nombre.
+ */
+export function useSubirFotoDeProducto(productoId: number) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (archivo: File) => {
+      const cuerpo = new FormData()
+      cuerpo.append('file', archivo)
+
+      const { data } = await api.post<Envelope<Product>>(
+        `/admin/products/${productoId}/image`,
+        cuerpo,
+      )
+
+      return data.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: clavesDeBackoffice.catalogo() })
+      // El catalogo publico tambien: es donde se va a ver.
+      queryClient.invalidateQueries({ queryKey: ['catalog'] })
+    },
+  })
+}

@@ -49,6 +49,7 @@ function unProducto(overrides: Partial<Product> = {}): Product {
     name: 'Dibujo por encargo',
     description: 'Retrato dibujado a partir de tu fotografia.',
     category: 'dibujo',
+    image: null,
     requires_reference_image: true,
     requires_notes: true,
     max_quantity: 10,

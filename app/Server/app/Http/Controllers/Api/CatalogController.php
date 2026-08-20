@@ -22,7 +22,7 @@ class CatalogController extends Controller
         // lista sin elementos es un 200 con lista vacia.
         $products = Product::query()
             ->active()
-            ->with($this->activeVariants())
+            ->with(['image', ...$this->activeVariants()])
             ->orderBy('sort_order')
             ->orderBy('name')
             ->get();
@@ -40,7 +40,7 @@ class CatalogController extends Controller
         // nada que autorizar, sencillamente no forma parte del catalogo.
         abort_unless($product->is_active, 404);
 
-        return ProductResource::make($product->load($this->activeVariants()));
+        return ProductResource::make($product->load(['image', ...$this->activeVariants()]));
     }
 
     /**

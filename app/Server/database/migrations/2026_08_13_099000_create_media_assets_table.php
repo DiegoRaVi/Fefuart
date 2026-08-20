@@ -12,6 +12,15 @@ use Illuminate\Support\Facades\Schema;
  * Policy decida. En v1 las imagenes colgaban de `products` sin ninguna
  * comprobacion de propiedad.
  */
+/*
+ * Va **antes** que el catalogo, y no es cosmetico.
+ *
+ * `products.image_media_id` apunta aqui, asi que si `media_assets` se creara
+ * despues, MySQL rechazaria la clave foranea con «Foreign key constraint is
+ * incorrectly formed». SQLite no lo comprueba en el mismo momento, de modo
+ * que la bateria —que corre en memoria— pasaba en verde y `migrate:fresh`
+ * reventaba contra la base real.
+ */
 return new class extends Migration
 {
     public function up(): void

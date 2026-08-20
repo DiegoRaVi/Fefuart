@@ -6,6 +6,7 @@ use Database\Factories\ProductFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -56,6 +57,17 @@ class Product extends Model
     /**
      * @return HasMany<ProductVariant, $this>
      */
+    /**
+     * La foto del articulo, para el catalogo y la ficha. Nullable: un
+     * producto recien creado todavia no la tiene.
+     *
+     * @return BelongsTo<MediaAsset, $this>
+     */
+    public function image(): BelongsTo
+    {
+        return $this->belongsTo(MediaAsset::class, 'image_media_id');
+    }
+
     public function variants(): HasMany
     {
         return $this->hasMany(ProductVariant::class);

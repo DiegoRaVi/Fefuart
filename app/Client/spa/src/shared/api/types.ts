@@ -1,3 +1,5 @@
+import type { MediaAsset } from '@/features/media/api'
+
 /**
  * El contrato de la API, escrito a mano.
  *
@@ -66,6 +68,12 @@ export interface Product {
   name: string
   description: string | null
   category: string
+  /**
+   * La foto del articulo. `null` mientras no se haya subido: la tienda
+   * funciona sin ella, solo vende peor. Se anadio tras la auditoria de UX
+   * del 2026-08-20, que encontro un catalogo de dibujos sin dibujos.
+   */
+  image: MediaAsset | null
   /** N9 — la foto es el material de partida, no un adjunto. */
   requires_reference_image: boolean
   requires_notes: boolean

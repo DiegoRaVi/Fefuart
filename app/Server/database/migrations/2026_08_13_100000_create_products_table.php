@@ -23,6 +23,22 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->string('category', 50);
 
+            /*
+             * La foto del articulo, para el catalogo y la ficha.
+             *
+             * Anadida tras la auditoria de UX del 2026-08-20: la tienda vendia
+             * dibujos sin enseñar ninguno, y el precio aparecia antes que el
+             * producto. Es nullable porque un producto recien creado desde el
+             * backoffice todavia no la tiene y la tienda no puede caerse por
+             * eso.
+             *
+             * Columna propia y no una consulta a la galeria: son cosas
+             * distintas (D33). La galeria es obra seleccionada por ella, sin
+             * relacion con lo que se vende; esto es el escaparate de un
+             * articulo concreto.
+             */
+            $table->foreignId('image_media_id')->nullable()->constrained('media_assets');
+
             $table->boolean('is_active')->default(true);
             $table->unsignedSmallInteger('sort_order')->default(0);
 
