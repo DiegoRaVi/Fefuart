@@ -1,3 +1,4 @@
+import type { UseMutationResult } from '@tanstack/react-query'
 import { useState } from 'react'
 
 import type { Product, ProductVariant } from '@/shared/api/types'
@@ -6,7 +7,12 @@ import { Aviso } from '@/shared/ui/Aviso'
 import { Boton } from '@/shared/ui/Boton'
 import { Cargando } from '@/shared/ui/Cargando'
 
-import { useCambiarVariante, useCatalogoDeAdmin, useSubirFotoDeProducto } from '../api'
+import {
+  useCambiarVariante,
+  useCatalogoDeAdmin,
+  useSubirFotoDeProducto,
+  useSubirFotoDeVariante,
+} from '../api'
 import { Paginacion } from '../components/Paginacion'
 
 /**
@@ -87,17 +93,49 @@ function Producto({ producto }: { producto: Product }) {
  * enseñar ninguno y el precio aparecia antes que el producto.
  */
 function FotoDelProducto({ producto }: { producto: Product }) {
-  const subir = useSubirFotoDeProducto(producto.id)
-  const idCampo = `foto-${producto.id}`
+  return (
+    <SubirFoto
+      idCampo={`foto-producto-${producto.id}`}
+      foto={producto.image?.url}
+      subir={useSubirFotoDeProducto(producto.id)}
+      ayuda="Es lo primero que ve quien entra en la tienda. Se guarda a 1600 px."
+    />
+  )
+}
 
+/**
+ * La foto de un estilo.
+ *
+ * Es lo unico que lo distingue del de al lado en la ficha, asi que no es un
+ * adorno del backoffice: sin ella el cliente elige entre nombres y precios.
+ */
+function FotoDelEstilo({ variante }: { variante: ProductVariant }) {
+  return (
+    <SubirFoto
+      idCampo={`foto-estilo-${variante.id}`}
+      foto={variante.image?.url}
+      subir={useSubirFotoDeVariante(variante.id)}
+      ayuda={`Un ejemplo de como queda «${variante.name}».`}
+    />
+  )
+}
+
+/** El formulario de subida, igual para las dos. */
+function SubirFoto({
+  idCampo,
+  foto,
+  subir,
+  ayuda,
+}: {
+  idCampo: string
+  foto?: string
+  subir: UseMutationResult<Product, Error, File>
+  ayuda: string
+}) {
   return (
     <div className="flex flex-wrap items-start gap-4 rounded-fefu bg-white/60 p-3">
-      {producto.image?.url ? (
-        <img
-          src={producto.image.url}
-          alt=""
-          className="h-24 w-32 rounded-fefu object-cover"
-        />
+      {foto ? (
+        <img src={foto} alt="" className="h-24 w-32 rounded-fefu object-cover" />
       ) : (
         <p className="flex h-24 w-32 items-center justify-center rounded-fefu border border-dashed border-piedra/40 text-center text-sm text-piedra">
           Sin foto
@@ -106,7 +144,7 @@ function FotoDelProducto({ producto }: { producto: Product }) {
 
       <div className="min-w-48 flex-1 space-y-1">
         <label htmlFor={idCampo} className="block text-sm font-bold text-verde">
-          {producto.image ? 'Cambiar la foto' : 'Subir una foto'}
+          {foto ? 'Cambiar la foto' : 'Subir una foto'}
         </label>
 
         <input
@@ -128,9 +166,7 @@ function FotoDelProducto({ producto }: { producto: Product }) {
           className="block w-full text-sm text-piedra"
         />
 
-        <p className="text-sm text-piedra">
-          Es lo primero que ve quien entra en la tienda. Se guarda a 1600 px.
-        </p>
+        <p className="text-sm text-piedra">{ayuda}</p>
 
         {subir.isPending && <p className="text-sm text-piedra">Subiendo...</p>}
         {subir.isError && <Aviso tono="error">{subir.error.message}</Aviso>}
@@ -158,29 +194,33 @@ function Variante({ variante }: { variante: ProductVariant }) {
 
   if (!editando) {
     return (
-      <div className="flex flex-wrap items-baseline justify-between gap-3 rounded-fefu bg-white/60 p-3">
-        <div>
-          <p className="text-base">{variante.name}</p>
-          <p className="text-sm text-piedra">
-            {variante.shipping_methods.map((m) => m.name).join(' · ')}
-          </p>
+      <div className="space-y-2">
+        <div className="flex flex-wrap items-baseline justify-between gap-3 rounded-fefu bg-white/60 p-3">
+          <div>
+            <p className="text-base">{variante.name}</p>
+            <p className="text-sm text-piedra">
+              {variante.shipping_methods.map((m) => m.name).join(' · ')}
+            </p>
+          </div>
+
+          <div className="flex items-baseline gap-4">
+            <span className="text-base text-verde">
+              {euros(variante.price)}
+              {Number(variante.additional_copy_price) > 0 && (
+                <span className="text-sm text-piedra">
+                  {' '}
+                  + {euros(variante.additional_copy_price)} por copia
+                </span>
+              )}
+            </span>
+
+            <Boton type="button" variante="secundario" onClick={() => setEditando(true)}>
+              Cambiar
+            </Boton>
+          </div>
         </div>
 
-        <div className="flex items-baseline gap-4">
-          <span className="text-base text-verde">
-            {euros(variante.price)}
-            {Number(variante.additional_copy_price) > 0 && (
-              <span className="text-sm text-piedra">
-                {' '}
-                + {euros(variante.additional_copy_price)} por copia
-              </span>
-            )}
-          </span>
-
-          <Boton type="button" variante="secundario" onClick={() => setEditando(true)}>
-            Cambiar
-          </Boton>
-        </div>
+        <FotoDelEstilo variante={variante} />
       </div>
     )
   }

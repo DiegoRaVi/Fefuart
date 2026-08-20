@@ -66,32 +66,7 @@ export function FichaProducto() {
             {producto.description && <p className="text-lg">{producto.description}</p>}
           </div>
 
-          <section aria-labelledby="opciones" className="space-y-3">
-            <h2 id="opciones" className="antetitulo text-verde">
-              Elige el estilo
-            </h2>
-
-            {/*
-              Las opciones se enseñan, no se eligen aqui: la eleccion se hace
-              en `/encargar`, que es donde ademas se sube la foto y se calcula
-              el total. Pintarlas como si fueran seleccionables cuando no lo
-              son solo prometeria un gesto que esta pantalla no cumple.
-            */}
-            <ul className="space-y-3">
-              {producto.variants.map((variante) => (
-                <li
-                  key={variante.id}
-                  className="rounded-fefu border border-rosa bg-rosa-suave p-4"
-                >
-                  <Variante variante={variante} />
-                </li>
-              ))}
-            </ul>
-
-            <p className="text-sm text-piedra">
-              IVA incluido. El envío se cobra una vez por pedido, no por lámina.
-            </p>
-          </section>
+          <Estilos producto={producto} />
 
           {/* N18 — encargar exige cuenta. Si no la hay, RutaProtegida manda al
               login y devuelve aqui despues. */}
@@ -109,29 +84,109 @@ export function FichaProducto() {
   )
 }
 
-function Variante({ variante }: { variante: ProductVariant }) {
+/**
+ * Los estilos del producto.
+ *
+ * **Con foto se reparten en rejilla y sin foto se apilan**, y no es un
+ * capricho: la foto es justo lo que separa «Acuarela» de «Diseño de moda»
+ * —dos dibujos que no se parecen en nada—, asi que cuando existe manda ella
+ * y las tarjetas se ponen una al lado de otra para poder compararlas de un
+ * vistazo. Cuando no existe, una rejilla de cajas de texto solo seria aire:
+ * la lista apilada se lee mejor.
+ *
+ * `auto-fit` en vez de un numero de columnas fijo porque hay productos de un
+ * solo estilo —el ramo, las letras— y una rejilla de tres con uno dentro deja
+ * dos huecos.
+ */
+function Estilos({ producto }: { producto: Product }) {
+  const conFoto = producto.variants.some((variante) => variante.image?.url)
+  const varios = producto.variants.length > 1
+
   return (
-    <div className="flex flex-wrap items-baseline justify-between gap-2">
-      <div>
-        <h3 className="text-apartado text-verde">{variante.name}</h3>
+    <section aria-labelledby="opciones" className="space-y-3">
+      <h2 id="opciones" className="antetitulo text-verde">
+        {varios ? 'Elige el estilo' : 'El encargo'}
+      </h2>
 
-        {/* N7 — que entregas admite esta variante en concreto. Solo el estilo
-            digital admite descarga, y eso el cliente tiene que verlo antes de
-            elegir porque el servidor lo va a rechazar. */}
-        <p className="text-sm text-piedra">
-          {variante.shipping_methods
-            .map((metodo) =>
-              Number(metodo.price) === 0
-                ? metodo.name
-                : `${metodo.name} (${euros(metodo.price)})`,
-            )
-            .join(' · ')}
-        </p>
-      </div>
+      {/*
+        Las opciones se enseñan, no se eligen aqui: la eleccion se hace en
+        `/encargar`, que es donde ademas se sube la foto y se calcula el
+        total. Pintarlas como si fueran seleccionables cuando no lo son solo
+        prometeria un gesto que esta pantalla no cumple.
+      */}
+      <ul
+        className={
+          conFoto
+            ? 'grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(180px,1fr))]'
+            : 'space-y-3'
+        }
+      >
+        {producto.variants.map((variante) => (
+          <li
+            key={variante.id}
+            className="overflow-hidden rounded-fefu border border-rosa bg-rosa-suave"
+          >
+            <Variante variante={variante} enRejilla={conFoto} />
+          </li>
+        ))}
+      </ul>
 
-      <p className="text-base text-piedra">
-        {precioConCopias(variante.price, variante.additional_copy_price)}
+      <p className="text-sm text-piedra">
+        IVA incluido. El envío se cobra una vez por pedido, no por lámina.
       </p>
+    </section>
+  )
+}
+
+function Variante({
+  variante,
+  enRejilla,
+}: {
+  variante: ProductVariant
+  enRejilla: boolean
+}) {
+  /* N7 — que entregas admite esta variante en concreto. Solo el estilo
+     digital admite descarga, y eso el cliente tiene que verlo antes de
+     elegir porque el servidor lo va a rechazar. */
+  const entregas = variante.shipping_methods
+    .map((metodo) =>
+      Number(metodo.price) === 0 ? metodo.name : `${metodo.name} (${euros(metodo.price)})`,
+    )
+    .join(' · ')
+
+  const precio = precioConCopias(variante.price, variante.additional_copy_price)
+
+  if (!enRejilla) {
+    return (
+      <div className="flex flex-wrap items-baseline justify-between gap-2 p-4">
+        <div>
+          <h3 className="text-apartado text-verde">{variante.name}</h3>
+          <p className="text-sm text-piedra">{entregas}</p>
+        </div>
+
+        <p className="text-base text-piedra">{precio}</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex h-full flex-col">
+      {variante.image?.url && (
+        <img
+          src={variante.image.url}
+          alt={variante.name}
+          loading="lazy"
+          className="aspect-[4/3] w-full object-cover"
+        />
+      )}
+
+      <div className="flex flex-1 flex-col gap-1 p-4">
+        <h3 className="text-apartado text-verde">{variante.name}</h3>
+        <p className="text-base text-piedra">{precio}</p>
+        {/* Al fondo para que las tarjetas cuadren aunque una admita descarga
+            y las otras no. */}
+        <p className="mt-auto pt-1 text-sm text-piedra">{entregas}</p>
+      </div>
     </div>
   )
 }

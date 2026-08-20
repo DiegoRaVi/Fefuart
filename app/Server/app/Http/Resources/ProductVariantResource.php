@@ -25,6 +25,11 @@ class ProductVariantResource extends JsonResource
             'name' => $this->name,
             'price' => $this->price,
             'additional_copy_price' => $this->additional_copy_price,
+            // La foto de este estilo. Null mientras la artista no suba una:
+            // la ficha se cae entonces a la del producto.
+            'image' => $this->image === null
+                ? null
+                : MediaAssetResource::make($this->image),
             // N7 — que entregas admite esta variante.
             'shipping_methods' => ShippingMethodResource::collection(
                 $this->whenLoaded('shippingMethods')

@@ -45,6 +45,6 @@ class ProductImageController extends Controller
         // catalogo pinta una sola imagen por producto.
         $medios->delete($imagenes['thumbnail']);
 
-        return ProductResource::make($product->fresh()->load(['image', 'variants']));
+        return ProductResource::make($product->fresh()->load(['image', 'variants.shippingMethods', 'variants.image']));
     }
 }

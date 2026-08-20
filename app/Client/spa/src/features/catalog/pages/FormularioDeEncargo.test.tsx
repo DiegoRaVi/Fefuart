@@ -68,6 +68,7 @@ function unDibujo(overrides: Partial<Product> = {}): Product {
         name: 'Acuarela',
         price: '40.00',
         additional_copy_price: '10.00',
+        image: null,
         shipping_methods: [FISICO],
       },
       {
@@ -75,6 +76,7 @@ function unDibujo(overrides: Partial<Product> = {}): Product {
         name: 'Digital',
         price: '20.00',
         additional_copy_price: '10.00',
+        image: null,
         shipping_methods: [FISICO, DIGITAL],
       },
     ],

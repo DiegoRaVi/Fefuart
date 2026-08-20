@@ -47,6 +47,17 @@ class ProductVariant extends Model
     }
 
     /**
+     * La foto de este estilo. Nullable: hasta que la artista sube una, la
+     * ficha se cae a la del producto.
+     *
+     * @return BelongsTo<MediaAsset, $this>
+     */
+    public function image(): BelongsTo
+    {
+        return $this->belongsTo(MediaAsset::class, 'image_media_id');
+    }
+
+    /**
      * @return BelongsTo<Product, $this>
      */
     public function product(): BelongsTo

@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\Admin\ProductImageController;
 use App\Http\Controllers\Api\Admin\ProductVariantController as AdminVariantController;
 use App\Http\Controllers\Api\Admin\SettingsController;
 use App\Http\Controllers\Api\Admin\UserController as AdminUserController;
+use App\Http\Controllers\Api\Admin\VariantImageController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\CatalogController;
@@ -168,6 +169,12 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->name('admin.')->g
         ->name('products.variants.store');
     Route::patch('variants/{variant}', [AdminVariantController::class, 'update'])
         ->name('variants.update');
+
+    // La foto del estilo, por lo mismo que la del articulo: `multipart`
+    // aparte del JSON. Es lo unico que distingue una variante de otra en la
+    // ficha, asi que no es un adorno del backoffice.
+    Route::post('variants/{variant}/image', [VariantImageController::class, 'store'])
+        ->name('variants.image.store');
     Route::delete('variants/{variant}', [AdminVariantController::class, 'destroy'])
         ->name('variants.destroy');
 

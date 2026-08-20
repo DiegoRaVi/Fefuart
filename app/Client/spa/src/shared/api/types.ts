@@ -58,6 +58,8 @@ export interface ProductVariant {
   name: string
   price: string
   additional_copy_price: string
+  /** Null hasta que la artista suba una: la ficha se cae a la del producto. */
+  image: MediaAsset | null
   /** N7 — que entregas admite esta variante. */
   shipping_methods: ShippingMethod[]
 }

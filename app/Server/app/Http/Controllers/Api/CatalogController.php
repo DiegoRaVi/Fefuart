@@ -53,7 +53,11 @@ class CatalogController extends Controller
                 ->active()
                 ->orderBy('sort_order')
                 ->orderBy('name')
-                ->with('shippingMethods', fn ($q) => $q->orderBy('sort_order')),
+                ->with([
+                    'shippingMethods' => fn ($q) => $q->orderBy('sort_order'),
+                    // Sin esto la ficha dispara una consulta por estilo.
+                    'image',
+                ]),
         ];
     }
 }

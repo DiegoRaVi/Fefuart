@@ -30,7 +30,7 @@ class ProductController extends Controller
     {
         return ProductResource::collection(
             Product::query()
-                ->with('variants.shippingMethods')
+                ->with(['image', 'variants.shippingMethods', 'variants.image'])
                 ->orderBy('sort_order')
                 ->orderBy('name')
                 ->paginate(25)
@@ -41,14 +41,14 @@ class ProductController extends Controller
     {
         $product = Product::query()->create($request->validated());
 
-        return ProductResource::make($product->load('variants.shippingMethods'))
+        return ProductResource::make($product->load(['image', 'variants.shippingMethods', 'variants.image']))
             ->response()
             ->setStatusCode(Response::HTTP_CREATED);
     }
 
     public function show(Product $product): ProductResource
     {
-        return ProductResource::make($product->load('variants.shippingMethods'));
+        return ProductResource::make($product->load(['image', 'variants.shippingMethods', 'variants.image']));
     }
 
     public function update(UpdateProductRequest $request, Product $product): ProductResource
@@ -57,7 +57,7 @@ class ProductController extends Controller
         // donde entrar, ni aunque el modelo fuese otro.
         $product->update($request->validated());
 
-        return ProductResource::make($product->load('variants.shippingMethods'));
+        return ProductResource::make($product->load(['image', 'variants.shippingMethods', 'variants.image']));
     }
 
     /**

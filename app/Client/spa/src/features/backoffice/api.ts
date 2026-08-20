@@ -249,6 +249,28 @@ export function useMetricas() {
  * producto obligaria a reenviar la imagen cada vez que se corrige un nombre.
  */
 export function useSubirFotoDeProducto(productoId: number) {
+  return useSubirFoto(`/admin/products/${productoId}/image`)
+}
+
+/**
+ * La foto de un estilo concreto.
+ *
+ * Es lo unico que separa «Acuarela» de «Diseño de moda» en la ficha: dos
+ * dibujos que no se parecen en nada, y con una sola foto por producto el
+ * cliente elegia entre tres nombres y tres precios sin ver la diferencia.
+ */
+export function useSubirFotoDeVariante(varianteId: number) {
+  return useSubirFoto(`/admin/variants/${varianteId}/image`)
+}
+
+/**
+ * Lo que comparten las dos.
+ *
+ * Ambas devuelven el **producto** entero, no lo que se subio: quien sube la
+ * foto esta mirando la ficha del producto en el backoffice, y es esa la que
+ * tiene que refrescarse.
+ */
+function useSubirFoto(ruta: string) {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -256,10 +278,7 @@ export function useSubirFotoDeProducto(productoId: number) {
       const cuerpo = new FormData()
       cuerpo.append('file', archivo)
 
-      const { data } = await api.post<Envelope<Product>>(
-        `/admin/products/${productoId}/image`,
-        cuerpo,
-      )
+      const { data } = await api.post<Envelope<Product>>(ruta, cuerpo)
 
       return data.data
     },

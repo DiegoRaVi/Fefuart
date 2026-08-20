@@ -60,6 +60,7 @@ function unProducto(overrides: Partial<Product> = {}): Product {
         name: 'Diseno de moda',
         price: '30.00',
         additional_copy_price: '10.00',
+        image: null,
         shipping_methods: [
           { id: 1, code: 'physical', name: 'Envío a domicilio', price: '5.00' },
         ],
@@ -69,6 +70,7 @@ function unProducto(overrides: Partial<Product> = {}): Product {
         name: 'Digital',
         price: '20.00',
         additional_copy_price: '10.00',
+        image: null,
         shipping_methods: [
           { id: 1, code: 'physical', name: 'Envío a domicilio', price: '5.00' },
           { id: 2, code: 'digital', name: 'Descarga digital', price: '0.00' },

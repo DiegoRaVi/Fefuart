@@ -26,6 +26,17 @@ return new class extends Migration
             $table->decimal('price', 8, 2);
             $table->decimal('additional_copy_price', 8, 2)->default(0);
 
+            /*
+             * La foto de este estilo en concreto.
+             *
+             * Va aqui y no solo en el producto porque es lo unico que
+             * distingue «Acuarela» de «Diseno de moda» antes de encargar: son
+             * dos dibujos que no se parecen en nada y con una sola foto por
+             * producto el cliente elige a ciegas. Nullable, como la del
+             * producto: una variante recien creada todavia no tiene ninguna.
+             */
+            $table->foreignId('image_media_id')->nullable()->constrained('media_assets');
+
             $table->boolean('is_active')->default(true);
             $table->unsignedSmallInteger('sort_order')->default(0);
 
