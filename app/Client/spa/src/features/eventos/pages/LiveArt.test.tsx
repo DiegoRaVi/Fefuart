@@ -74,10 +74,49 @@ describe('el precio no se publica', () => {
   it('no enseña ningun importe', async () => {
     renderConProviders(<LiveArt />)
 
-    await screen.findByText('¿Tengo tu fecha libre?')
+    /*
+     * Se espera al formulario y no al titular: desde que la pantalla es
+     * publica hay dos paneles con el mismo «¿Tengo tu fecha libre?» —el
+     * formulario y la invitacion a crear cuenta— y ese texto aparece antes
+     * de que se resuelva la sesion, asi que no distingue uno de otro.
+     */
+    await screen.findByLabelText('Qué evento es')
 
     expect(document.body.textContent).not.toMatch(/\d+,\d{2}\s*€/)
     expect(screen.getByText(/a medida/i)).toBeInTheDocument()
+  })
+})
+
+/**
+ * N18 no se cae al abrir la pantalla: lo que cambia es donde se pide la
+ * cuenta. Publica desde el 2026-08-20, porque detras del login quien llegaba
+ * de Instagram se encontraba un formulario de acceso en vez de la pantalla
+ * que vende.
+ */
+describe('sin cuenta', () => {
+  beforeEach(() => {
+    vi.mocked(obtenerSesion).mockResolvedValue(null)
+  })
+
+  it('enseña lo que vende y pide la cuenta al final', async () => {
+    renderConProviders(<LiveArt />)
+
+    expect(
+      await screen.findByRole('link', { name: 'Crear cuenta y pedir presupuesto' }),
+    ).toBeInTheDocument()
+
+    // La propuesta se lee entera: no hay muro delante.
+    expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument()
+    expect(screen.queryByLabelText('Qué evento es')).not.toBeInTheDocument()
+  })
+
+  /** El endpoint responde 401: pedirlo igual solo llena la consola. */
+  it('no pide las solicitudes', async () => {
+    renderConProviders(<LiveArt />)
+
+    await screen.findByRole('link', { name: 'Crear cuenta y pedir presupuesto' })
+
+    expect(get.mock.calls.map(([ruta]) => ruta)).not.toContain('/events')
   })
 })
 

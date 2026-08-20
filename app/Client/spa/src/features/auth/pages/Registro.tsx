@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { Link } from 'react-router'
+import { Link, useLocation } from 'react-router'
 import { z } from 'zod'
 
 import { aplicarErroresDeApi } from '@/shared/api/formulario'
@@ -38,7 +38,16 @@ type Datos = z.infer<typeof esquema>
 const CAMPOS = ['name', 'email', 'password', 'password_confirmation'] as const
 
 export function Registro() {
-  const registrar = useRegistrarse('/perfil')
+  /*
+   * A donde se vuelve despues de crear la cuenta. Lo mismo que hace Login:
+   * quien llega aqui desde «pedir presupuesto» tiene que volver alli, no a
+   * su perfil. Sin sitio del que venir, al perfil, que es donde esta el
+   * aviso de verificar el correo (N19).
+   */
+  const ubicacion = useLocation()
+  const destino = (ubicacion.state as { desde?: string } | null)?.desde ?? '/perfil'
+
+  const registrar = useRegistrarse(destino)
   const [errorGeneral, setErrorGeneral] = useState<string | null>(null)
 
   const {
@@ -109,7 +118,11 @@ export function Registro() {
 
       <p className="text-base">
         Ya tienes cuenta?{' '}
-        <Link className="text-verde underline underline-offset-4" to="/login">
+        <Link
+          className="text-verde underline underline-offset-4"
+          to="/login"
+          state={ubicacion.state}
+        >
           Entra
         </Link>
       </p>

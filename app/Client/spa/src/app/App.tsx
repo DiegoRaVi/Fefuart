@@ -48,11 +48,16 @@ export function App() {
                   `Centrado` y se ponen ellas su propio ancho. */}
               <Route index element={<Portada />} />
 
-              {/* N18 — pedir presupuesto tambien exige cuenta: la artista
-                  tiene que poder responder a alguien. */}
-              <Route element={<RutaProtegida />}>
-                <Route path="live-art" element={<LiveArt />} />
-              </Route>
+              {/*
+                Publica desde el 2026-08-20, y N18 sigue en pie: lo que cambia
+                es donde se pide la cuenta. Detras de `RutaProtegida`, quien
+                llegaba de Instagram se encontraba un formulario de login en
+                lugar de la pantalla que vende — la peor primera impresion
+                posible para el servicio que mas margen deja. Ahora se entra,
+                se ve y se decide; la cuenta se pide al enviar, que es cuando
+                ya se sabe para que sirve. El endpoint la sigue exigiendo.
+              */}
+              <Route path="live-art" element={<LiveArt />} />
 
               <Route element={<Centrado />}>
                 {/* Publico: mirar no exige cuenta, encargar si (N18). */}

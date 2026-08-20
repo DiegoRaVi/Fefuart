@@ -93,8 +93,20 @@ export async function cancelarEvento(id: number): Promise<Evento> {
   return data.data
 }
 
-export function useEventos() {
-  return useQuery({ queryKey: CLAVE_EVENTOS, queryFn: obtenerEventos })
+/**
+ * Las solicitudes de quien mira.
+ *
+ * `habilitada` no es opcional por comodidad: desde que `/live-art` es
+ * publica, la pantalla se monta tambien sin sesion, y el endpoint responde
+ * 401. Pedirlo igual llenaria la consola de errores en la pagina que mas
+ * visitas recibe.
+ */
+export function useEventos(habilitada = true) {
+  return useQuery({
+    queryKey: CLAVE_EVENTOS,
+    queryFn: obtenerEventos,
+    enabled: habilitada,
+  })
 }
 
 export function usePedirEvento() {

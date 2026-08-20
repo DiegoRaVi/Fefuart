@@ -68,3 +68,25 @@ test('pedir presupuesto, recibirlo y ver la señal calculada', async ({ page }) 
     page.getByRole('button', { name: 'Aceptar y pagar la señal de 360,00 €' }),
   ).toBeVisible()
 })
+
+/**
+ * La pantalla es publica desde el 2026-08-20.
+ *
+ * Detras de `RutaProtegida`, quien llegaba de Instagram se encontraba un
+ * formulario de acceso en lugar de la pantalla que vende. N18 no se cae: lo
+ * que cambia es que la cuenta se pide al enviar y no al entrar, y el endpoint
+ * la sigue exigiendo — eso ultimo lo comprueba `EventPolicy` en Pest.
+ */
+test('se lee entera sin cuenta y pide registrarse al final', async ({ page }) => {
+  await page.goto('/live-art')
+
+  // No hay muro: la propuesta se lee.
+  await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+  await expect(page).toHaveURL(/\/live-art/)
+
+  // El formulario no esta; en su sitio, la invitacion.
+  await expect(page.getByLabel('Qué evento es')).toHaveCount(0)
+
+  await page.getByRole('link', { name: 'Crear cuenta y pedir presupuesto' }).click()
+  await expect(page).toHaveURL(/\/registro/)
+})

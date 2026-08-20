@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form'
 import { Link } from 'react-router'
 import { z } from 'zod'
 
+import { useSesion } from '@/features/auth/sesion'
 import { useGaleria } from '@/features/galeria/api'
 import { useAceptarPresupuesto } from '@/features/pagos/api'
 import { aplicarErroresDeApi } from '@/shared/api/formulario'
@@ -79,6 +80,7 @@ const PREGUNTAS = [
 ]
 
 export function LiveArt() {
+  const { autenticado } = useSesion()
   const { data: piezas } = useGaleria()
 
   const enDirecto = piezas?.filter((pieza) => pieza.category === 'live-art') ?? []
@@ -146,7 +148,10 @@ export function LiveArt() {
               </Link>
             </div>
 
-            <ul className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(240px,1fr))]">
+            {/* Columnas fijas y no `auto-fit`: con una sola pieza, auto-fit
+                la estiraba a todo el ancho y quedaba enorme. Una celda vacia
+                no dibuja nada, asi que sobra el hueco pero no se ve. */}
+            <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3">
               {muestra.map((pieza) => (
                 <li key={pieza.id}>
                   <img
@@ -178,12 +183,14 @@ export function LiveArt() {
           </dl>
         </section>
 
-        <Formulario />
+        {autenticado ? <Formulario /> : <SinCuenta />}
       </div>
 
-      <div className="mx-auto max-w-6xl px-6 pb-14">
-        <MisSolicitudes />
-      </div>
+      {autenticado && (
+        <div className="mx-auto max-w-6xl px-6 pb-14">
+          <MisSolicitudes />
+        </div>
+      )}
     </div>
   )
 }
@@ -342,6 +349,55 @@ function Formulario() {
           {isSubmitting ? 'Enviando...' : 'Pedir presupuesto'}
         </Boton>
       </form>
+    </section>
+  )
+}
+
+/**
+ * N18 sigue en pie: para pedir presupuesto hace falta cuenta.
+ *
+ * Lo que cambia es **donde** se pide. Antes la regla se aplicaba en la ruta,
+ * asi que quien llegaba de Instagram se encontraba un formulario de login en
+ * lugar de la pantalla que vende. Ahora la pantalla es publica y la cuenta se
+ * pide en el ultimo paso, que es cuando ya se sabe para que sirve.
+ *
+ * El `?volver=` lo lee `RutaProtegida`: al entrar o registrarse se vuelve
+ * aqui, no a la portada.
+ */
+function SinCuenta() {
+  return (
+    <section
+      id="solicitud"
+      aria-labelledby="titulo-sin-cuenta"
+      className="scroll-mt-24 space-y-4 rounded-fefu bg-rosa-suave p-6 sm:p-8"
+    >
+      <h2 id="titulo-sin-cuenta" className="text-seccion">
+        ¿Tengo tu fecha libre?
+      </h2>
+
+      <p className="text-base">
+        Para pedir presupuesto necesito una cuenta: es donde te dejo la
+        respuesta y desde donde reservas la fecha si te encaja. Se tarda un
+        minuto.
+      </p>
+
+      <div className="flex flex-wrap gap-3">
+        <Link
+          to="/registro"
+          state={{ desde: '/live-art' }}
+          className="rounded-fefu bg-piedra px-8 py-4 text-white transition-colors duration-300 hover:bg-verde"
+        >
+          Crear cuenta y pedir presupuesto
+        </Link>
+
+        <Link
+          to="/login"
+          state={{ desde: '/live-art' }}
+          className="rounded-fefu border border-piedra px-8 py-4 text-piedra transition-colors duration-300 hover:bg-white"
+        >
+          Ya tengo cuenta
+        </Link>
+      </div>
     </section>
   )
 }
