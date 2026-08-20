@@ -61,9 +61,9 @@ beforeEach(() => {
 })
 
 async function rellenarLoMinimo() {
-  await userEvent.type(await screen.findByLabelText('Que evento es'), 'Boda de Marta y Luis')
+  await userEvent.type(await screen.findByLabelText('Qué evento es'), 'Boda de Marta y Luis')
   await userEvent.type(screen.getByLabelText('Fecha'), '2027-06-12')
-  await userEvent.type(screen.getByLabelText('Donde'), 'Finca El Olivar, Toledo')
+  await userEvent.type(screen.getByLabelText('Dónde'), 'Finca El Olivar, Toledo')
 }
 
 /**
@@ -74,7 +74,7 @@ describe('el precio no se publica', () => {
   it('no enseña ningun importe', async () => {
     renderConProviders(<LiveArt />)
 
-    await screen.findByText('Cuéntanos tu evento')
+    await screen.findByText('¿Tengo tu fecha libre?')
 
     expect(document.body.textContent).not.toMatch(/\d+,\d{2}\s*€/)
     expect(screen.getByText(/a medida/i)).toBeInTheDocument()
@@ -151,7 +151,7 @@ describe('lo que se manda', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Pedir presupuesto' }))
 
     expect(await screen.findByText('Ponle un nombre al evento.')).toBeInTheDocument()
-    expect(screen.getByText('Dinos donde es.')).toBeInTheDocument()
+    expect(screen.getByText('Dinos dónde es.')).toBeInTheDocument()
     expect(post).not.toHaveBeenCalled()
   })
 

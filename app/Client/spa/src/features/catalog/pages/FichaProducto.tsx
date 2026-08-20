@@ -1,7 +1,7 @@
 import { Link, useParams } from 'react-router'
 
 import { ApiError } from '@/shared/api/errors'
-import type { ProductVariant } from '@/shared/api/types'
+import type { Product, ProductVariant } from '@/shared/api/types'
 import { euros, precioConCopias } from '@/shared/lib/dinero'
 import { Aviso } from '@/shared/ui/Aviso'
 import { Cargando } from '@/shared/ui/Cargando'
@@ -22,81 +22,89 @@ export function FichaProducto() {
     return (
       <div className="space-y-4">
         <Aviso tono="error">
-          {noExiste ? 'Ese encargo no existe o ya no esta disponible.' : error.message}
+          {noExiste ? 'Ese encargo no existe o ya no está disponible.' : error.message}
         </Aviso>
 
         <Link className="text-verde underline underline-offset-4" to="/encargos">
-          Volver al catalogo
+          Volver al catálogo
         </Link>
       </div>
     )
   }
 
   return (
-    <article className="max-w-3xl space-y-8">
-      <header className="space-y-3">
-        <Link className="text-base text-piedra underline underline-offset-4" to="/encargos">
-          Volver al catalogo
-        </Link>
+    <article className="mx-auto max-w-6xl space-y-8">
+      <nav aria-label="Migas de pan" className="text-base text-piedra">
+        <Link className="underline underline-offset-4" to="/encargos">
+          Encargos
+        </Link>{' '}
+        <span aria-hidden="true">&rsaquo;</span>{' '}
+        <span className="text-verde">{producto.name}</span>
+      </nav>
 
+      {/*
+        La obra a un lado y la decision al otro. En movil se apilan y la foto
+        queda arriba, que es el orden natural: primero se ve, luego se elige.
+      */}
+      <div
+        className={`grid gap-10 ${
+          producto.image?.url ? 'lg:grid-cols-2 lg:gap-14' : ''
+        }`}
+      >
         {producto.image?.url && (
           <img
             src={producto.image.url}
             alt={producto.name}
-            className="aspect-[3/2] w-full rounded-fefu object-cover"
+            className="aspect-[4/5] w-full rounded-fefu object-cover"
           />
         )}
 
-        <h1 className="text-titulo text-verde">{producto.name}</h1>
+        <div className="space-y-8">
+          <div className="space-y-4">
+            <h1 className="text-titulo">{producto.name}</h1>
 
-        {producto.description && <p>{producto.description}</p>}
-      </header>
+            {producto.description && <p className="text-lg">{producto.description}</p>}
+          </div>
 
-      <section aria-labelledby="opciones" className="space-y-4">
-        <h2 id="opciones" className="text-seccion text-verde">
-          Opciones
-        </h2>
+          <section aria-labelledby="opciones" className="space-y-3">
+            <h2 id="opciones" className="antetitulo text-verde">
+              Elige el estilo
+            </h2>
 
-        <ul className="space-y-3">
-          {producto.variants.map((variante) => (
-            <li key={variante.id} className="rounded-fefu bg-rosa-suave p-4">
-              <Variante variante={variante} />
-            </li>
-          ))}
-        </ul>
-      </section>
+            {/*
+              Las opciones se enseñan, no se eligen aqui: la eleccion se hace
+              en `/encargar`, que es donde ademas se sube la foto y se calcula
+              el total. Pintarlas como si fueran seleccionables cuando no lo
+              son solo prometeria un gesto que esta pantalla no cumple.
+            */}
+            <ul className="space-y-3">
+              {producto.variants.map((variante) => (
+                <li
+                  key={variante.id}
+                  className="rounded-fefu border border-rosa bg-rosa-suave p-4"
+                >
+                  <Variante variante={variante} />
+                </li>
+              ))}
+            </ul>
 
-      <section aria-labelledby="como-funciona" className="space-y-3">
-        <h2 id="como-funciona" className="text-seccion text-verde">
-          Como funciona
-        </h2>
+            <p className="text-sm text-piedra">
+              IVA incluido. El envío se cobra una vez por pedido, no por lámina.
+            </p>
+          </section>
 
-        <ul className="list-inside list-disc space-y-1 text-base">
-          {/* N9 — la foto no es un adjunto opcional: es el material de partida. */}
-          {producto.requires_reference_image && (
-            <li>Se dibuja a partir de una foto que subes tu.</li>
-          )}
-          {producto.requires_notes && (
-            <li>Puedes contarnos como lo quieres al hacer el encargo.</li>
-          )}
-          <li>Tarda unos {producto.delivery_days} dias en estar listo.</li>
-          {/* N3 — la cantidad son copias de la misma lamina. */}
-          <li>
-            Si quieres varias copias de la misma lamina, puedes pedir hasta{' '}
-            {producto.max_quantity}.
-          </li>
-        </ul>
+          {/* N18 — encargar exige cuenta. Si no la hay, RutaProtegida manda al
+              login y devuelve aqui despues. */}
+          <Link
+            to={`/encargos/${producto.slug}/encargar`}
+            className="inline-block rounded-fefu bg-piedra px-9 py-4 text-white transition-colors duration-300 hover:bg-verde"
+          >
+            Empezar mi encargo
+          </Link>
 
-      </section>
-
-      {/* N18 — encargar exige cuenta. Si no la hay, RutaProtegida manda al
-          login y devuelve aqui despues. */}
-      <Link
-        to={`/encargos/${producto.slug}/encargar`}
-        className="inline-block rounded-fefu bg-piedra px-6 py-3 text-white transition-colors duration-300 hover:bg-verde"
-      >
-        Encargar
-      </Link>
+          <QuePasaDespues producto={producto} />
+        </div>
+      </div>
     </article>
   )
 }
@@ -125,5 +133,43 @@ function Variante({ variante }: { variante: ProductVariant }) {
         {precioConCopias(variante.price, variante.additional_copy_price)}
       </p>
     </div>
+  )
+}
+
+/**
+ * Lo que pasa despues de pulsar, contado antes de pulsar.
+ *
+ * Era una lista de puntos bajo el titulo «Como funciona» y se queda en el
+ * mismo sitio de la pantalla que ocupa la decision, porque es justo lo que
+ * hace falta saber para tomarla: cuanto tarda, que hay que subir y cuantas
+ * copias caben. Todo sale del producto, asi que no hay ningun plazo escrito
+ * a mano que pueda quedarse viejo.
+ */
+function QuePasaDespues({ producto }: { producto: Product }) {
+  return (
+    <section
+      aria-labelledby="que-pasa"
+      className="space-y-2 rounded-fefu bg-rosa-suave p-5"
+    >
+      <h2 id="que-pasa" className="antetitulo text-verde">
+        Qué pasa después
+      </h2>
+
+      <ul className="space-y-1 text-base">
+        {/* N9 — la foto no es un adjunto opcional: es el material de partida. */}
+        {producto.requires_reference_image && (
+          <li>Se dibuja a partir de una foto que subes tú.</li>
+        )}
+        {producto.requires_notes && (
+          <li>Puedes contarnos cómo lo quieres al hacer el encargo.</li>
+        )}
+        <li>Tarda unos {producto.delivery_days} días en estar listo.</li>
+        {/* N3 — la cantidad son copias de la misma lamina. */}
+        <li>
+          Si quieres varias copias de la misma lámina, puedes pedir hasta{' '}
+          {producto.max_quantity}.
+        </li>
+      </ul>
+    </section>
   )
 }

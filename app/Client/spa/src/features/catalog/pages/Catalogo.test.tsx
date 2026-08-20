@@ -174,7 +174,7 @@ describe('la ficha', () => {
 
     renderFicha()
 
-    expect(await screen.findByText(/a partir de una foto que subes tu/i)).toBeInTheDocument()
+    expect(await screen.findByText(/a partir de una foto que subes tú/i)).toBeInTheDocument()
   })
 
   it('no lo avisa cuando el producto no la necesita', async () => {
@@ -182,8 +182,8 @@ describe('la ficha', () => {
 
     renderFicha()
 
-    await screen.findByText('Opciones')
-    expect(screen.queryByText(/a partir de una foto que subes tu/i)).not.toBeInTheDocument()
+    await screen.findByText('Elige el estilo')
+    expect(screen.queryByText(/a partir de una foto que subes tú/i)).not.toBeInTheDocument()
   })
 
   /** BUG-007 — v1 devolvia 200 con el 404 dentro del cuerpo. */
@@ -192,6 +192,6 @@ describe('la ficha', () => {
 
     renderFicha('no-existe')
 
-    expect(await screen.findByText(/no existe o ya no esta disponible/i)).toBeInTheDocument()
+    expect(await screen.findByText(/no existe o ya no está disponible/i)).toBeInTheDocument()
   })
 })

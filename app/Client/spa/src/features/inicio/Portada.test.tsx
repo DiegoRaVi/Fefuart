@@ -28,10 +28,10 @@ it('lleva a cada servicio desde su tarjeta', async () => {
   renderConProviders(<Portada />)
 
   const destinos = [
-    ['Live Art', '/live-art'],
+    ['Live Art en tu boda', '/live-art'],
     ['Dibujo por encargo', '/encargos/dibujo-por-encargo'],
     ['Letras infantiles', '/encargos/letras-infantiles'],
-    ['Ramos dibujados', '/encargos/ramos-dibujados'],
+    ['Tu ramo, en lámina', '/encargos/ramos-dibujados'],
   ]
 
   for (const [nombre, destino] of destinos) {
