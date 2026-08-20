@@ -63,7 +63,7 @@ Todo el desarrollo se realiza **en local**. El despliegue a staging y producció
 |---|---|---|
 | ~~P1~~ | **Resuelta:** el presupuesto caduca, y el plazo es **configurable** (`settings.quote_validity_days`, 14 días por defecto) en vez de estar fijado en código. Se congela al presupuestar: cambiar el ajuste no mueve la caducidad de los ya emitidos. Un presupuesto caducado no se puede aceptar —ni desde la SPA, que ni ofrece el botón, ni desde la API, que responde 422— y la artista puede emitir uno nuevo. Sin esto, un presupuesto de hace ocho meses se podría aceptar hoy a aquel precio. | Fase 5 |
 | ~~P2~~ | **Resuelta → N21:** la señal no se devuelve si cancela el cliente; se devuelve entera si cancela la artista. La devolución la hace el código y no la artista a mano en el panel, porque la regla es determinista y olvidarse de aplicarla deja al cliente sin su dinero. Lo que sí es explícito es el gesto: el botón del backoffice dice «Cancelar y devolver la señal (360,00 €)» y la pantalla del cliente avisa de que la perderá **antes** de que pulse, no después. Ningún endpoint devuelve dinero por su cuenta: se llega ahí como consecuencia declarada de cancelar. | Fase 5 |
-| ~~P3~~ | **Resuelta:** eliminación de cuenta → D21 (desactivación reversible) + D22 (supresión por anonimización). **Se implementa al final de la Fase 4 y antes de la Fase 5.** El motivo es técnico: hoy suprimir una cuenta sería `$user->delete()`, pero en cuanto existan pedidos pagados y eventos confirmados hay que anonimizar en vez de borrar. Escribirlo antes significa escribirlo dos veces. Antes de la Fase 5 sí es exigible: con pagos reales entran datos de terceros y el margen se estrecha. | Fin de Fase 4 |
+| ~~P3~~ | **Resuelta, e implementada el 2026-08-20** — no en la Fase 4, como decía esta ficha. Eliminación de cuenta → D21 (desactivación reversible) + D22 (supresión por anonimización). Decía **se implementa al final de la Fase 4 y antes de la Fase 5**, y no se hizo: se detectó repasando el roadmap contra el código cuando ya había pagos reales. La lección es de proceso — «decisión resuelta» y «decisión implementada» no son lo mismo, y esta tabla no distinguía las dos cosas. El motivo es técnico: hoy suprimir una cuenta sería `$user->delete()`, pero en cuanto existan pedidos pagados y eventos confirmados hay que anonimizar en vez de borrar. Escribirlo antes significa escribirlo dos veces. Antes de la Fase 5 sí es exigible: con pagos reales entran datos de terceros y el margen se estrecha. | Fin de Fase 4 |
 | ~~P5~~ | **Resuelta** en `b0c24d9` (Fase 4a). El backend responde en español, nombres de campo incluidos, y los asuntos de las notificaciones también. `APP_LOCALE` se fija además en `phpunit.xml` para que los tests no dependan del `.env` de quien los ejecute. El fallback se queda en inglés a propósito: si algún día falta una clave, es preferible ver el texto original que la clave cruda. | Fase 4 |
 | ~~P4~~ | **Resuelta:** los precios (30/40/20 € por variante, 40 € ramo y letras, 5 € de envío) se siembran tal cual, y el hueco que faltaba —el precio de la copia adicional— lo fija **D26**. Todos son semilla editable desde el backoffice, así que ninguno queda congelado en código. | Fase 2 |
 
@@ -554,6 +554,36 @@ Las dos pantallas que el legacy tenía y la SPA nunca llegó a construir. La gal
 **El texto de «Sobre mí» es de Felicitas** y se rescató del histórico de git al retirar el legacy. Va en el pie y no en la cabecera: se busca cuando algo ya te ha gustado, no antes.
 
 **Fuera por ahora:** los 2 vídeos y el PDF que hay mezclados en el archivo. Un vídeo en la galería trae reproductor, *poster*, formatos, peso y accesibilidad — es otra funcionalidad, no un detalle de esta.
+
+### Cuentas: desactivación y supresión (D21, D22) · ✅ completada (2026-08-20)
+
+**Estaban calendarizadas «al final de la Fase 4 y antes de la Fase 5» y nunca se hicieron.** Se descubrió repasando este documento contra el código, con pagos reales, direcciones y fotos de clientes ya en producción de desarrollo. Era la única deuda del proyecto con una obligación legal detrás, y P3 figuraba como «Resuelta» —cierto: la decisión estaba tomada— de una forma que inducía a pensar que también estaba implementada. **No lo estaba.**
+
+| Entregado | Estado |
+|---|---|
+| `users.deactivated_at` (reescrito en sitio, D25) + `EnsureIsActive` | ✅ `da61d2f` (D21) |
+| `AccountDeletionService::suprimir()` — anonimización | ✅ `da61d2f` (D22) |
+| `POST /api/profile/deactivate`, `DELETE /api/profile`, `DELETE /api/admin/users/{user}` | ✅ `da61d2f` |
+| Las dos acciones en el perfil, con la diferencia por escrito | ✅ `da61d2f` |
+| 16 tests | ✅ |
+
+**El middleware no es un detalle.** Sin `EnsureIsActive`, desactivar solo cerraría la sesión desde la que se pidió: la del móvil seguiría funcionando hasta que caducase la cookie. Va en el grupo de la API y no ruta a ruta, porque olvidarlo en una sola dejaría una puerta abierta difícil de ver.
+
+**El bloqueo del login va después de validar la contraseña**, no antes. Responder «esta cuenta está desactivada» a cualquiera que escriba un email sería confirmarle que esa cuenta existe — la misma razón por la que el mensaje de credenciales inválidas es único (SEC-007).
+
+**Qué sobrevive y qué no.** El pedido se queda con su importe, su fecha y su estado (art. 17(3)(b)); se van nombre, correo, teléfono, dirección de envío, notas del encargo, los datos de los eventos, los ficheros del disco y los avisos —que llevan el nombre dentro del JSON—. **La dirección de envío sí se anonimiza**, y se deduce de D18: el sistema no emite facturas, se gestionan fuera, así que aquí no hay obligación contable que la cubra.
+
+**Se bloquea si queda trabajo por entregar** —un pedido sin completar o un evento confirmado—, diciendo cuál. Es ejecución del contrato (art. 6(1)(b)) y evita el absurdo de que Felicitas no pueda entregar algo ya cobrado. Y una administradora no puede suprimirse a sí misma: dejaría la tienda sin nadie, y N20 impide recuperar el rol por HTTP.
+
+**Detalle que salió al implementarlo:** `events.title` y `events.location` son `NOT NULL` —la agenda no admite un evento sin fecha ni sitio—, así que se sustituyen por un marcador en vez de vaciarse. El resultado es el mismo: dejan de identificar a nadie.
+
+### Resumen del backoffice · ✅ completada (2026-08-20)
+
+`GET /api/admin/metrics` era el único endpoint de la tabla de API sin construir. Se hace lo mínimo: dos números de dinero —pedidos e ingresos del mes— y dos de trabajo —eventos sin presupuestar y entregas digitales pendientes—.
+
+**Sigue pendiente lo que lo aplazó desde la Fase 4: preguntarle a Felicitas qué mira.** Lo que ella consulte un lunes por la mañana es lo que debería estar ahí, y ampliarlo significa quitar alguno de estos cuatro — más de cuatro números en una pantalla dejan de leerse.
+
+Solo cuenta como ingreso **lo cobrado**: un pedido en `pending_payment` puede ser un carrito que nadie termine, y contarlo como facturación daría un número peor que no dar ninguno.
 
 ### Fase 8 — Despliegue · pospuesta
 Staging, producción, CI/CD, infraestructura, backups, monitorización, dominio, HTTPS, variables de entorno y rollback.
