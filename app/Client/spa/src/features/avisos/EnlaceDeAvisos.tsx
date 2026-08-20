@@ -12,7 +12,7 @@ import { useAvisos } from './api'
  * el carrito: el desplegable de v1 era donde vivian la peticion por linea y
  * el `innerHTML` sin escapar que acabo siendo SEC-005.
  */
-export function EnlaceDeAvisos() {
+export function EnlaceDeAvisos({ onNavegar }: { onNavegar?: () => void } = {}) {
   const { autenticado } = useSesion()
   const { data } = useAvisos(autenticado)
 
@@ -21,8 +21,9 @@ export function EnlaceDeAvisos() {
   return (
     <NavLink
       to="/avisos"
+      onClick={onNavegar}
       className={({ isActive }) =>
-        `rounded-fefu px-3 py-1 hover:bg-rosa-hondo ${isActive ? 'bg-rosa-hondo' : ''}`
+        `rounded-fefu px-3 py-2 hover:bg-rosa-hondo ${isActive ? 'bg-rosa-hondo' : ''}`
       }
     >
       {/* Sin numero cuando no hay nada: un «(0)» permanente solo es ruido. */}

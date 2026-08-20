@@ -18,9 +18,23 @@ export async function entrar(page: Page, quien: { email: string; password: strin
   await page.getByLabel('Contrasena').fill(quien.password)
   await page.getByRole('button', { name: 'Entrar' }).click()
 
-  // La cabecera solo ofrece «Salir» con sesion: es la senal de que la cookie
-  // viajo y Sanctum la acepto.
-  await expect(page.getByRole('button', { name: 'Salir' })).toBeVisible()
+  /*
+   * Se espera a que desaparezca «Crear cuenta», que es un enlace que **solo**
+   * se pinta sin sesion.
+   *
+   * Dos cosas a la vez, y las dos hacen falta. Buscar «Salir» ataba el helper
+   * al ancho de la ventana: desde que la cabecera se pliega por debajo de
+   * 768 px, esa navegacion esta detras del boton de menu y cualquier
+   * recorrido movil fallaba. Y comprobar que el formulario ya no esta no
+   * basta: se cumple en cuanto la pantalla de login se desmonta, que ocurre
+   * **antes** de que la consulta de sesion se resuelva — asi que el siguiente
+   * `goto` a una ruta protegida llegaba sin usuario y rebotaba.
+   *
+   * Esperar a que se vaya «Crear cuenta» espera a lo segundo, y funciona en
+   * los dos tamanos porque la navegacion es una sola copia en el DOM: por
+   * debajo de `md` se oculta con CSS, no se desmonta.
+   */
+  await expect(page.getByRole('link', { name: 'Crear cuenta' })).toHaveCount(0)
 }
 
 interface CorreoDeMailpit {

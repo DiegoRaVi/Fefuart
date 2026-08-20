@@ -97,3 +97,73 @@ describe('con sesion de administradora', () => {
     expect(await screen.findByRole('link', { name: 'Backoffice' })).toBeInTheDocument()
   })
 })
+
+/**
+ * La auditoria de UX del 2026-08-20 encontro que a 390 px la barra se salia
+ * de la pantalla y la pagina scrolleaba en horizontal — con sesion iniciada,
+ * la mitad de la navegacion quedaba fuera del viewport. Eran ocho enlaces en
+ * `flex-wrap` sin menu compacto.
+ *
+ * Los tests no miden pixeles, asi que lo que se fija aqui es la estructura
+ * que lo arregla: existe un boton de menu, la navegacion esta plegada al
+ * cargar, y al abrirla se llega a todo.
+ */
+describe('la navegacion en pantalla estrecha', () => {
+  it('ofrece un boton de menu', async () => {
+    sesion.mockResolvedValue(null)
+
+    renderConProviders(<Cabecera />)
+
+    expect(await screen.findByRole('button', { name: /menu/i })).toBeInTheDocument()
+  })
+
+  it('empieza plegada y anuncia que lo esta', async () => {
+    sesion.mockResolvedValue(null)
+
+    renderConProviders(<Cabecera />)
+
+    const boton = await screen.findByRole('button', { name: /menu/i })
+
+    expect(boton).toHaveAttribute('aria-expanded', 'false')
+  })
+
+  it('despliega la navegacion al pulsarlo', async () => {
+    sesion.mockResolvedValue(unUsuario({ name: 'Marta' }))
+
+    renderConProviders(<Cabecera />)
+
+    const boton = await screen.findByRole('button', { name: /menu/i })
+    await userEvent.click(boton)
+
+    expect(boton).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.getByRole('link', { name: 'Galeria' })).toBeVisible()
+  })
+
+  /** Navegar cierra el menu: dejarlo abierto tapa la pagina de destino. */
+  it('se cierra al elegir un destino', async () => {
+    sesion.mockResolvedValue(null)
+
+    renderConProviders(<Cabecera />)
+
+    const boton = await screen.findByRole('button', { name: /menu/i })
+    await userEvent.click(boton)
+    await userEvent.click(screen.getByRole('link', { name: 'Galeria' }))
+
+    expect(boton).toHaveAttribute('aria-expanded', 'false')
+  })
+})
+
+/**
+ * La administradora no compra en su propia tienda, y esos dos enlaces eran
+ * ademas cuatro elementos de mas en la barra que se desbordaba.
+ */
+it('no ensena carrito ni pedidos de cliente a la administradora', async () => {
+  sesion.mockResolvedValue(unaAdministradora())
+
+  renderConProviders(<Cabecera />)
+
+  await screen.findByRole('link', { name: 'Backoffice' })
+
+  expect(screen.queryByRole('link', { name: /^Carrito/ })).not.toBeInTheDocument()
+  expect(screen.queryByRole('link', { name: 'Pedidos' })).not.toBeInTheDocument()
+})
