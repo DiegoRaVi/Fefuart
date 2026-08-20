@@ -19,7 +19,7 @@ describe('los importes se enseñan en euros y en espanol', () => {
    * centimos enteros para no pasar por float. Si algun dia llega algo que no
    * es un numero, mejor enseñarlo tal cual que un NaN.
    */
-  it('no inventa nada si el importe no es un numero', () => {
+  it('no inventa nada si el importe no es un número', () => {
     expect(euros('lo-que-sea')).toBe('lo-que-sea')
   })
 })

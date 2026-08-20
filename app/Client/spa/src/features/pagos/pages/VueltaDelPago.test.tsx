@@ -73,7 +73,7 @@ describe('no se cree la URL', () => {
   })
 
   /** El `session_id` del enlace no se manda a ningun sitio: no autoriza nada. */
-  it('no manda a la API el identificador de sesion del enlace', async () => {
+  it('no manda a la API el identificador de sesión del enlace', async () => {
     servirEstado('paid')
 
     montar('pedido', '/pedidos/1/pago?sesion=cs_test_inventada')

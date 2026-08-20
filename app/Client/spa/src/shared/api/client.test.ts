@@ -20,7 +20,7 @@ beforeEach(() => {
 })
 
 describe('el cliente habla el idioma de Sanctum', () => {
-  it('manda la cookie de sesion en cada peticion', () => {
+  it('manda la cookie de sesión en cada peticion', () => {
     expect(api.defaults.withCredentials).toBe(true)
   })
 
@@ -29,7 +29,7 @@ describe('el cliente habla el idioma de Sanctum', () => {
    * JWT vivia en `localStorage` (`auth.js:7-10`), de modo que un XSS lo
    * robaba directamente y no habia forma de revocarlo.
    */
-  it('no guarda nada de la sesion donde JavaScript pueda leerlo', () => {
+  it('no guarda nada de la sesión donde JavaScript pueda leerlo', () => {
     expect(JSON.stringify(api.defaults.headers)).not.toContain('Authorization')
     expect(localStorage.length).toBe(0)
     expect(sessionStorage.length).toBe(0)
@@ -41,7 +41,7 @@ describe('el cliente habla el idioma de Sanctum', () => {
 })
 
 describe('la cookie CSRF', () => {
-  it('se pide cuando todavia no existe', async () => {
+  it('se pide cuando todavía no existe', async () => {
     const get = vi.spyOn(axios, 'get').mockResolvedValue({ data: '' })
 
     await asegurarCookieCsrf()

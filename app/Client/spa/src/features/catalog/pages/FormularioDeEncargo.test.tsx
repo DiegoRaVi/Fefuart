@@ -47,7 +47,7 @@ function loEnviadoAlCarrito(): Record<string, unknown> {
   return anadir.llamadas[0][1] as Record<string, unknown>
 }
 
-const FISICO = { id: 1, code: 'physical' as const, name: 'Envio a domicilio', price: '5.00' }
+const FISICO = { id: 1, code: 'physical' as const, name: 'Envío a domicilio', price: '5.00' }
 const DIGITAL = { id: 2, code: 'digital' as const, name: 'Descarga digital', price: '0.00' }
 
 function unDibujo(overrides: Partial<Product> = {}): Product {
@@ -111,7 +111,7 @@ describe('la entrega depende de la opcion elegida', () => {
     await screen.findByText('Acuarela')
 
     // Acuarela viene seleccionada y solo admite fisico.
-    expect(screen.getByLabelText(/Envio a domicilio/)).toBeInTheDocument()
+    expect(screen.getByLabelText(/Envío a domicilio/)).toBeInTheDocument()
     expect(screen.queryByLabelText(/Descarga digital/)).not.toBeInTheDocument()
 
     await userEvent.click(screen.getByRole('radio', { name: /Digital/ }))
@@ -160,7 +160,7 @@ describe('la foto de referencia', () => {
   it('no deja encargar sin ella cuando el producto la exige', async () => {
     renderFormulario()
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Anadir al carrito' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Añadir al carrito' }))
 
     expect(await screen.findByText(/se dibuja a partir de tu foto/i)).toBeInTheDocument()
     expect(anadir.llamadas).toHaveLength(0)
@@ -174,7 +174,7 @@ describe('la foto de referencia', () => {
 
     renderFormulario()
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Anadir al carrito' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Añadir al carrito' }))
 
     await waitFor(() => expect(anadir.llamadas).toHaveLength(1))
     expect(loEnviadoAlCarrito().reference_media_id).toBeNull()
@@ -224,7 +224,7 @@ describe('lo que se manda al servidor', () => {
     await screen.findByText('boda.jpg')
 
     await userEvent.type(screen.getByLabelText('Como lo quieres'), 'En blanco y negro.')
-    await userEvent.click(screen.getByRole('button', { name: 'Anadir al carrito' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Añadir al carrito' }))
 
     await waitFor(() => expect(anadir.llamadas).toHaveLength(1))
 
@@ -249,7 +249,7 @@ describe('lo que se manda al servidor', () => {
 
     renderFormulario()
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Anadir al carrito' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Añadir al carrito' }))
 
     expect(await screen.findByText('Tu carrito')).toBeInTheDocument()
   })
@@ -268,7 +268,7 @@ describe('lo que se manda al servidor', () => {
 
     renderFormulario()
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Anadir al carrito' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Añadir al carrito' }))
 
     expect(
       await screen.findByText('No se pueden encargar mas de 10 copias.'),

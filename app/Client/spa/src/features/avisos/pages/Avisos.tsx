@@ -33,7 +33,7 @@ export function Avisos() {
       <h1 className="text-titulo text-verde">Avisos</h1>
 
       {data.data.length === 0 ? (
-        <Recuadro tono="informacion">Todavia no tienes avisos.</Recuadro>
+        <Recuadro tono="informacion">Todavía no tienes avisos.</Recuadro>
       ) : (
         <ul className="space-y-3">
           {data.data.map((aviso) => (

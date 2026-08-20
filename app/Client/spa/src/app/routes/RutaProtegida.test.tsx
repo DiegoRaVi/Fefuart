@@ -36,8 +36,8 @@ function arbol() {
   )
 }
 
-describe('rutas que exigen sesion', () => {
-  it('no decide nada mientras no sabe si hay sesion', async () => {
+describe('rutas que exigen sesión', () => {
+  it('no decide nada mientras no sabe si hay sesión', async () => {
     // Consulta que nunca resuelve: es el estado del primer render.
     sesion.mockReturnValue(new Promise(() => {}))
 
@@ -49,7 +49,7 @@ describe('rutas que exigen sesion', () => {
     expect(screen.queryByText('Formulario de acceso')).not.toBeInTheDocument()
   })
 
-  it('manda al login a quien no tiene sesion', async () => {
+  it('manda al login a quien no tiene sesión', async () => {
     sesion.mockResolvedValue(null)
 
     renderConProviders(arbol(), { ruta: '/perfil' })
@@ -58,7 +58,7 @@ describe('rutas que exigen sesion', () => {
     expect(screen.queryByText('Mi perfil')).not.toBeInTheDocument()
   })
 
-  it('deja pasar a quien tiene sesion', async () => {
+  it('deja pasar a quien tiene sesión', async () => {
     sesion.mockResolvedValue(unUsuario())
 
     renderConProviders(arbol(), { ruta: '/perfil' })
@@ -76,7 +76,7 @@ describe('el backoffice', () => {
     expect(await screen.findByText('Panel de la artista')).toBeInTheDocument()
   })
 
-  it('devuelve a la portada a un cliente con sesion', async () => {
+  it('devuelve a la portada a un cliente con sesión', async () => {
     sesion.mockResolvedValue(unUsuario())
 
     renderConProviders(arbol(), { ruta: '/backoffice' })
@@ -85,7 +85,7 @@ describe('el backoffice', () => {
     expect(screen.queryByText('Panel de la artista')).not.toBeInTheDocument()
   })
 
-  it('manda al login a quien no tiene sesion', async () => {
+  it('manda al login a quien no tiene sesión', async () => {
     sesion.mockResolvedValue(null)
 
     renderConProviders(arbol(), { ruta: '/backoffice' })
@@ -116,7 +116,7 @@ describe('el backoffice', () => {
 })
 
 describe('rutas solo para invitados', () => {
-  it('deja registrarse a quien no tiene sesion', async () => {
+  it('deja registrarse a quien no tiene sesión', async () => {
     sesion.mockResolvedValue(null)
 
     renderConProviders(arbol(), { ruta: '/registro' })

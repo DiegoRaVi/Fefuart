@@ -180,7 +180,7 @@ function Encargo({ producto }: { producto: Product }) {
 
           <p className="text-sm text-piedra">
             {admiteCopias
-              ? `Copias de esta misma lamina, hasta ${producto.max_quantity}.`
+              ? `Copias de esta misma lámina, hasta ${producto.max_quantity}.`
               : 'Una entrega digital es un unico archivo.'}
           </p>
 
@@ -231,7 +231,7 @@ function Encargo({ producto }: { producto: Product }) {
           el mismo caso.
         */}
         <Boton type="submit" disabled={anadir.isPending} className="w-full">
-          {anadir.isPending ? 'Anadiendo...' : 'Anadir al carrito'}
+          {anadir.isPending ? 'Anadiendo...' : 'Añadir al carrito'}
         </Boton>
       </form>
     </div>

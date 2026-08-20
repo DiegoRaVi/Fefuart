@@ -157,7 +157,7 @@ describe('el buscador', () => {
 
     renderConProviders(<PedidosDeAdmin />)
 
-    expect(await screen.findByText(/Todavia no hay pedidos/i)).toBeInTheDocument()
+    expect(await screen.findByText(/Todavía no hay pedidos/i)).toBeInTheDocument()
   })
 })
 

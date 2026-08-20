@@ -26,7 +26,7 @@ const esquema = z
     name: z.string().min(1, 'Escribe tu nombre.').max(255),
     email: z.string().min(1, 'Escribe tu correo.').email('Eso no parece un correo.'),
     password: z.string().min(8, 'Al menos ocho caracteres.'),
-    password_confirmation: z.string().min(1, 'Repite la contrasena.'),
+    password_confirmation: z.string().min(1, 'Repite la contraseña.'),
   })
   .refine((datos) => datos.password === datos.password_confirmation, {
     path: ['password_confirmation'],
@@ -86,7 +86,7 @@ export function Registro() {
         />
 
         <Campo
-          etiqueta="Contrasena"
+          etiqueta="Contraseña"
           type="password"
           autoComplete="new-password"
           ayuda="Al menos ocho caracteres."
@@ -95,7 +95,7 @@ export function Registro() {
         />
 
         <Campo
-          etiqueta="Repite la contrasena"
+          etiqueta="Repite la contraseña"
           type="password"
           autoComplete="new-password"
           error={errors.password_confirmation?.message}

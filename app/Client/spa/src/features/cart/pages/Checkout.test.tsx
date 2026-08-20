@@ -78,15 +78,15 @@ beforeEach(() => {
   vi.mocked(obtenerSesion).mockResolvedValue(unUsuario())
 })
 
-describe('la direccion', () => {
+describe('la dirección', () => {
   /** N6 — un pedido con alguna linea fisica hay que enviarlo a alguna parte. */
   it('se pide cuando hay una linea fisica', async () => {
     servirCarrito(unCarrito([unaLinea()]))
 
     renderCheckout()
 
-    expect(await screen.findByLabelText('Direccion')).toBeInTheDocument()
-    expect(screen.getByLabelText('Codigo postal')).toBeInTheDocument()
+    expect(await screen.findByLabelText('Dirección')).toBeInTheDocument()
+    expect(screen.getByLabelText('Código postal')).toBeInTheDocument()
   })
 
   /**
@@ -98,7 +98,7 @@ describe('la direccion', () => {
 
     renderCheckout()
 
-    expect(await screen.findByText(/no hace falta direccion/i)).toBeInTheDocument()
+    expect(await screen.findByText(/no hace falta dirección/i)).toBeInTheDocument()
     expect(screen.queryByLabelText('Direccion')).not.toBeInTheDocument()
   })
 })
@@ -115,26 +115,26 @@ describe('el resumen', () => {
     expect(screen.getByText('IVA incluido.')).toBeInTheDocument()
   })
 
-  it('manda al catalogo si el carrito esta vacio', async () => {
+  it('manda al catalogo si el carrito esta vacío', async () => {
     servirCarrito(unCarrito([]))
 
     renderCheckout()
 
-    expect(await screen.findByText(/carrito esta vacio/i)).toBeInTheDocument()
+    expect(await screen.findByText(/carrito esta vacío/i)).toBeInTheDocument()
   })
 })
 
 describe('confirmar el encargo', () => {
   /** SEC-006 — ningun importe sale del cliente, tampoco aqui. */
-  it('manda solo la direccion', async () => {
+  it('manda solo la dirección', async () => {
     servirCarrito(unCarrito([unaLinea()]))
     post.mockResolvedValue({ data: { data: { id: 9 } } } as never)
 
     renderCheckout()
 
     await userEvent.type(await screen.findByLabelText('Nombre y apellidos'), 'Marta Ruiz')
-    await userEvent.type(screen.getByLabelText('Direccion'), 'Calle Mayor 1')
-    await userEvent.type(screen.getByLabelText('Codigo postal'), '45001')
+    await userEvent.type(screen.getByLabelText('Dirección'), 'Calle Mayor 1')
+    await userEvent.type(screen.getByLabelText('Código postal'), '45001')
     await userEvent.type(screen.getByLabelText('Ciudad'), 'Toledo')
     await userEvent.click(screen.getByRole('button', { name: 'Confirmar el encargo' }))
 

@@ -69,7 +69,7 @@ beforeEach(() => {
  * `status` del navegador. Aqui lo unico que viaja es el id en la URL: el
  * importe lo tiene el pedido y lo calculo el servidor.
  */
-it('pide la sesion de pago sin mandar ningun importe', async () => {
+it('pide la sesión de pago sin mandar ningun importe', async () => {
   get.mockResolvedValue({ data: { data: unPedido() } } as never)
   post.mockResolvedValue({
     data: { url: 'https://checkout.stripe.com/c/pay/cs_test_1', payment_id: 3 },

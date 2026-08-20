@@ -47,12 +47,12 @@ it('pinta la miniatura en la rejilla, no la imagen grande', async () => {
   expect(imagen).toHaveAttribute('loading', 'lazy')
 })
 
-it('avisa cuando la galeria esta vacia', async () => {
+it('avisa cuando la galeria esta vacía', async () => {
   get.mockResolvedValue({ data: { data: [] } } as never)
 
   renderConProviders(<Galeria />, { ruta: '/galeria' })
 
-  expect(await screen.findByText(/Todavia no hay nada por aqui/)).toBeInTheDocument()
+  expect(await screen.findByText(/Todavía no hay nada por aquí/)).toBeInTheDocument()
 })
 
 it('pide al servidor la categoria que se elige', async () => {

@@ -23,7 +23,7 @@ beforeEach(() => {
 
 async function rellenar(email: string, password: string) {
   await userEvent.type(screen.getByLabelText('Correo'), email)
-  await userEvent.type(screen.getByLabelText('Contrasena'), password)
+  await userEvent.type(screen.getByLabelText('Contraseña'), password)
   await userEvent.click(screen.getByRole('button', { name: 'Entrar' }))
 }
 
@@ -34,7 +34,7 @@ describe('validacion antes de salir del navegador', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Entrar' }))
 
     expect(await screen.findByText('Escribe tu correo.')).toBeInTheDocument()
-    expect(screen.getByText('Escribe tu contrasena.')).toBeInTheDocument()
+    expect(screen.getByText('Escribe tu contraseña.')).toBeInTheDocument()
     expect(entrar).not.toHaveBeenCalled()
   })
 })
@@ -100,7 +100,7 @@ describe('el servidor es quien decide', () => {
   })
 })
 
-describe('la sesion no toca el almacenamiento del navegador', () => {
+describe('la sesión no toca el almacenamiento del navegador', () => {
   /**
    * SEC-005 / SEC-011 — en v1 el JWT acababa en localStorage al entrar.
    */

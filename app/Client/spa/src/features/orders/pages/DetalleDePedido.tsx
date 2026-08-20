@@ -95,7 +95,7 @@ export function DetalleDePedido() {
           <span>{euros(pedido.subtotal)}</span>
         </div>
         <div className="flex justify-between text-base">
-          <span>Envio</span>
+          <span>Envío</span>
           <span>{euros(pedido.shipping_total)}</span>
         </div>
         <div className="flex justify-between text-seccion text-verde">
@@ -171,7 +171,7 @@ function Linea({ pedidoId, linea }: { pedidoId: number; linea: OrderItem }) {
 
         <p className="text-sm text-piedra">
           {linea.variant_name} ·{' '}
-          {linea.delivery_type === 'digital' ? 'Descarga digital' : 'Envio a domicilio'}
+          {linea.delivery_type === 'digital' ? 'Descarga digital' : 'Envío a domicilio'}
           {linea.quantity > 1 && ` · ${linea.quantity} copias`}
         </p>
 

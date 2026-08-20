@@ -82,7 +82,7 @@ export function CerrarLaCuenta() {
             }}
           >
             <Campo
-              etiqueta="Tu contrasena"
+              etiqueta="Tu contraseña"
               type="password"
               autoComplete="current-password"
               value={password}

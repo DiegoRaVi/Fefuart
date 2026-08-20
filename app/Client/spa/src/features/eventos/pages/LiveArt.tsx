@@ -111,7 +111,7 @@ function Formulario() {
   return (
     <section aria-labelledby="solicitud" className="space-y-4">
       <h2 id="solicitud" className="text-seccion text-verde">
-        Cuentanos tu evento
+        Cuéntanos tu evento
       </h2>
 
       {enviada && (
@@ -155,7 +155,7 @@ function Formulario() {
 
         <Campo
           etiqueta="Donde"
-          ayuda="Sitio y poblacion."
+          ayuda="Sitio y población."
           error={errors.location?.message}
           {...register('location')}
         />
@@ -180,14 +180,14 @@ function Formulario() {
           />
           <Campo
             etiqueta="Tipo"
-            ayuda="Boda, comunion..."
+            ayuda="Boda, comunión..."
             error={errors.event_type?.message}
             {...register('event_type')}
           />
         </div>
 
         <Campo
-          etiqueta="Telefono"
+          etiqueta="Teléfono"
           type="tel"
           autoComplete="tel"
           error={errors.phone?.message}

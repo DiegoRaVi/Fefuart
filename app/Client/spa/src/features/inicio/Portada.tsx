@@ -21,19 +21,19 @@ const SERVICIOS = [
   },
   {
     nombre: 'Dibujo por encargo',
-    descripcion: 'Retratos dibujados a mano a partir de tu fotografia, en tres estilos.',
+    descripcion: 'Retratos dibujados a mano a partir de tu fotografía, en tres estilos.',
     destino: '/encargos/dibujo-por-encargo',
     slug: 'dibujo-por-encargo',
   },
   {
     nombre: 'Letras infantiles',
-    descripcion: 'Letras ilustradas para la habitacion de los peques.',
+    descripcion: 'Letras ilustradas para la habitación de los peques.',
     destino: '/encargos/letras-infantiles',
     slug: 'letras-infantiles',
   },
   {
     nombre: 'Ramos dibujados',
-    descripcion: 'Tu ramo de novia convertido en lamina para siempre.',
+    descripcion: 'Tu ramo de novia convertido en lámina para siempre.',
     destino: '/encargos/ramos-dibujados',
     slug: 'ramos-dibujados',
   },

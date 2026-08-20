@@ -29,7 +29,7 @@ export function MisPedidos() {
     return (
       <div className="mx-auto max-w-2xl space-y-4">
         <h1 className="text-titulo text-verde">Mis pedidos</h1>
-        <Aviso tono="informacion">Todavia no has hecho ningun pedido.</Aviso>
+        <Aviso tono="informacion">Todavía no has hecho ningun pedido.</Aviso>
         <Link className="text-verde underline underline-offset-4" to="/encargos">
           Ver los encargos
         </Link>

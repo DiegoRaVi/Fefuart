@@ -62,7 +62,7 @@ export function Checkout() {
     return (
       <div className="mx-auto max-w-2xl space-y-4">
         <h1 className="text-titulo text-verde">Confirmar el encargo</h1>
-        <Aviso tono="informacion">Tu carrito esta vacio.</Aviso>
+        <Aviso tono="informacion">Tu carrito esta vacío.</Aviso>
         <Link className="text-verde underline underline-offset-4" to="/encargos">
           Ver los encargos
         </Link>
@@ -126,7 +126,7 @@ export function Checkout() {
         </ul>
 
         <div className="flex justify-between border-t border-piedra/20 pt-2 text-base">
-          <span>Envio</span>
+          <span>Envío</span>
           <span>{euros(carrito.shipping_total)}</span>
         </div>
 
@@ -151,7 +151,7 @@ export function Checkout() {
             />
 
             <Campo
-              etiqueta="Telefono"
+              etiqueta="Teléfono"
               type="tel"
               autoComplete="tel"
               ayuda="Por si el repartidor necesita localizarte."
@@ -160,7 +160,7 @@ export function Checkout() {
             />
 
             <Campo
-              etiqueta="Direccion"
+              etiqueta="Dirección"
               autoComplete="address-line1"
               error={errors.shipping_line1?.message}
               {...register('shipping_line1')}
@@ -175,7 +175,7 @@ export function Checkout() {
 
             <div className="grid gap-4 sm:grid-cols-3">
               <Campo
-                etiqueta="Codigo postal"
+                etiqueta="Código postal"
                 autoComplete="postal-code"
                 error={errors.shipping_postal_code?.message}
                 {...register('shipping_postal_code')}
@@ -196,7 +196,7 @@ export function Checkout() {
           </>
         ) : (
           <Aviso tono="informacion">
-            Tu encargo es digital, asi que no hace falta direccion. Lo podras
+            Tu encargo es digital, así que no hace falta dirección. Lo podrás
             descargar desde el detalle del pedido.
           </Aviso>
         )}

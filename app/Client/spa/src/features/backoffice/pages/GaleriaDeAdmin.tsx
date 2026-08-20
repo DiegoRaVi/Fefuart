@@ -27,7 +27,7 @@ export function GaleriaDeAdmin() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-titulo text-verde">Galeria</h1>
+      <h1 className="text-titulo text-verde">Galería</h1>
 
       <NuevaPieza />
 
@@ -78,10 +78,10 @@ function NuevaPieza() {
         }
       }}
     >
-      <h2 className="text-apartado text-verde">Anadir una pieza</h2>
+      <h2 className="text-apartado text-verde">Añadir una pieza</h2>
 
       <Campo
-        etiqueta="Titulo"
+        etiqueta="Título"
         value={titulo}
         onChange={(e) => setTitulo(e.target.value)}
         required
@@ -129,7 +129,7 @@ function NuevaPieza() {
       </div>
 
       <Boton type="submit" disabled={subir.isPending || !archivo}>
-        {subir.isPending ? 'Subiendo...' : 'Anadir a la galeria'}
+        {subir.isPending ? 'Subiendo...' : 'Añadir a la galeria'}
       </Boton>
 
       {subir.isError && <Aviso tono="error">{subir.error.message}</Aviso>}

@@ -23,9 +23,9 @@ const esquemaDatos = z.object({
 
 const esquemaContrasena = z
   .object({
-    current_password: z.string().min(1, 'Escribe tu contrasena actual.'),
+    current_password: z.string().min(1, 'Escribe tu contraseña actual.'),
     password: z.string().min(8, 'Al menos ocho caracteres.'),
-    password_confirmation: z.string().min(1, 'Repite la contrasena.'),
+    password_confirmation: z.string().min(1, 'Repite la contraseña.'),
   })
   .refine((d) => d.password === d.password_confirmation, {
     path: ['password_confirmation'],
@@ -76,7 +76,7 @@ function AvisoDeVerificacion() {
   return (
     <div className="space-y-3 rounded-fefu border-l-4 border-piedra bg-rosa-suave px-4 py-3">
       <p role="status" className="text-base text-piedra">
-        Tu correo todavia no esta verificado.
+        Tu correo todavía no está verificado.
       </p>
 
       {enviado ? (
@@ -148,7 +148,7 @@ function DatosDeLaCuenta() {
         <Campo
           etiqueta="Correo"
           type="email"
-          ayuda="Si lo cambias tendras que verificar la direccion nueva."
+          ayuda="Si lo cambias tendrás que verificar la dirección nueva."
           error={errors.email?.message}
           {...register('email')}
         />
@@ -196,14 +196,14 @@ function ContrasenaDeLaCuenta() {
         Contrasena
       </h2>
 
-      {cambiada && <Aviso tono="exito">Contrasena cambiada.</Aviso>}
+      {cambiada && <Aviso tono="exito">Contraseña cambiada.</Aviso>}
       {errorGeneral && <Aviso tono="error">{errorGeneral}</Aviso>}
 
       <form onSubmit={enviar} noValidate className="space-y-4">
         {/* El backend la comprueba contra la contrasena del usuario
             autenticado, no contra un valor del cliente. */}
         <Campo
-          etiqueta="Contrasena actual"
+          etiqueta="Contraseña actual"
           type="password"
           autoComplete="current-password"
           error={errors.current_password?.message}
@@ -211,7 +211,7 @@ function ContrasenaDeLaCuenta() {
         />
 
         <Campo
-          etiqueta="Contrasena nueva"
+          etiqueta="Contraseña nueva"
           type="password"
           autoComplete="new-password"
           ayuda="Al menos ocho caracteres, y distinta de la actual."
@@ -220,7 +220,7 @@ function ContrasenaDeLaCuenta() {
         />
 
         <Campo
-          etiqueta="Repite la contrasena nueva"
+          etiqueta="Repite la contraseña nueva"
           type="password"
           autoComplete="new-password"
           error={errors.password_confirmation?.message}
@@ -228,7 +228,7 @@ function ContrasenaDeLaCuenta() {
         />
 
         <Boton type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Cambiando...' : 'Cambiar la contrasena'}
+          {isSubmitting ? 'Cambiando...' : 'Cambiar la contraseña'}
         </Boton>
       </form>
     </section>

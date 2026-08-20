@@ -20,7 +20,7 @@ beforeEach(() => {
   localStorage.clear()
 })
 
-describe('sin sesion', () => {
+describe('sin sesión', () => {
   it('ofrece entrar y crear cuenta', async () => {
     sesion.mockResolvedValue(null)
 
@@ -41,7 +41,7 @@ describe('sin sesion', () => {
   })
 })
 
-describe('con sesion de cliente', () => {
+describe('con sesión de cliente', () => {
   it('ensena el nombre y la salida', async () => {
     sesion.mockResolvedValue(unUsuario({ name: 'Marta' }))
 
@@ -88,7 +88,7 @@ describe('con sesion de cliente', () => {
   })
 })
 
-describe('con sesion de administradora', () => {
+describe('con sesión de administradora', () => {
   it('ensena el backoffice', async () => {
     sesion.mockResolvedValue(unaAdministradora())
 

@@ -47,7 +47,7 @@ function unProducto(overrides: Partial<Product> = {}): Product {
     id: 1,
     slug: 'dibujo-por-encargo',
     name: 'Dibujo por encargo',
-    description: 'Retrato dibujado a partir de tu fotografia.',
+    description: 'Retrato dibujado a partir de tu fotografía.',
     category: 'dibujo',
     image: null,
     requires_reference_image: true,
@@ -61,7 +61,7 @@ function unProducto(overrides: Partial<Product> = {}): Product {
         price: '30.00',
         additional_copy_price: '10.00',
         shipping_methods: [
-          { id: 1, code: 'physical', name: 'Envio a domicilio', price: '5.00' },
+          { id: 1, code: 'physical', name: 'Envío a domicilio', price: '5.00' },
         ],
       },
       {
@@ -70,7 +70,7 @@ function unProducto(overrides: Partial<Product> = {}): Product {
         price: '20.00',
         additional_copy_price: '10.00',
         shipping_methods: [
-          { id: 1, code: 'physical', name: 'Envio a domicilio', price: '5.00' },
+          { id: 1, code: 'physical', name: 'Envío a domicilio', price: '5.00' },
           { id: 2, code: 'digital', name: 'Descarga digital', price: '0.00' },
         ],
       },
@@ -80,7 +80,7 @@ function unProducto(overrides: Partial<Product> = {}): Product {
 }
 
 describe('el listado', () => {
-  it('no exige sesion', async () => {
+  it('no exige sesión', async () => {
     catalogo.mockResolvedValue([unProducto()])
 
     renderConProviders(<Catalogo />)
@@ -113,7 +113,7 @@ describe('el listado', () => {
   })
 
   /** BUG-008 — en v1 una coleccion vacia respondia 404. */
-  it('dice que no hay nada en vez de romperse con el catalogo vacio', async () => {
+  it('dice que no hay nada en vez de romperse con el catalogo vacío', async () => {
     catalogo.mockResolvedValue([])
 
     renderConProviders(<Catalogo />)
@@ -163,7 +163,7 @@ describe('la ficha', () => {
     const moda = screen.getByText('Diseno de moda').closest('li')
     const digital = screen.getByText('Digital').closest('li')
 
-    expect(moda).toHaveTextContent('Envio a domicilio')
+    expect(moda).toHaveTextContent('Envío a domicilio')
     expect(moda).not.toHaveTextContent('Descarga digital')
     expect(digital).toHaveTextContent('Descarga digital')
   })

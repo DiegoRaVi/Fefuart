@@ -30,7 +30,7 @@ export function SobreMi() {
           agradable posible.
         </p>
 
-        <p>Gracias por visitar mi pequeno rincon artistico, no dudes en escribirme!</p>
+        <p>Gracias por visitar mi pequeño rincón artistico, no dudes en escribirme!</p>
       </div>
     </div>
   )

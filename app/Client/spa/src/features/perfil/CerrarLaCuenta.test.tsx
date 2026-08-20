@@ -56,16 +56,16 @@ it('no suprime con un solo clic', async () => {
   await userEvent.click(screen.getByRole('button', { name: 'Suprimir mi cuenta' }))
 
   expect(del).not.toHaveBeenCalled()
-  expect(screen.getByLabelText('Tu contrasena')).toBeInTheDocument()
+  expect(screen.getByLabelText('Tu contraseña')).toBeInTheDocument()
 })
 
-it('suprime con la contrasena', async () => {
+it('suprime con la contraseña', async () => {
   del.mockResolvedValue({ data: null } as never)
 
   renderConProviders(<CerrarLaCuenta />)
 
   await userEvent.click(screen.getByRole('button', { name: 'Suprimir mi cuenta' }))
-  await userEvent.type(screen.getByLabelText('Tu contrasena'), 'unaclavelarga')
+  await userEvent.type(screen.getByLabelText('Tu contraseña'), 'unaclavelarga')
   await userEvent.click(
     screen.getByRole('button', { name: 'Suprimir mi cuenta para siempre' }),
   )

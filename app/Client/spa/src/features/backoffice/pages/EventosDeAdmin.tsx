@@ -31,11 +31,11 @@ const ESTADOS: Record<string, string> = {
  * celebra.
  */
 const CAMPOS: CampoDeBusqueda[] = [
-  { valor: 'titulo', etiqueta: 'Titulo', ayuda: 'Boda de Marta y Luis' },
+  { valor: 'titulo', etiqueta: 'Título', ayuda: 'Boda de Marta y Luis' },
   { valor: 'lugar', etiqueta: 'Lugar', ayuda: 'Finca El Olivar, Toledo' },
   { valor: 'nombre', etiqueta: 'Nombre', ayuda: 'Quien lo pidio' },
   { valor: 'email', etiqueta: 'Correo', ayuda: 'marta@ejemplo.com', tipo: 'email' },
-  { valor: 'telefono', etiqueta: 'Telefono', ayuda: '600123456', tipo: 'tel' },
+  { valor: 'telefono', etiqueta: 'Teléfono', ayuda: '600123456', tipo: 'tel' },
 ]
 
 /**
@@ -106,7 +106,7 @@ export function EventosDeAdmin() {
         onDesde={cambiar(setDesde)}
         hasta={hasta}
         onHasta={cambiar(setHasta)}
-        ayudaBusqueda="Titulo, lugar, nombre, correo o telefono"
+        ayudaBusqueda="Titulo, lugar, nombre, correo o teléfono"
         hayFiltros={hayFiltros}
         onLimpiar={() => {
           setQ('')
@@ -124,7 +124,7 @@ export function EventosDeAdmin() {
         <Cargando texto="Cargando los eventos..." />
       ) : data.data.length === 0 ? (
         <Aviso tono="informacion">
-          {hayFiltros ? 'Ningun evento cuadra con lo que buscas.' : 'Todavia no hay eventos.'}
+          {hayFiltros ? 'Ningun evento cuadra con lo que buscas.' : 'Todavía no hay eventos.'}
         </Aviso>
       ) : (
         <>

@@ -74,7 +74,7 @@ describe('el precio no se publica', () => {
   it('no enseña ningun importe', async () => {
     renderConProviders(<LiveArt />)
 
-    await screen.findByText('Cuentanos tu evento')
+    await screen.findByText('Cuéntanos tu evento')
 
     expect(document.body.textContent).not.toMatch(/\d+,\d{2}\s*€/)
     expect(screen.getByText(/a medida/i)).toBeInTheDocument()
@@ -94,7 +94,7 @@ describe('los datos con los que se presupuesta', () => {
     expect(screen.getByLabelText('Tipo')).toBeInTheDocument()
   })
 
-  it('los manda como numero y no como texto', async () => {
+  it('los manda como número y no como texto', async () => {
     post.mockResolvedValue({ data: { data: unEvento() } } as never)
 
     renderConProviders(<LiveArt />)
@@ -323,7 +323,7 @@ it('avisa de que la señal no se devuelve antes de cancelar', async () => {
   expect(await screen.findByText(/la señal no se devuelve/i)).toBeInTheDocument()
 })
 
-it('no lo avisa si todavia no hay señal pagada', async () => {
+it('no lo avisa si todavía no hay señal pagada', async () => {
   servirEventos([unEvento({ status: 'requested' })])
 
   renderConProviders(<LiveArt />)

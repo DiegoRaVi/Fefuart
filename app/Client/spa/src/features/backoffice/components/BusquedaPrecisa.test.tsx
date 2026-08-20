@@ -5,10 +5,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { BusquedaPrecisa, type CampoDeBusqueda } from './BusquedaPrecisa'
 
 const CAMPOS: CampoDeBusqueda[] = [
-  { valor: 'numero', etiqueta: 'Numero de pedido', ayuda: '7', tipo: 'number' },
-  { valor: 'nombre', etiqueta: 'Nombre', ayuda: 'De la cuenta o del envio' },
+  { valor: 'numero', etiqueta: 'Número de pedido', ayuda: '7', tipo: 'number' },
+  { valor: 'nombre', etiqueta: 'Nombre', ayuda: 'De la cuenta o del envío' },
   { valor: 'email', etiqueta: 'Correo', ayuda: 'marta@ejemplo.com', tipo: 'email' },
-  { valor: 'telefono', etiqueta: 'Telefono', ayuda: '600123456', tipo: 'tel' },
+  { valor: 'telefono', etiqueta: 'Teléfono', ayuda: '600123456', tipo: 'tel' },
 ]
 
 /**
@@ -52,29 +52,29 @@ describe('solo un campo a la vez', () => {
   it('deja escribir unicamente en el elegido', () => {
     abrir()
 
-    expect(screen.getByLabelText('Numero de pedido')).not.toHaveAttribute('readonly')
+    expect(screen.getByLabelText('Número de pedido')).not.toHaveAttribute('readonly')
     expect(screen.getByLabelText('Nombre')).toHaveAttribute('readonly')
     expect(screen.getByLabelText('Correo')).toHaveAttribute('readonly')
-    expect(screen.getByLabelText('Telefono')).toHaveAttribute('readonly')
+    expect(screen.getByLabelText('Teléfono')).toHaveAttribute('readonly')
   })
 
   it('cambia cual esta activo al elegir otro', async () => {
     abrir()
 
-    await userEvent.click(screen.getByRole('radio', { name: 'Buscar por telefono' }))
+    await userEvent.click(screen.getByRole('radio', { name: 'Buscar por teléfono' }))
 
-    expect(screen.getByLabelText('Telefono')).not.toHaveAttribute('readonly')
-    expect(screen.getByLabelText('Numero de pedido')).toHaveAttribute('readonly')
+    expect(screen.getByLabelText('Teléfono')).not.toHaveAttribute('readonly')
+    expect(screen.getByLabelText('Número de pedido')).toHaveAttribute('readonly')
   })
 
   /**
    * Un telefono no vale como nombre: arrastrar el termino de un campo a otro
    * produce busquedas sin sentido que parecen fallos del buscador.
    */
-  it('vacia el termino al cambiar de campo', async () => {
+  it('vacía el termino al cambiar de campo', async () => {
     abrir()
 
-    await userEvent.type(screen.getByLabelText('Numero de pedido'), '7')
+    await userEvent.type(screen.getByLabelText('Número de pedido'), '7')
     await userEvent.click(screen.getByRole('radio', { name: 'Buscar por nombre' }))
 
     expect(screen.getByLabelText('Nombre')).toHaveValue('')
@@ -144,7 +144,7 @@ describe('lo que devuelve', () => {
   it('arranca con el campo que ya estaba buscandose', () => {
     abrir({ busqueda: { campo: 'telefono', termino: '600123456' } })
 
-    expect(screen.getByLabelText('Telefono')).toHaveValue('600123456')
+    expect(screen.getByLabelText('Teléfono')).toHaveValue('600123456')
     expect(screen.getByLabelText('Nombre')).toHaveAttribute('readonly')
   })
 })

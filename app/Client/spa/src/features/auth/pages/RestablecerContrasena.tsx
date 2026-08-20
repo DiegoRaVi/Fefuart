@@ -15,7 +15,7 @@ import { restablecerContrasena } from '../api'
 const esquema = z
   .object({
     password: z.string().min(8, 'Al menos ocho caracteres.'),
-    password_confirmation: z.string().min(1, 'Repite la contrasena.'),
+    password_confirmation: z.string().min(1, 'Repite la contraseña.'),
   })
   .refine((datos) => datos.password === datos.password_confirmation, {
     path: ['password_confirmation'],
@@ -84,7 +84,7 @@ export function RestablecerContrasena() {
 
   return (
     <div className="mx-auto max-w-md space-y-6">
-      <h1 className="text-titulo text-verde">Elegir una contrasena nueva</h1>
+      <h1 className="text-titulo text-verde">Elegir una contraseña nueva</h1>
 
       <p className="text-base">
         Vas a cambiar la contrasena de <strong>{email}</strong>.
@@ -94,7 +94,7 @@ export function RestablecerContrasena() {
 
       <form onSubmit={enviar} noValidate className="space-y-4">
         <Campo
-          etiqueta="Contrasena nueva"
+          etiqueta="Contraseña nueva"
           type="password"
           autoComplete="new-password"
           ayuda="Al menos ocho caracteres."
@@ -103,7 +103,7 @@ export function RestablecerContrasena() {
         />
 
         <Campo
-          etiqueta="Repite la contrasena"
+          etiqueta="Repite la contraseña"
           type="password"
           autoComplete="new-password"
           error={errors.password_confirmation?.message}
@@ -111,7 +111,7 @@ export function RestablecerContrasena() {
         />
 
         <Boton type="submit" disabled={isSubmitting} className="w-full">
-          {isSubmitting ? 'Guardando...' : 'Guardar la contrasena'}
+          {isSubmitting ? 'Guardando...' : 'Guardar la contraseña'}
         </Boton>
       </form>
     </div>

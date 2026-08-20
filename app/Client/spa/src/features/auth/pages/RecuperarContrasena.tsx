@@ -47,7 +47,7 @@ export function RecuperarContrasena() {
 
   return (
     <div className="mx-auto max-w-md space-y-6">
-      <h1 className="text-titulo text-verde">Recuperar contrasena</h1>
+      <h1 className="text-titulo text-verde">Recuperar contraseña</h1>
 
       {/*
         El backend responde lo mismo exista o no la cuenta, para que el

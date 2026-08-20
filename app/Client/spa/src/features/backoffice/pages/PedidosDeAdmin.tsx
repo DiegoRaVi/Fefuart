@@ -27,10 +27,10 @@ const ESTADOS_DE_PEDIDO = Object.fromEntries(
  * cual le han dado, y separarlos le trasladaria el problema.
  */
 const CAMPOS: CampoDeBusqueda[] = [
-  { valor: 'numero', etiqueta: 'Numero de pedido', ayuda: '7', tipo: 'number' },
-  { valor: 'nombre', etiqueta: 'Nombre', ayuda: 'De la cuenta o del envio' },
+  { valor: 'numero', etiqueta: 'Número de pedido', ayuda: '7', tipo: 'number' },
+  { valor: 'nombre', etiqueta: 'Nombre', ayuda: 'De la cuenta o del envío' },
   { valor: 'email', etiqueta: 'Correo', ayuda: 'marta@ejemplo.com', tipo: 'email' },
-  { valor: 'telefono', etiqueta: 'Telefono', ayuda: '600123456', tipo: 'tel' },
+  { valor: 'telefono', etiqueta: 'Teléfono', ayuda: '600123456', tipo: 'tel' },
 ]
 
 export function PedidosDeAdmin() {
@@ -105,7 +105,7 @@ export function PedidosDeAdmin() {
         onDesde={cambiar(setDesde)}
         hasta={hasta}
         onHasta={cambiar(setHasta)}
-        ayudaBusqueda="Numero de pedido, nombre, correo o telefono"
+        ayudaBusqueda="Número de pedido, nombre, correo o teléfono"
         hayFiltros={hayFiltros}
         onLimpiar={limpiar}
       />
@@ -118,7 +118,7 @@ export function PedidosDeAdmin() {
         <Aviso tono="informacion">
           {hayFiltros
             ? 'Ningun pedido cuadra con lo que buscas.'
-            : 'Todavia no hay pedidos.'}
+            : 'Todavía no hay pedidos.'}
         </Aviso>
       ) : (
         <>

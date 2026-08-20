@@ -37,7 +37,7 @@ it('ensena cuantos avisos hay sin leer', async () => {
 })
 
 /** Con todo leido no se pinta el numero: un «(0)» solo es ruido. */
-it('no ensena el numero si no hay nada sin leer', async () => {
+it('no ensena el número si no hay nada sin leer', async () => {
   servirContador(0)
 
   renderConProviders(<EnlaceDeAvisos />)
@@ -52,7 +52,7 @@ it('no ensena el numero si no hay nada sin leer', async () => {
  * Sin sesion no se piden avisos: el endpoint responde 401 y pedirlo igual
  * llenaria la consola de errores en cada pagina publica.
  */
-it('no pide nada sin sesion', async () => {
+it('no pide nada sin sesión', async () => {
   vi.mocked(obtenerSesion).mockResolvedValue(null)
   servirContador(3)
 

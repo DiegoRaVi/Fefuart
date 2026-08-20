@@ -59,10 +59,10 @@ interface LaravelErrorBody {
 }
 
 const MENSAJES_POR_ESTADO: Record<number, string> = {
-  401: 'Tienes que iniciar sesion.',
+  401: 'Tienes que iniciar sesión.',
   403: 'No tienes permiso para hacer esto.',
   404: 'No hemos encontrado lo que buscabas.',
-  419: 'La sesion ha caducado. Vuelve a intentarlo.',
+  419: 'La sesión ha caducado. Vuelve a intentarlo.',
   429: 'Demasiados intentos. Espera un momento.',
   500: 'Algo ha fallado por nuestra parte.',
 }

@@ -22,7 +22,7 @@ export function Carrito() {
     return (
       <div className="mx-auto max-w-2xl space-y-4">
         <h1 className="text-titulo text-verde">Tu carrito</h1>
-        <Aviso tono="informacion">Todavia no has anadido ningun encargo.</Aviso>
+        <Aviso tono="informacion">Todavía no has anadido ningun encargo.</Aviso>
         <Link className="text-verde underline underline-offset-4" to="/encargos">
           Ver los encargos
         </Link>
@@ -79,7 +79,7 @@ function Linea({ linea }: { linea: OrderItem }) {
         <h2 className="text-apartado text-verde">{linea.product_name}</h2>
 
         <p className="text-sm text-piedra">
-          {linea.variant_name} · {esDigital ? 'Descarga digital' : 'Envio a domicilio'}
+          {linea.variant_name} · {esDigital ? 'Descarga digital' : 'Envío a domicilio'}
         </p>
 
         {linea.customer_notes && (

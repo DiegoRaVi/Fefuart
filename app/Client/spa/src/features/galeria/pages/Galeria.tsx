@@ -31,7 +31,7 @@ export function Galeria() {
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       <div className="space-y-2">
-        <h1 className="text-titulo text-verde">Galeria</h1>
+        <h1 className="text-titulo text-verde">Galería</h1>
         <p className="text-base text-piedra">
           Algunos de los trabajos de Felicitas: dibujo en directo, retratos por
           encargo, letras, ramos y papeleria.
@@ -59,7 +59,7 @@ export function Galeria() {
 
       {data && data.length === 0 && (
         <Aviso tono="informacion">
-          Todavia no hay nada por aqui. Felicitas esta preparando la galeria.
+          Todavía no hay nada por aquí. Felicitas está preparando la galería.
         </Aviso>
       )}
 

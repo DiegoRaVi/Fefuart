@@ -49,7 +49,7 @@ describe('los datos de la cuenta', () => {
     renderConProviders(<Perfil />)
 
     expect(
-      await screen.findByText(/tendras que verificar la direccion nueva/i),
+      await screen.findByText(/tendrás que verificar la dirección nueva/i),
     ).toBeInTheDocument()
   })
 
@@ -69,13 +69,13 @@ describe('los datos de la cuenta', () => {
   })
 })
 
-describe('la verificacion del correo', () => {
-  it('avisa cuando la direccion no esta verificada', async () => {
+describe('la verificación del correo', () => {
+  it('avisa cuando la dirección no esta verificada', async () => {
     sesion.mockResolvedValue(unUsuario({ email_verified_at: null }))
 
     renderConProviders(<Perfil />)
 
-    expect(await screen.findByText(/todavia no esta verificado/i)).toBeInTheDocument()
+    expect(await screen.findByText(/todavía no está verificado/i)).toBeInTheDocument()
   })
 
   it('no avisa cuando ya lo esta', async () => {
@@ -84,7 +84,7 @@ describe('la verificacion del correo', () => {
     renderConProviders(<Perfil />)
 
     await screen.findByLabelText('Nombre')
-    expect(screen.queryByText(/todavia no esta verificado/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/todavía no está verificado/i)).not.toBeInTheDocument()
   })
 
   it('reenvia el correo cuando se pide', async () => {
@@ -102,7 +102,7 @@ describe('la verificacion del correo', () => {
   })
 
   /** El backend redirige aqui con ?verificado=1 tras marcar la direccion. */
-  it('confirma la verificacion al volver del enlace del correo', async () => {
+  it('confirma la verificación al volver del enlace del correo', async () => {
     sesion.mockResolvedValue(unUsuario())
 
     renderConProviders(<Perfil />, { ruta: '/perfil?verificado=1' })
@@ -111,17 +111,17 @@ describe('la verificacion del correo', () => {
   })
 })
 
-describe('el cambio de contrasena', () => {
+describe('el cambio de contraseña', () => {
   it('exige la actual', async () => {
     sesion.mockResolvedValue(unUsuario())
 
     renderConProviders(<Perfil />)
 
     await userEvent.click(
-      await screen.findByRole('button', { name: 'Cambiar la contrasena' }),
+      await screen.findByRole('button', { name: 'Cambiar la contraseña' }),
     )
 
-    expect(await screen.findByText('Escribe tu contrasena actual.')).toBeInTheDocument()
+    expect(await screen.findByText('Escribe tu contraseña actual.')).toBeInTheDocument()
     expect(cambiar).not.toHaveBeenCalled()
   })
 
@@ -129,25 +129,25 @@ describe('el cambio de contrasena', () => {
     sesion.mockResolvedValue(unUsuario())
     cambiar.mockRejectedValue(
       new ApiError(422, 'Los datos no son validos.', {
-        current_password: ['La contrasena actual no es correcta.'],
+        current_password: ['La contraseña actual no es correcta.'],
       }),
     )
 
     renderConProviders(<Perfil />)
 
     await userEvent.type(
-      await screen.findByLabelText('Contrasena actual'),
+      await screen.findByLabelText('Contraseña actual'),
       'la-que-no-es',
     )
-    await userEvent.type(screen.getByLabelText('Contrasena nueva'), 'contrasena-larga')
+    await userEvent.type(screen.getByLabelText('Contraseña nueva'), 'contrasena-larga')
     await userEvent.type(
-      screen.getByLabelText('Repite la contrasena nueva'),
+      screen.getByLabelText('Repite la contraseña nueva'),
       'contrasena-larga',
     )
-    await userEvent.click(screen.getByRole('button', { name: 'Cambiar la contrasena' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Cambiar la contraseña' }))
 
     expect(
-      await screen.findByText('La contrasena actual no es correcta.'),
+      await screen.findByText('La contraseña actual no es correcta.'),
     ).toBeInTheDocument()
   })
 })

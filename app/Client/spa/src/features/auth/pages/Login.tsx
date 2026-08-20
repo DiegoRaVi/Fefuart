@@ -13,7 +13,7 @@ import { useIniciarSesion } from '../hooks'
 
 const esquema = z.object({
   email: z.string().min(1, 'Escribe tu correo.').email('Eso no parece un correo.'),
-  password: z.string().min(1, 'Escribe tu contrasena.'),
+  password: z.string().min(1, 'Escribe tu contraseña.'),
 })
 
 type Datos = z.infer<typeof esquema>
@@ -60,7 +60,7 @@ export function Login() {
         />
 
         <Campo
-          etiqueta="Contrasena"
+          etiqueta="Contraseña"
           type="password"
           autoComplete="current-password"
           error={errors.password?.message}
