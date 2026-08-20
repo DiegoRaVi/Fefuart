@@ -15,7 +15,7 @@ const MAILPIT = 'http://127.0.0.1:8025/api/v1'
 export async function entrar(page: Page, quien: { email: string; password: string }): Promise<void> {
   await page.goto('/login')
   await page.getByLabel('Correo').fill(quien.email)
-  await page.getByLabel('Contrasena').fill(quien.password)
+  await page.getByLabel('Contraseña').fill(quien.password)
   await page.getByRole('button', { name: 'Entrar' }).click()
 
   /*

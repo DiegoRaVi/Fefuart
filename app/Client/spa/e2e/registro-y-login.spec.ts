@@ -23,15 +23,15 @@ test('registrarse, verificar el correo y entrar', async ({ page }) => {
 
   await page.getByLabel('Nombre').fill('Marta Ruiz')
   await page.getByLabel('Correo').fill(correo)
-  await page.getByLabel('Contrasena', { exact: true }).fill('unaclavelarga')
-  await page.getByLabel('Repite la contrasena').fill('unaclavelarga')
+  await page.getByLabel('Contraseña', { exact: true }).fill('unaclavelarga')
+  await page.getByLabel('Repite la contraseña').fill('unaclavelarga')
   await page.getByRole('button', { name: 'Crear cuenta' }).click()
 
   // Registrarse deja la sesion abierta, pero sin verificar.
   await expect(page.getByRole('button', { name: 'Salir' })).toBeVisible()
 
   await page.goto('/perfil')
-  await expect(page.getByText(/todavia no esta verificado/i)).toBeVisible()
+  await expect(page.getByText(/todavía no está verificado/i)).toBeVisible()
 
   // El enlace del correo, seguido de verdad.
   const mensaje = await ultimoCorreoPara(correo)
@@ -44,7 +44,7 @@ test('registrarse, verificar el correo y entrar', async ({ page }) => {
 
   // El backend redirige a la SPA con ?verificado=1, y esa ruta si existe.
   await expect(page.getByText('Tu correo ha quedado verificado.')).toBeVisible()
-  await expect(page.getByText(/todavia no esta verificado/i)).not.toBeVisible()
+  await expect(page.getByText(/todavía no está verificado/i)).not.toBeVisible()
 })
 
 test('entrar con la cuenta sembrada', async ({ page }) => {

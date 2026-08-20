@@ -196,7 +196,7 @@ function Linea({ pedidoId, linea }: { pedidoId: number; linea: OrderItem }) {
 
         {linea.delivery_type === 'digital' && !linea.delivered && (
           <p className="mt-2 text-sm text-piedra">
-            Felicitas todavía esta con el. Te avisamos en cuanto puedas descargarlo.
+            Felicitas todavía está con él. Te avisamos en cuanto puedas descargarlo.
           </p>
         )}
       </div>

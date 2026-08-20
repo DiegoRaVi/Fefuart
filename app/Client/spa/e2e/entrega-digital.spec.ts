@@ -101,7 +101,7 @@ test('la artista entrega y el cliente se la descarga', async ({ page }) => {
   await entrar(page, CLIENTE)
   await page.goto(`/pedidos/${pedido}`)
 
-  await expect(page.getByText(/Felicitas todavia esta con el/)).toBeVisible()
+  await expect(page.getByText(/Felicitas todavía está con él/)).toBeVisible()
   await expect(page.getByRole('link', { name: 'Descargar mi encargo' })).not.toBeVisible()
 
   await salir(page)
@@ -152,8 +152,8 @@ test('otro cliente no puede abrir la descarga', async ({ page }) => {
   await page.goto('/registro')
   await page.getByLabel('Nombre').fill('Intrusa')
   await page.getByLabel('Correo').fill(`intrusa-${Date.now()}@fefuart.test`)
-  await page.getByLabel('Contrasena', { exact: true }).fill('unaclavelarga')
-  await page.getByLabel('Repite la contrasena').fill('unaclavelarga')
+  await page.getByLabel('Contraseña', { exact: true }).fill('unaclavelarga')
+  await page.getByLabel('Repite la contraseña').fill('unaclavelarga')
   await page.getByRole('button', { name: 'Crear cuenta' }).click()
   await expect(page.getByRole('button', { name: 'Salir' })).toBeVisible()
 

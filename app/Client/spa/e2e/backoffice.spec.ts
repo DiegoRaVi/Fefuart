@@ -14,14 +14,14 @@ import { ARTISTA, CLIENTE, entrar, ultimoCorreoPara, vaciarLaBandeja } from './a
 /** Deja un pedido confirmado y devuelve su numero. */
 async function unPedidoConfirmado(page: import('@playwright/test').Page): Promise<number> {
   await page.goto('/encargos/letras-infantiles')
-  await page.getByRole('link', { name: 'Encargar' }).click()
-  await page.getByRole('button', { name: 'Anadir al carrito' }).click()
+  await page.getByRole('link', { name: 'Empezar mi encargo' }).click()
+  await page.getByRole('button', { name: 'Añadir al carrito' }).click()
 
   await page.getByRole('link', { name: 'Continuar' }).click()
   await page.getByLabel('Nombre y apellidos').fill('Cliente de prueba')
-  await page.getByLabel('Telefono').fill('600123456')
-  await page.getByLabel('Direccion', { exact: true }).fill('Calle Mayor 1')
-  await page.getByLabel('Codigo postal').fill('28001')
+  await page.getByLabel('Teléfono').fill('600123456')
+  await page.getByLabel('Dirección', { exact: true }).fill('Calle Mayor 1')
+  await page.getByLabel('Código postal').fill('28001')
   await page.getByLabel('Ciudad').fill('Madrid')
   await page.getByLabel('Provincia').fill('Madrid')
   await page.getByRole('button', { name: 'Confirmar el encargo' }).click()

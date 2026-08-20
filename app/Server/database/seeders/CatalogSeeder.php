@@ -25,7 +25,7 @@ class CatalogSeeder extends Seeder
     {
         $fisico = ShippingMethod::query()->updateOrCreate(
             ['code' => DeliveryType::Physical],
-            ['name' => 'Envio a domicilio', 'price' => '5.00', 'is_active' => true, 'sort_order' => 0],
+            ['name' => 'Envío a domicilio', 'price' => '5.00', 'is_active' => true, 'sort_order' => 0],
         );
 
         $digital = ShippingMethod::query()->updateOrCreate(
@@ -39,13 +39,13 @@ class CatalogSeeder extends Seeder
         $this->product(
             slug: 'dibujo-por-encargo',
             name: 'Dibujo por encargo',
-            description: 'Retrato dibujado a partir de tu fotografia.',
+            description: 'Retrato dibujado a partir de tu fotografía.',
             category: 'dibujo',
             sortOrder: 0,
             requiresReferenceImage: true,
             requiresNotes: true,
             variants: [
-                ['Diseno de moda', '30.00', [$fisico]],
+                ['Diseño de moda', '30.00', [$fisico]],
                 ['Acuarela', '40.00', [$fisico]],
                 ['Digital', '20.00', [$fisico, $digital]],
             ],
@@ -54,26 +54,26 @@ class CatalogSeeder extends Seeder
         $this->product(
             slug: 'letras-infantiles',
             name: 'Letras infantiles',
-            description: 'Letras ilustradas para la habitacion de los peques.',
+            description: 'Letras ilustradas para la habitación de los peques.',
             category: 'letras',
             sortOrder: 1,
             requiresReferenceImage: false,
             requiresNotes: false,
             variants: [
-                ['Lamina ilustrada', '40.00', [$fisico]],
+                ['Lámina ilustrada', '40.00', [$fisico]],
             ],
         );
 
         $this->product(
             slug: 'ramos-dibujados',
             name: 'Ramos dibujados',
-            description: 'Tu ramo de novia convertido en lamina.',
+            description: 'Tu ramo de novia convertido en lámina.',
             category: 'ramos',
             sortOrder: 2,
             requiresReferenceImage: true,
             requiresNotes: true,
             variants: [
-                ['Lamina del ramo', '40.00', [$fisico]],
+                ['Lámina del ramo', '40.00', [$fisico]],
             ],
         );
     }

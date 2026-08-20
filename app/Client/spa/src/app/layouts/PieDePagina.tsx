@@ -34,7 +34,7 @@ export function PieDePagina() {
           {/* D33 — quien hay detras. Va en el pie y no en la cabecera: es lo
               que se busca cuando ya te ha gustado algo, no antes. */}
           <Link to="/sobre-mi" className="underline underline-offset-4 hover:text-verde-hondo">
-            Sobre mi
+            Sobre mí
           </Link>
 
           <a

@@ -129,7 +129,7 @@ function NuevaPieza() {
       </div>
 
       <Boton type="submit" disabled={subir.isPending || !archivo}>
-        {subir.isPending ? 'Subiendo...' : 'Añadir a la galeria'}
+        {subir.isPending ? 'Subiendo...' : 'Añadir a la galería'}
       </Boton>
 
       {subir.isError && <Aviso tono="error">{subir.error.message}</Aviso>}

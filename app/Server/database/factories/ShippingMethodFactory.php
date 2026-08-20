@@ -42,7 +42,7 @@ class ShippingMethodFactory extends Factory
     {
         return [
             'code' => DeliveryType::Physical,
-            'name' => 'Envio a domicilio',
+            'name' => 'Envío a domicilio',
             'price' => '5.00',
             'is_active' => true,
             'sort_order' => 0,

@@ -31,9 +31,9 @@ test('la artista publica una pieza y se ve sin sesion', async ({ page }) => {
   await entrar(page, ARTISTA)
   await page.goto('/backoffice/galeria')
 
-  await page.getByLabel('Titulo').fill(titulo)
+  await page.getByLabel('Título').fill(titulo)
   await page.getByLabel('Imagen').setInputFiles(unaImagenEnDisco())
-  await page.getByRole('button', { name: 'Anadir a la galeria' }).click()
+  await page.getByRole('button', { name: 'Añadir a la galería' }).click()
 
   await expect(page.getByRole('heading', { name: titulo })).toBeVisible()
 
@@ -52,9 +52,9 @@ test('lo que se oculta deja de verse en el escaparate', async ({ page }) => {
   await entrar(page, ARTISTA)
   await page.goto('/backoffice/galeria')
 
-  await page.getByLabel('Titulo').fill(titulo)
+  await page.getByLabel('Título').fill(titulo)
   await page.getByLabel('Imagen').setInputFiles(unaImagenEnDisco())
-  await page.getByRole('button', { name: 'Anadir a la galeria' }).click()
+  await page.getByRole('button', { name: 'Añadir a la galería' }).click()
 
   const pieza = page.locator('article').filter({ hasText: titulo })
   await expect(pieza).toBeVisible()
