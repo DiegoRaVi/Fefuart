@@ -111,7 +111,7 @@ export function PedidoDeAdmin() {
       {pedido.shipping_address.line1 && (
         <section aria-labelledby="envio" className="space-y-1">
           <h2 id="envio" className="text-seccion text-verde">
-            Envio
+            Envío
           </h2>
           <address className="text-base not-italic text-piedra">
             {pedido.shipping_address.name && <p>{pedido.shipping_address.name}</p>}
@@ -135,7 +135,7 @@ export function PedidoDeAdmin() {
 
         {siguientes.length === 0 ? (
           <p className="text-base text-piedra">
-            Este pedido ya no se mueve de aqui.
+            Este pedido ya no se mueve de aquí.
           </p>
         ) : (
           <div className="flex flex-wrap gap-2">

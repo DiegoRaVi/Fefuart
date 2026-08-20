@@ -64,7 +64,7 @@ export function Registro() {
 
       <p className="text-base">
         N18: hace falta cuenta para encargar. Te enviaremos un correo para
-        confirmar tu direccion.
+        confirmar tu dirección.
       </p>
 
       {errorGeneral && <Aviso tono="error">{errorGeneral}</Aviso>}

@@ -87,7 +87,7 @@ export function RestablecerContrasena() {
       <h1 className="text-titulo text-verde">Elegir una contraseña nueva</h1>
 
       <p className="text-base">
-        Vas a cambiar la contrasena de <strong>{email}</strong>.
+        Vas a cambiar la contraseña de <strong>{email}</strong>.
       </p>
 
       {errorGeneral && <Aviso tono="error">{errorGeneral}</Aviso>}

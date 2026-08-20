@@ -193,7 +193,7 @@ function ContrasenaDeLaCuenta() {
   return (
     <section aria-labelledby="contrasena" className="space-y-4">
       <h2 id="contrasena" className="text-seccion text-verde">
-        Contrasena
+        Contraseña
       </h2>
 
       {cambiada && <Aviso tono="exito">Contraseña cambiada.</Aviso>}

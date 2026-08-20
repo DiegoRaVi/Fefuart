@@ -44,7 +44,7 @@ export function CerrarLaCuenta() {
         <h3 className="text-apartado text-verde">Aparcarla</h3>
         <p className="text-base text-piedra">
           Dejas de poder entrar y no recibes mas correos, pero no se pierde
-          nada. Escribenos cuando quieras recuperarla.
+          nada. Escríbenos cuando quieras recuperarla.
         </p>
 
         <Boton
@@ -62,7 +62,7 @@ export function CerrarLaCuenta() {
       <div className="space-y-2">
         <h3 className="text-apartado text-verde">Suprimirla del todo</h3>
         <p className="text-base text-piedra">
-          Borramos tu nombre, tu correo, tu telefono, tus direcciones y las
+          Borramos tu nombre, tu correo, tu teléfono, tus direcciones y las
           fotos que hayas subido. <strong>No se puede deshacer.</strong>
         </p>
 
@@ -70,7 +70,7 @@ export function CerrarLaCuenta() {
             pedido sigue ahi seria peor que leerlo ahora. */}
         <p className="text-sm text-piedra">
           Tus pedidos se conservan sin tus datos, solo con el importe y la
-          fecha: la ley obliga a guardar esa parte durante unos anos.
+          fecha: la ley obliga a guardar esa parte durante unos años.
         </p>
 
         {confirmando ? (

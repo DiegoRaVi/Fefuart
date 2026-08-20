@@ -339,7 +339,7 @@ function FormularioDePresupuesto({
 
           <p className="text-sm text-piedra">
             La señal se calcula sola con el porcentaje de Ajustes y se guarda con el
-            presupuesto: cambiarlo despues no toca los ya enviados.
+            presupuesto: cambiarlo después no toca los ya enviados.
           </p>
         </div>
 

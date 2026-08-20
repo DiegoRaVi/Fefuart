@@ -59,8 +59,8 @@ export function LiveArt() {
         <h1 className="text-titulo text-verde">Live Art</h1>
         <p>
           Felicitas dibuja en directo durante tu evento y los invitados se
-          llevan el dibujo. Cada evento es distinto, asi que el precio se hace
-          a medida: cuentanos como es el tuyo y te preparamos un presupuesto.
+          llevan el dibujo. Cada evento es distinto, así que el precio se hace
+          a medida: cuéntanos como es el tuyo y te preparamos un presupuesto.
         </p>
       </header>
 
@@ -326,7 +326,7 @@ function Presupuesto({ evento }: { evento: Evento }) {
 
       {evento.quote_expired && (
         <Aviso tono="informacion">
-          Este presupuesto ha caducado. Escribenos y te preparamos uno nuevo.
+          Este presupuesto ha caducado. Escríbenos y te preparamos uno nuevo.
         </Aviso>
       )}
 

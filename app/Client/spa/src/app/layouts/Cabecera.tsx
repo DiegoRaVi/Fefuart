@@ -46,7 +46,7 @@ export function Cabecera() {
       </Enlace>
 
       <Enlace to="/galeria" onClick={cerrarMenu}>
-        Galeria
+        Galería
       </Enlace>
 
       {esAdmin && (

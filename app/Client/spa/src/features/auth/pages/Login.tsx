@@ -75,7 +75,7 @@ export function Login() {
       <div className="space-y-2 text-base">
         <p>
           <Link className="text-verde underline underline-offset-4" to="/recuperar-contrasena">
-            He olvidado mi contrasena
+            He olvidado mi contraseña
           </Link>
         </p>
         <p>

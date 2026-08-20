@@ -136,7 +136,7 @@ describe('la navegacion en pantalla estrecha', () => {
     await userEvent.click(boton)
 
     expect(boton).toHaveAttribute('aria-expanded', 'true')
-    expect(screen.getByRole('link', { name: 'Galeria' })).toBeVisible()
+    expect(screen.getByRole('link', { name: 'Galería' })).toBeVisible()
   })
 
   /** Navegar cierra el menu: dejarlo abierto tapa la pagina de destino. */
@@ -147,7 +147,7 @@ describe('la navegacion en pantalla estrecha', () => {
 
     const boton = await screen.findByRole('button', { name: /menu/i })
     await userEvent.click(boton)
-    await userEvent.click(screen.getByRole('link', { name: 'Galeria' }))
+    await userEvent.click(screen.getByRole('link', { name: 'Galería' }))
 
     expect(boton).toHaveAttribute('aria-expanded', 'false')
   })

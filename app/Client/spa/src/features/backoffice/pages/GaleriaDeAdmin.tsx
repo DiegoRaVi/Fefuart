@@ -36,7 +36,7 @@ export function GaleriaDeAdmin() {
 
       {data && data.length === 0 && (
         <Aviso tono="informacion">
-          La galeria esta vacia. Sube la primera pieza aqui arriba.
+          La galería esta vacía. Sube la primera pieza aquí arriba.
         </Aviso>
       )}
 
@@ -90,7 +90,7 @@ function NuevaPieza() {
 
       <div className="space-y-1">
         <label htmlFor="categoria" className="block font-bold text-verde">
-          Categoria
+          Categoría
         </label>
 
         <select

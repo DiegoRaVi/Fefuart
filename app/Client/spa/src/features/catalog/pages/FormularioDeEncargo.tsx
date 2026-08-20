@@ -114,7 +114,7 @@ function Encargo({ producto }: { producto: Product }) {
           que sepa que tiene el aviso pendiente: los avisos del pedido van ahi. */}
       {!verificado && (
         <Aviso tono="informacion">
-          Todavia no has verificado tu correo. Puedes encargar igualmente, pero
+          Todavía no has verificado tu correo. Puedes encargar igualmente, pero
           confirmalo desde <Link className="underline" to="/perfil">tu cuenta</Link> para
           recibir los avisos del pedido.
         </Aviso>
@@ -181,7 +181,7 @@ function Encargo({ producto }: { producto: Product }) {
           <p className="text-sm text-piedra">
             {admiteCopias
               ? `Copias de esta misma lámina, hasta ${producto.max_quantity}.`
-              : 'Una entrega digital es un unico archivo.'}
+              : 'Una entrega digital es un único archivo.'}
           </p>
 
           <input

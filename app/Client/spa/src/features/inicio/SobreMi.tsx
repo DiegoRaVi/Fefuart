@@ -5,32 +5,44 @@
  * `views/about.html`. Se recupero del historico de git al retirar el legacy.
  * Reescribirlo «mejor» seria sustituir su voz por la mia, que es lo unico
  * que esta pagina tiene que transmitir.
+ *
+ * Lo unico que se ha tocado es la ortografia: las tildes que el HTML original
+ * no llevaba, la apertura de las exclamaciones y un «lo experiencia» que era
+ * un dedazo. Acentuar no le cambia la voz a nadie.
  */
 export function SobreMi() {
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
-      <h1 className="text-titulo text-verde">Quien hay detras</h1>
+    <div className="mx-auto max-w-3xl space-y-8">
+      <div className="space-y-3">
+        <p className="antetitulo text-verde">Sobre mí</p>
+        <h1 className="titular-portada text-verde">Quién hay detrás</h1>
+      </div>
 
-      <div className="space-y-4 text-base">
-        <p>Hola, bienvenidos!</p>
+      {/* Un poco mas ancho de lo normal para el cuerpo, porque aqui manda el
+          ritmo del texto y no la densidad. */}
+      <div className="max-w-prose space-y-5 text-lg">
+        <p>¡Hola, bienvenidos!</p>
 
         <p>
-          Me llamo Feli, y soy la mente y el corazon detras de esta travesia
-          artistica. Soy una apasionada artista plastica con formacion en Bellas
-          Artes, carrera que me ofrecio la oportunidad de conocer el fantastico
-          mundo de las acuarelas y asi poder dar forma y color a mis ideas.
+          Me llamo Feli, y soy la mente y el corazón detrás de esta travesía
+          artística. Soy una apasionada artista plástica con formación en Bellas
+          Artes, carrera que me ofreció la oportunidad de conocer el fantástico
+          mundo de las acuarelas y así poder dar forma y color a mis ideas.
         </p>
 
         <p>
-          Actualmente mi mision es transformar momentos especiales en recuerdos
-          eternos a traves de la magia de la pintura en directo y los dibujos
-          personalizados. En cada ilustracion intento plasmar todo el carino y la
-          pasion que me acompanan en esta profesion. Ademas, me comprometo con la
-          estetica y la decoracion para ofreceros lo experiencia lo mas bonita y
+          Actualmente mi misión es transformar momentos especiales en recuerdos
+          eternos a través de la magia de la pintura en directo y los dibujos
+          personalizados. En cada ilustración intento plasmar todo el cariño y la
+          pasión que me acompañan en esta profesión. Además, me comprometo con la
+          estética y la decoración para ofreceros la experiencia lo más bonita y
           agradable posible.
         </p>
 
-        <p>Gracias por visitar mi pequeño rincón artistico, no dudes en escribirme!</p>
+        <p>
+          Gracias por visitar mi pequeño rincón artístico, ¡no dudes en
+          escribirme!
+        </p>
       </div>
     </div>
   )

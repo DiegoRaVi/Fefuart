@@ -119,15 +119,15 @@ export function VueltaDelPago({ tipo }: { tipo: Tipo }) {
               de pantalla anuncia el cambio sin que haya que repetirlo. */}
           <Cargando texto="Estamos confirmando el cobro con la pasarela..." />
           <p className="text-base text-piedra">
-            Puedes cerrar esta pagina: la confirmacion no depende de que sigas aqui.
+            Puedes cerrar esta página: la confirmación no depende de que sigas aquí.
           </p>
         </>
       )}
 
       {!listo && !enCurso && (
         <Aviso tono="informacion">
-          El cobro sigue en curso. En cuanto la pasarela lo confirme lo veras aqui; si
-          pasan unos minutos y no cambia, escribenos.
+          El cobro sigue en curso. En cuanto la pasarela lo confirme lo verás aquí; si
+          pasan unos minutos y no cambia, escríbenos.
         </Aviso>
       )}
 

@@ -211,8 +211,8 @@ export function Checkout() {
         </Boton>
 
         <p className="text-sm text-piedra">
-          Al confirmar veras el resumen del pedido y desde ahi podras pagarlo
-          con tarjeta. No se te cobra nada todavia.
+          Al confirmar verás el resumen del pedido y desde ahí podrás pagarlo
+          con tarjeta. No se te cobra nada todavía.
         </p>
       </form>
     </div>

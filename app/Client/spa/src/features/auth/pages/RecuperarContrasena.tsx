@@ -60,8 +60,8 @@ export function RecuperarContrasena() {
       ) : (
         <>
           <p className="text-base">
-            Escribe tu correo y, si hay una cuenta con esa direccion, te
-            enviaremos un enlace para elegir una contrasena nueva.
+            Escribe tu correo y, si hay una cuenta con esa dirección, te
+            enviaremos un enlace para elegir una contraseña nueva.
           </p>
 
           {errorGeneral && <Aviso tono="error">{errorGeneral}</Aviso>}

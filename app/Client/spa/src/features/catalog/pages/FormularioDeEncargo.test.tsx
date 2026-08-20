@@ -138,7 +138,7 @@ describe('las copias', () => {
     await userEvent.click(screen.getByLabelText(/Descarga digital/))
 
     expect(screen.getByLabelText('Copias')).toBeDisabled()
-    expect(screen.getByText(/un unico archivo/i)).toBeInTheDocument()
+    expect(screen.getByText(/un único archivo/i)).toBeInTheDocument()
   })
 
   it('vuelve a una copia al pasar a digital', async () => {

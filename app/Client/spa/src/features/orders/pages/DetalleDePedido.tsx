@@ -124,7 +124,7 @@ export function DetalleDePedido() {
           {/* D7 — Checkout hospedado: el formulario de tarjeta lo sirve
               Stripe en su dominio y ningun dato de pago pasa por el nuestro. */}
           <p className="text-sm text-piedra">
-            El pago lo gestiona Stripe en su propia pagina. Aqui no se guarda ningun dato
+            El pago lo gestiona Stripe en su propia página. Aquí no se guarda ningún dato
             de tu tarjeta.
           </p>
         </section>
@@ -146,7 +146,7 @@ export function DetalleDePedido() {
           {/* N12 — despues de pagar, la cancelacion se acuerda con la artista
               y la aplica ella desde el backoffice. */}
           <p className="text-sm text-piedra">
-            Una vez pagado, escribenos y lo vemos.
+            Una vez pagado, escríbenos y lo vemos.
           </p>
         </section>
       )}
@@ -196,7 +196,7 @@ function Linea({ pedidoId, linea }: { pedidoId: number; linea: OrderItem }) {
 
         {linea.delivery_type === 'digital' && !linea.delivered && (
           <p className="mt-2 text-sm text-piedra">
-            Felicitas todavia esta con el. Te avisamos en cuanto puedas descargarlo.
+            Felicitas todavía esta con el. Te avisamos en cuanto puedas descargarlo.
           </p>
         )}
       </div>
@@ -210,7 +210,7 @@ function Direccion({ direccion }: { direccion: ShippingAddress }) {
   return (
     <section aria-labelledby="envio" className="space-y-1">
       <h2 id="envio" className="text-seccion text-verde">
-        Envio
+        Envío
       </h2>
 
       <address className="text-base not-italic text-piedra">

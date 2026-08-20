@@ -87,8 +87,8 @@ export function Portada() {
 
           <p className="max-w-2xl">
             Me llamo Feli y pinto en directo en bodas y eventos: los invitados
-            ven como nace su retrato y se lo llevan puesto. Tambien dibujo por
-            encargo a partir de tus fotografias.
+            ven como nace su retrato y se lo llevan puesto. También dibujo por
+            encargo a partir de tus fotografías.
           </p>
 
           <div className="flex flex-wrap gap-3 pt-2">
